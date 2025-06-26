@@ -101,7 +101,7 @@ const App = () => {
 
       {/* Widget Integration */}
       <LimeChatWidget
-        websiteToken="XouxmSgHSbN853omga3uAZNG"
+        websiteToken="MEFFACy4xaovJayhLjSt836h"
         user={user}
         locale="en"
         colorScheme={colorScheme}
@@ -109,7 +109,6 @@ const App = () => {
         onWidgetLoad={handleWidgetLoad}
         onWidgetClose={handleWidgetClose}
         onError={handleError}
-        style={styles.widgetContainer}
       />
     </SafeAreaView>
   );

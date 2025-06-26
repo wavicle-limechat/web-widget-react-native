@@ -14,6 +14,7 @@ export interface LimeChatWidgetProps {
   locale?: string;
   colorScheme?: 'light' | 'dark' | 'auto';
   customAttributes?: Record<string, any>;
+  customIcon?: React.ReactElement;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
   onError?: (error: Error, errorInfo?: any) => void;
@@ -49,6 +50,8 @@ export const POST_MESSAGE_EVENTS: {
   SET_COLOR_SCHEME: string;
   WIDGET_LOADED: string;
   CLOSE_WIDGET: string;
+  SET_CW_CONVERSATION: string;
+  SET_UNREAD_COUNT: string;
 };
 
 export const WIDGET_CONFIG: {

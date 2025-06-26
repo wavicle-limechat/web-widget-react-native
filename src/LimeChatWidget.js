@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, TouchableOpacity } from 'react-native';
 import ErrorBoundary from './components/ErrorBoundary';
 import WidgetIcon from './components/WidgetIcon';
 import WidgetModal from './components/WidgetModal';
@@ -17,6 +17,7 @@ const LimeChatWidget = ({
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes = {},
+  customIcon = null,
   onWidgetLoad,
   onWidgetClose,
   onError,
@@ -45,16 +46,41 @@ const LimeChatWidget = ({
     onError?.(error, errorInfo);
   };
 
-  return (
-    <ErrorBoundary onError={handleError}>
-      <View style={[widgetStyles.container, style]}>
+  const renderIcon = () => {
+    // If custom icon is provided, wrap it in a TouchableOpacity
+    if (customIcon) {
+      return (
+        <TouchableOpacity 
+          onPress={handleIconPress}
+          style={widgetStyles.iconButton}
+          activeOpacity={0.8}
+        >
+          {customIcon}
+        </TouchableOpacity>
+      );
+    }
+
+    // Otherwise, render the default widget icon wrapped in TouchableOpacity
+    return (
+      <TouchableOpacity 
+        onPress={handleIconPress}
+        style={widgetStyles.iconButton}
+        activeOpacity={0.8}
+      >
         <WidgetIcon
           widgetConfig={widgetConfig}
           isLoading={isLoading}
           error={error}
-          onPress={handleIconPress}
           iconStyle={iconStyle}
         />
+      </TouchableOpacity>
+    );
+  };
+
+  return (
+    <ErrorBoundary onError={handleError}>
+      <View style={[widgetStyles.container, style]}>
+        {renderIcon()}
 
         <WidgetModal
           isVisible={showWidget}
@@ -84,6 +110,7 @@ LimeChatWidget.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
   customAttributes: PropTypes.object,
+  customIcon: PropTypes.element,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
   onError: PropTypes.func,
@@ -96,6 +123,7 @@ LimeChatWidget.defaultProps = {
   locale: WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme: WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes: {},
+  customIcon: null,
   onWidgetLoad: null,
   onWidgetClose: null,
   onError: null,

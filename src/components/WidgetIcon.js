@@ -1,13 +1,12 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import { Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { widgetStyles } from '../styles';
 
 const WidgetIcon = ({ 
   widgetConfig, 
   isLoading, 
   error, 
-  onPress, 
   iconStyle 
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -43,22 +42,13 @@ const WidgetIcon = ({
     );
   };
 
-  return (
-    <TouchableOpacity 
-      onPress={onPress}
-      style={widgetStyles.iconButton}
-      activeOpacity={0.8}
-    >
-      {renderIcon()}
-    </TouchableOpacity>
-  );
+  return renderIcon();
 };
 
 WidgetIcon.propTypes = {
   widgetConfig: PropTypes.object,
   isLoading: PropTypes.bool,
   error: PropTypes.string,
-  onPress: PropTypes.func.isRequired,
   iconStyle: PropTypes.object,
 };
 

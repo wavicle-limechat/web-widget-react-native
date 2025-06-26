@@ -282,3 +282,46 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - 📧 Email: support@limechat.ai
 - 📖 Documentation: https://docs.limechat.ai
 - 🐛 Issues: https://github.com/limechat/react-native-widget/issues
+
+## Custom Icon
+
+You can provide your own custom icon component instead of using the default widget icon:
+
+```jsx
+import React from 'react';
+import { View, Text, Image } from 'react-native';
+import { LimeChatWidget } from '@limechat/react-native-widget';
+
+const MyCustomIcon = () => (
+  <View style={{ 
+    width: 60, 
+    height: 60, 
+    backgroundColor: '#007bff', 
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center'
+  }}>
+    <Text style={{ color: 'white', fontSize: 18 }}>💬</Text>
+  </View>
+);
+
+// Or using an image
+const MyImageIcon = () => (
+  <Image 
+    source={{ uri: 'https://example.com/my-icon.png' }}
+    style={{ width: 60, height: 60, borderRadius: 30 }}
+  />
+);
+
+export default function App() {
+  return (
+    <LimeChatWidget
+      websiteToken="your-website-token"
+      customIcon={<MyCustomIcon />}
+      // ... other props
+    />
+  );
+}
+```
+
+**Note:** When using `customIcon`, the click handling is automatically managed by the widget. You don't need to add any onPress handlers to your custom icon component.
