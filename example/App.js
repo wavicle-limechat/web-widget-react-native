@@ -13,7 +13,6 @@ import { LimeChatWidget } from '@limechat/react-native-widget';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
-  const [showWidget, setShowWidget] = useState(false);
   const [colorScheme, setColorScheme] = useState('auto');
 
   const backgroundStyle = {
@@ -77,8 +76,8 @@ const App = () => {
           </Text>
           
           <View style={styles.configRow}>
-            <Text style={styles.configLabel}>Color Scheme:</Text>
-            <Text style={styles.configValue}>{colorScheme}</Text>
+            <Text style={[styles.configLabel, { color: isDarkMode ? '#cccccc' : '#666666' }]}>Color Scheme:</Text>
+            <Text style={[styles.configValue, { color: isDarkMode ? '#ffffff' : '#333333' }]}>{colorScheme}</Text>
           </View>
         </View>
 
@@ -102,7 +101,7 @@ const App = () => {
 
       {/* Widget Integration */}
       <LimeChatWidget
-        websiteToken="your-website-token-here"
+        websiteToken="XouxmSgHSbN853omga3uAZNG"
         user={user}
         locale="en"
         colorScheme={colorScheme}
@@ -117,12 +116,8 @@ const App = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
     backgroundColor: '#007bff',
@@ -140,46 +135,33 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     textAlign: 'center',
   },
-  section: {
-    backgroundColor: 'white',
+  configSection: {
     margin: 16,
     padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 12,
-    color: '#333',
   },
-  configItem: {
+  configRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   configLabel: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666',
   },
   configValue: {
     fontSize: 16,
-    color: '#333',
     fontWeight: '400',
   },
-  buttonGroup: {
-    gap: 12,
+  buttonsSection: {
+    margin: 16,
   },
   button: {
     paddingVertical: 12,
@@ -190,30 +172,24 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: '#007bff',
   },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#007bff',
-  },
   buttonText: {
     fontSize: 16,
     fontWeight: '500',
     color: 'white',
   },
-  secondaryButtonText: {
-    color: '#007bff',
+  infoSection: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
   },
-  instructionText: {
+  infoText: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#666',
   },
   widgetContainer: {
     // Custom positioning if needed
   },
-  widgetIcon: {
-    // Custom icon styling if needed
-  },
 });
 
-export default App; 
+export default App;

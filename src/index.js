@@ -1,20 +1,8 @@
 // Main Widget Component
 export { default as LimeChatWidget, default } from './LimeChatWidget';
 
-// Individual Components
-export { default as ErrorBoundary } from './components/ErrorBoundary';
-export { default as WebViewComponent } from './components/WebViewComponent';
-export { default as WidgetIcon } from './components/WidgetIcon';
-export { default as WidgetModal } from './components/WidgetModal';
+// Essential utilities for advanced use cases
+export { buildWidgetUrl, generateScripts } from './utils';
 
-// Hooks
-export { default as useWidgetConfig } from './hooks/useWidgetConfig';
-
-// Utilities
-export * from './utils';
-
-// Constants
-export * from './constants';
-
-// Styles
-export * from './styles';
+// Constants for external configuration
+export { POST_MESSAGE_EVENTS, WIDGET_CONFIG } from './constants';

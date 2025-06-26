@@ -24,13 +24,37 @@ export interface LimeChatWidgetProps {
 export const LimeChatWidget: React.FC<LimeChatWidgetProps>;
 export default LimeChatWidget;
 
-export const ErrorBoundary: React.ComponentType<any>;
-export const WebViewComponent: React.ComponentType<any>;
-export const WidgetIcon: React.ComponentType<any>;
-export const WidgetModal: React.ComponentType<any>;
+// Essential utilities for advanced use cases
+export function buildWidgetUrl(params: {
+  baseUrl: string;
+  websiteToken: string;
+  locale?: string;
+  colorScheme?: string;
+  user?: LimeChatUser;
+  customAttributes?: Record<string, any>;
+}): string;
 
-export const useWidgetConfig: (baseUrl: string, websiteToken: string) => any;
+export function generateScripts(params: {
+  colorScheme?: string;
+  user?: LimeChatUser;
+  locale?: string;
+  customAttributes?: Record<string, any>;
+}): string;
 
-export * from './src/utils';
-export * from './src/constants';
-export * from './src/styles';
+// Constants for external configuration
+export const POST_MESSAGE_EVENTS: {
+  SET_LOCALE: string;
+  SET_CUSTOM_ATTRIBUTES: string;
+  SET_USER: string;
+  SET_COLOR_SCHEME: string;
+  WIDGET_LOADED: string;
+  CLOSE_WIDGET: string;
+};
+
+export const WIDGET_CONFIG: {
+  DEFAULT_BASE_URL: string;
+  DEFAULT_LOCALE: string;
+  DEFAULT_COLOR_SCHEME: string;
+  DEFAULT_ICON_SIZE: number;
+  DEFAULT_BORDER_RADIUS: number;
+};

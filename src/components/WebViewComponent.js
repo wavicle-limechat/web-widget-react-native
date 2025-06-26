@@ -81,7 +81,6 @@ const WebViewComponent = ({
   };
 
   const handleLoad = () => {
-    console.log('WebView loaded successfully');
     onWidgetLoad?.();
   };
 
