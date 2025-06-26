@@ -97,14 +97,6 @@ const App = () => {
           <Text style={[styles.sectionTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
             Widget Features
           </Text>
-          <Text style={[styles.infoText, { color: isDarkMode ? '#cccccc' : '#666666' }]}>
-            • Automatic dark/light mode support{'\n'}
-            • User information pre-filling{'\n'}
-            • Custom attributes support{'\n'}
-            • Error boundary protection{'\n'}
-            • Configurable styling{'\n'}
-            • Accessibility features
-          </Text>
         </View>
       </ScrollView>
 
