@@ -1,7 +1,7 @@
 {
   "name": "@limechat/react-native-widget",
   "version": "0.0.3",
-  "description": "Professional React Native SDK for LimeChat widget integration",
+  "description": "React Native SDK for LimeChat widget integration",
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
