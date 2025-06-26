@@ -1,6 +1,6 @@
 # LimeChat React Native Widget
 
-Professional React Native SDK for integrating LimeChat's customer support widget into your mobile applications.
+React Native SDK for integrating LimeChat's customer support widget into your mobile applications.
 
 ## Features
 
@@ -17,10 +17,10 @@ Professional React Native SDK for integrating LimeChat's customer support widget
 
 ```bash
 # Using yarn (recommended)
-yarn add @limechat/react-native-widget
+yarn add git+https://github.com/wavicle-limechat/web-widget-react-native.git
 
 # Using npm
-npm install @limechat/react-native-widget
+npm install git+https://github.com/wavicle-limechat/web-widget-react-native.git
 ```
 
 ### Step 2: Install peer dependencies (Required)
