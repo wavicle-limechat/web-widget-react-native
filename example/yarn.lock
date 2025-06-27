@@ -1200,15 +1200,15 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@limechat/react-native-widget@../build-11.tgz":
+"@limechat/react-native-widget@../build-18.tgz":
   version "0.0.3"
-  resolved "../build-11.tgz#bc83c50501015fec3ee8d42634922d9909386937"
+  resolved "../build-18.tgz#a6eb1624e3f5a1a8506d28205ec4a14da2372e6d"
   dependencies:
     prop-types "^15.8.1"
 
-"@limechat/react-native-widget@../build-12.tgz":
+"@limechat/react-native-widget@../build-19.tgz":
   version "0.0.3"
-  resolved "../build-12.tgz#1d4b52794efe18e8e5c7091eb221f1f55523d293"
+  resolved "../build-19.tgz#cfbae47334191bcf7e45861ace197744a869fe44"
   dependencies:
     prop-types "^15.8.1"
 

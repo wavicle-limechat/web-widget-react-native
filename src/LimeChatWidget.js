@@ -18,7 +18,7 @@ const LimeChatWidget = ({
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes = {},
-  customIcon = null,
+  customButton = null,
   onWidgetLoad,
   onWidgetClose,
   onError,
@@ -92,6 +92,34 @@ const LimeChatWidget = ({
   };
 
   const renderIcon = () => {
+    // If customButton is provided, render it directly without wrapping in TouchableOpacity
+    // This allows the custom button to handle its own onPress events
+    if (customButton) {
+      return (
+        <View style={widgetStyles.iconButton}>
+          {unreadCount > 0 && (
+            <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
+              <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
+                {unreadCount}
+              </Text>
+            </View>
+          )}
+
+          {React.cloneElement(customButton, {
+            onPress: () => {
+              // Call the custom button's onPress if it exists
+              if (customButton.props.onPress) {
+                customButton.props.onPress();
+              }
+              // Also trigger the widget open/close
+              handleIconPress();
+            }
+          })}
+        </View>
+      );
+    }
+
+    // Default behavior: wrap the default icon in TouchableOpacity
     return (
       <TouchableOpacity
         onPress={handleIconPress}
@@ -106,17 +134,13 @@ const LimeChatWidget = ({
           </View>
         )}
 
-        {customIcon ? (
-          customIcon
-        ) : (
-          <WidgetIcon
-            widgetConfig={widgetConfig}
-            isLoading={isLoading}
-            error={error}
-            iconStyle={iconStyle}
-            onError={onError}
-          />
-        )}
+        <WidgetIcon
+          widgetConfig={widgetConfig}
+          isLoading={isLoading}
+          error={error}
+          iconStyle={iconStyle}
+          onError={onError}
+        />
       </TouchableOpacity>
     );
   };
@@ -157,7 +181,7 @@ LimeChatWidget.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
   customAttributes: PropTypes.object,
-  customIcon: PropTypes.element,
+  customButton: PropTypes.element,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
   onError: PropTypes.func,
@@ -172,7 +196,7 @@ LimeChatWidget.defaultProps = {
   locale: WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme: WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes: {},
-  customIcon: null,
+  customButton: null,
   onWidgetLoad: null,
   onWidgetClose: null,
   onError: null,

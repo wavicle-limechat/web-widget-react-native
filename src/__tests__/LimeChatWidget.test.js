@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { Text, View } from 'react-native';
+import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
 
 // Mock the components and hooks
@@ -42,45 +42,72 @@ describe('LimeChatWidget', () => {
     websiteToken: 'test-token',
   };
 
-  it('renders default widget icon when no customIcon is provided', () => {
+  it('renders default widget icon when no customButton is provided', () => {
     const { getByTestId } = render(<LimeChatWidget {...defaultProps} />);
     
     expect(getByTestId('default-widget-icon')).toBeTruthy();
   });
 
-  it('renders custom icon when customIcon is provided', () => {
-    const CustomIcon = () => (
-      <View testID="custom-icon">
-        <Text>Custom Icon</Text>
+  it('renders custom button when customButton is provided', () => {
+    const CustomButton = () => (
+      <View testID="custom-button">
+        <Text>Custom Button</Text>
       </View>
     );
 
     const { getByTestId, queryByTestId } = render(
-      <LimeChatWidget {...defaultProps} customIcon={<CustomIcon />} />
+      <LimeChatWidget {...defaultProps} customButton={<CustomButton />} />
     );
     
-    expect(getByTestId('custom-icon')).toBeTruthy();
+    expect(getByTestId('custom-button')).toBeTruthy();
     expect(queryByTestId('default-widget-icon')).toBeNull();
   });
 
-  it('opens modal when custom icon is pressed', () => {
-    const CustomIcon = () => (
-      <View testID="custom-icon">
-        <Text>Custom Icon</Text>
+  it('opens modal when custom button is pressed', () => {
+    const CustomButton = () => (
+      <View testID="custom-button">
+        <Text>Custom Button</Text>
       </View>
     );
 
     const { getByTestId, queryByTestId } = render(
-      <LimeChatWidget {...defaultProps} customIcon={<CustomIcon />} />
+      <LimeChatWidget {...defaultProps} customButton={<CustomButton />} />
     );
     
     // Initially modal should not be visible
     expect(queryByTestId('widget-modal')).toBeNull();
     
-    // Press the custom icon
-    fireEvent.press(getByTestId('custom-icon'));
+    // Press the custom button
+    fireEvent.press(getByTestId('custom-button'));
     
     // Modal should now be visible
+    expect(getByTestId('widget-modal')).toBeTruthy();
+  });
+
+  it('calls both custom button onPress and opens widget when custom button with onPress is provided', () => {
+    const mockCustomOnPress = jest.fn();
+    
+    const CustomButton = ({ onPress }) => (
+      <TouchableOpacity testID="custom-button" onPress={onPress}>
+        <Text>Custom Button</Text>
+      </TouchableOpacity>
+    );
+
+    const { getByTestId, queryByTestId } = render(
+      <LimeChatWidget 
+        {...defaultProps} 
+        customButton={<CustomButton onPress={mockCustomOnPress} />} 
+      />
+    );
+    
+    // Initially modal should not be visible
+    expect(queryByTestId('widget-modal')).toBeNull();
+    
+    // Press the custom button
+    fireEvent.press(getByTestId('custom-button'));
+    
+    // Both the custom onPress and widget modal opening should happen
+    expect(mockCustomOnPress).toHaveBeenCalled();
     expect(getByTestId('widget-modal')).toBeTruthy();
   });
 

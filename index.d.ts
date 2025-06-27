@@ -8,15 +8,21 @@ export interface LimeChatUser {
   identifier_hash?: string;
 }
 
-export interface WidgetErrorData {
-  name: 'WidgetError';
+export interface WidgetError {
   code: string;
   message: string;
-  type: string;
-  severity: string;
-  context: Record<string, any>;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   timestamp: string;
   originalError?: Error;
+  toJSON(): WidgetErrorData;
+}
+
+export interface WidgetErrorData {
+  code: string;
+  message: string;
+  severity: string;
+  timestamp: string;
+  context?: Record<string, any>;
 }
 
 export interface LimeChatWidgetProps {
@@ -25,7 +31,7 @@ export interface LimeChatWidgetProps {
   locale?: string;
   colorScheme?: 'light' | 'dark' | 'auto';
   customAttributes?: Record<string, any>;
-  customIcon?: React.ReactElement;
+  customButton?: React.ReactElement;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
@@ -35,10 +41,11 @@ export interface LimeChatWidgetProps {
   unreadCountTextStyle?: TextStyle;
 }
 
-export const LimeChatWidget: React.FC<LimeChatWidgetProps>;
+declare const LimeChatWidget: React.FC<LimeChatWidgetProps>;
+
 export default LimeChatWidget;
 
-// Essential utilities for advanced use cases
+// Advanced use cases
 export function buildWidgetUrl(params: {
   baseUrl: string;
   websiteToken: string;
@@ -49,6 +56,17 @@ export function buildWidgetUrl(params: {
   cwConversation?: string;
 }): string;
 
+export function createWidgetUrl(params: {
+  baseUrl: string;
+  websiteToken: string;
+  locale?: string;
+  colorScheme?: string;
+  user?: LimeChatUser;
+  customAttributes?: Record<string, any>;
+  cwConversation?: string;
+}): string;
+
+// Essential utilities for advanced use cases
 export function generateScripts(params: {
   colorScheme?: string;
   user?: LimeChatUser;

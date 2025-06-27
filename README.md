@@ -117,12 +117,14 @@ export default function App() {
 | `locale` | `string` | ❌ | Locale for the widget (default: 'en') |
 | `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Color scheme (default: 'light') |
 | `customAttributes` | `Record<string, any>` | ❌ | Custom attributes to pass to the widget |
-| `children` | `ReactNode` | ❌ | Custom trigger element |
+| `customButton` | `ReactElement` | ❌ | Custom button component with optional onPress handler |
 | `onWidgetLoad` | `() => void` | ❌ | Callback when widget loads |
 | `onWidgetClose` | `() => void` | ❌ | Callback when widget closes |
 | `onError` | `(error: Error) => void` | ❌ | Callback for error handling |
 | `style` | `ViewStyle` | ❌ | Style for the container |
 | `iconStyle` | `ViewStyle` | ❌ | Style for the default icon |
+| `unreadCountStyle` | `ViewStyle` | ❌ | Style for the unread count badge |
+| `unreadCountTextStyle` | `TextStyle` | ❌ | Style for the unread count text |
 
 ### LimeChatUser Interface
 
@@ -283,48 +285,65 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - 📖 Documentation: https://docs.limechat.ai
 - 🐛 Issues: https://github.com/limechat/react-native-widget/issues
 
-## Custom Icon
+## Custom Button
 
-You can provide your own custom icon component instead of using the default widget icon:
+You can provide your own custom button component instead of using the default widget icon. This allows you to create custom buttons with their own onPress handlers that get called before opening the widget:
 
 ```jsx
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { LimeChatWidget } from '@limechat/react-native-widget';
 
-const MyCustomIcon = () => (
-  <View style={{ 
-    width: 60, 
-    height: 60, 
-    backgroundColor: '#007bff', 
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center'
-  }}>
+// Custom button with its own onPress handler
+const MyCustomButton = ({ onPress }) => (
+  <TouchableOpacity
+    style={{ 
+      width: 60, 
+      height: 60, 
+      backgroundColor: '#007bff', 
+      borderRadius: 30,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 5,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+    }}
+    onPress={onPress}
+    activeOpacity={0.8}
+  >
     <Text style={{ color: 'white', fontSize: 18 }}>💬</Text>
-  </View>
+  </TouchableOpacity>
 );
 
-// Or using an image
-const MyImageIcon = () => (
-  <Image 
-    source={{ uri: 'https://example.com/my-icon.png' }}
-    style={{ width: 60, height: 60, borderRadius: 30 }}
-  />
+// Or using an image with button functionality
+const MyImageButton = ({ onPress }) => (
+  <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
+    <Image 
+      source={{ uri: 'https://example.com/my-icon.png' }}
+      style={{ width: 60, height: 60, borderRadius: 30 }}
+    />
+  </TouchableOpacity>
 );
 
 export default function App() {
+  const handleCustomButtonPress = () => {
+    console.log('Custom action before opening widget!');
+    // Add your custom logic here (analytics, logging, etc.)
+  };
+
   return (
     <LimeChatWidget
       websiteToken="your-website-token"
-      customIcon={<MyCustomIcon />}
+      customButton={<MyCustomButton onPress={handleCustomButtonPress} />}
       // ... other props
     />
   );
 }
 ```
 
-**Note:** When using `customIcon`, the click handling is automatically managed by the widget. You don't need to add any onPress handlers to your custom icon component.
+**Note:** When using `customButton` with an `onPress` prop, both your custom onPress handler and the widget's default behavior (opening/closing the chat) will be executed. Your custom onPress runs first, followed by the widget opening.
 
 ## Styling
 
