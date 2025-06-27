@@ -18,6 +18,7 @@ const WidgetModal = ({
   onWidgetLoad,
   onUnreadCountUpdate,
   onCwConversationUpdate,
+  onError,
 }) => {
   const handleClose = () => {
     onClose?.();
@@ -54,6 +55,7 @@ const WidgetModal = ({
             onWidgetClose={handleWidgetClose}
             onUnreadCountUpdate={onUnreadCountUpdate}
             onCwConversationUpdate={onCwConversationUpdate}
+            onError={onError}
           />
         </View>
       </SafeAreaView>
@@ -79,6 +81,7 @@ WidgetModal.propTypes = {
   onWidgetLoad: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,
+  onError: PropTypes.func,
 };
 
 WidgetModal.defaultProps = {
@@ -90,6 +93,7 @@ WidgetModal.defaultProps = {
   onWidgetLoad: null,
   onUnreadCountUpdate: null,
   onCwConversationUpdate: null,
+  onError: null,
 };
 
 export default WidgetModal; 

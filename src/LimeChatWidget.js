@@ -1,12 +1,13 @@
 import PropTypes from "prop-types";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WidgetIcon from "./components/WidgetIcon";
 import WidgetModal from "./components/WidgetModal";
-import { WIDGET_CONFIG } from "./constants";
+import { WIDGET_CONFIG, ERROR_CODES } from "./constants";
 import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
+import { validators, reportError, WidgetError } from "./utils/errorUtils";
 
 // Internal baseUrl - not exposed to clients
 const INTERNAL_BASE_URL = WIDGET_CONFIG.DEFAULT_BASE_URL;
@@ -29,13 +30,44 @@ const LimeChatWidget = ({
   const [showWidget, setShowWidget] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [cwConversation, setCwConversation] = useState(null);
+  const [validationError, setValidationError] = useState(null);
+
+  // Validate props on mount and when they change
+  useEffect(() => {
+    try {
+      validators.websiteToken(websiteToken);
+      validators.user(user);
+      validators.customAttributes(customAttributes);
+      setValidationError(null);
+    } catch (error) {
+      setValidationError(error);
+      reportError(error, onError, { action: 'propValidation' });
+    }
+  }, [websiteToken, user, customAttributes, onError]);
+
   const { widgetConfig, isLoading, error } = useWidgetConfig(
     INTERNAL_BASE_URL,
-    websiteToken
+    websiteToken,
+    onError
   );
 
   const handleIconPress = () => {
-    setShowWidget(!showWidget);
+    try {
+      // Don't open widget if there are validation errors
+      if (validationError) {
+        reportError(validationError, onError, { action: 'iconPress' });
+        return;
+      }
+      setShowWidget(!showWidget);
+    } catch (error) {
+      const widgetError = new WidgetError(
+        ERROR_CODES.COMPONENT_ERROR,
+        `Failed to handle icon press: ${error.message}`,
+        error,
+        { action: 'iconPress' }
+      );
+      reportError(widgetError, onError);
+    }
   };
 
   const handleModalClose = () => {
@@ -82,6 +114,7 @@ const LimeChatWidget = ({
             isLoading={isLoading}
             error={error}
             iconStyle={iconStyle}
+            onError={onError}
           />
         )}
       </TouchableOpacity>

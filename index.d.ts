@@ -8,6 +8,17 @@ export interface LimeChatUser {
   identifier_hash?: string;
 }
 
+export interface WidgetErrorData {
+  name: 'WidgetError';
+  code: string;
+  message: string;
+  type: string;
+  severity: string;
+  context: Record<string, any>;
+  timestamp: string;
+  originalError?: Error;
+}
+
 export interface LimeChatWidgetProps {
   websiteToken: string;
   user?: LimeChatUser;
@@ -17,7 +28,7 @@ export interface LimeChatWidgetProps {
   customIcon?: React.ReactElement;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
-  onError?: (error: Error, errorInfo?: any) => void;
+  onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;
   unreadCountStyle?: ViewStyle;
@@ -64,3 +75,42 @@ export const WIDGET_CONFIG: {
   DEFAULT_ICON_SIZE: number;
   DEFAULT_BORDER_RADIUS: number;
 };
+
+// Error codes and types
+export const ERROR_CODES: {
+  CONFIG_ERROR: string;
+  WEBVIEW_ERROR: string;
+  NETWORK_ERROR: string;
+  COMPONENT_ERROR: string;
+  UNKNOWN_ERROR: string;
+};
+
+export const ERROR_TYPES: {
+  CONFIGURATION: string;
+  NETWORK: string;
+  WEBVIEW: string;
+  COMPONENT: string;
+  UNKNOWN: string;
+};
+
+export const ERROR_SEVERITY: {
+  LOW: string;
+  MEDIUM: string;
+  HIGH: string;
+  CRITICAL: string;
+};
+
+// Error handling utilities
+export class WidgetError extends Error {
+  constructor(code: string, message: string, originalError?: Error, context?: Record<string, any>);
+  code: string;
+  type: string;
+  severity: string;
+  originalError?: Error;
+  context: Record<string, any>;
+  timestamp: string;
+  toJSON(): WidgetErrorData;
+}
+
+export function safeJsonParse<T = any>(jsonString: string, fallback?: T): T | null;
+export function reportError(error: Error | WidgetError, onError?: (error: WidgetError, data: WidgetErrorData) => void, context?: Record<string, any>): void;

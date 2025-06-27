@@ -7,6 +7,7 @@ import {
   Text,
   View,
   useColorScheme,
+  TouchableOpacity,
 } from "react-native";
 import { LimeChatWidget } from "@limechat/react-native-widget";
 
@@ -37,8 +38,43 @@ const App = () => {
     console.log("Widget closed!");
   };
 
-  const handleError = (error, errorInfo) => {
-    console.error("Widget error:", error, errorInfo);
+  const handleError = (error, errorData) => {
+    console.error("Widget error:", errorData);
+    
+    // Handle based on severity
+    switch (error.severity) {
+      case 'critical':
+        console.error('Critical error - widget broken:', error.code);
+        // Could show fallback UI or alert here
+        break;
+      case 'high':
+        console.warn('High severity error:', error.code);
+        // Log to analytics
+        break;
+      case 'medium':
+        console.warn('Medium severity error:', error.code);
+        // Show user notification if needed
+        break;
+      case 'low':
+        console.log('Low severity error:', error.code);
+        // Just log for debugging
+        break;
+      case 'info':
+        console.info('Info:', error.message);
+        // Informational messages like fallback icon usage
+        break;
+    }
+    
+    // Handle specific error types
+    if (error.code === 'WIDGET_ERROR_1000') {
+      console.error('Configuration error - check token and setup:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1100') {
+      console.error('WebView error - check network and URL:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1200') {
+      console.error('Network error - check connectivity:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1300') {
+      console.error('Component error - UI issue:', error.message);
+    }
   };
 
   return (
@@ -79,7 +115,7 @@ const App = () => {
           onWidgetLoad={handleWidgetLoad}
           onWidgetClose={handleWidgetClose}
           onError={handleError}
-          customIcon={<Text>Custom Icon</Text>}
+          customIcon={<Text>Custom Icon yo</Text>}
           unreadCountStyle={{
             top: -20,
           }}

@@ -2,6 +2,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { Text, View } from 'react-native';
 import { widgetStyles } from '../styles';
+import { ERROR_CODES } from '../constants';
+import { WidgetError, reportError } from '../utils/errorUtils';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -17,9 +19,20 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.warn('LimeChat Widget Error Boundary caught an error:', error);
     
+    // Create structured error for component crashes
+    const widgetError = new WidgetError(
+      ERROR_CODES.COMPONENT_ERROR,
+      `Component crashed: ${error.message}`,
+      error,
+      { 
+        componentStack: errorInfo.componentStack,
+        errorBoundary: true 
+      }
+    );
+    
     // Call the onError prop if provided
     if (this.props.onError) {
-      this.props.onError(error, errorInfo);
+      reportError(widgetError, this.props.onError, { source: 'ErrorBoundary' });
     }
   }
 

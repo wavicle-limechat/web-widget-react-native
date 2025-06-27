@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import { Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { POST_MESSAGE_EVENTS } from '../constants';
+import { POST_MESSAGE_EVENTS, ERROR_CODES } from '../constants';
 import { webViewStyles } from '../styles';
 import {
     buildWidgetUrl,
@@ -10,6 +10,7 @@ import {
     getMessage,
     isJsonString
 } from '../utils';
+import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
 
 const WebViewComponent = ({
   baseUrl,
@@ -23,6 +24,7 @@ const WebViewComponent = ({
   onWidgetClose,
   onUnreadCountUpdate,
   onCwConversationUpdate,
+  onError,
 }) => {
   const [currentUrl, setCurrentUrl] = useState(null);
 
@@ -50,7 +52,13 @@ const WebViewComponent = ({
     const shouldRedirectToBrowser = isMessageView && isAttachmentUrl;
     
     if (shouldRedirectToBrowser) {
-      Linking.openURL(request.url);
+      // Use safe URL opening with error handling
+      safeOpenURL(request.url).catch(error => {
+        reportError(error, onError, { 
+          action: 'openExternalLink',
+          url: request.url 
+        });
+      });
       return false;
     }
 
@@ -62,34 +70,65 @@ const WebViewComponent = ({
   };
 
   const handleMessage = (event) => {
-    const { data } = event.nativeEvent;
-    const message = getMessage(data);
-    
-    if (isJsonString(message)) {
-      const parsedMessage = JSON.parse(message);
-      const { event: eventType, type, count, conversation } = parsedMessage;
+    try {
+      const { data } = event.nativeEvent;
+      const message = getMessage(data);
       
-      if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
-        onWidgetLoad?.();
-      }
-      
-      if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
-        onWidgetClose?.();
-      }
+      if (isJsonString(message)) {
+        // Use safe JSON parsing
+        const parsedMessage = safeJsonParse(message);
+        if (!parsedMessage) {
+          throw new WidgetError(
+            ERROR_CODES.WEBVIEW_ERROR,
+            'Failed to parse WebView message as JSON',
+            null,
+            { rawMessage: message }
+          );
+        }
 
-      if (eventType === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
-        onUnreadCountUpdate?.(count);
-      }
+        const { event: eventType, type, count, conversation } = parsedMessage;
+        
+        if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
+          onWidgetLoad?.();
+        }
+        
+        if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
+          onWidgetClose?.();
+        }
 
-      if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
-        onCwConversationUpdate?.(conversation);
+        if (eventType === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
+          onUnreadCountUpdate?.(count);
+        }
+
+        if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
+          onCwConversationUpdate?.(conversation);
+        }
       }
+    } catch (error) {
+      reportError(error, onError, {
+        action: 'handleWebViewMessage',
+        eventData: event.nativeEvent.data
+      });
     }
   };
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
     console.error('WebView error: ', nativeEvent);
+    
+    const error = new WidgetError(
+      ERROR_CODES.WEBVIEW_ERROR,
+      `WebView failed to load: ${nativeEvent.description || 'Unknown error'}`,
+      null,
+      { 
+        nativeEvent,
+        url: nativeEvent.url || widgetUrl,
+        canGoBack: nativeEvent.canGoBack,
+        canGoForward: nativeEvent.canGoForward
+      }
+    );
+    
+    reportError(error, onError, { action: 'webViewLoadError' });
   };
 
   const handleLoad = () => {
@@ -135,6 +174,7 @@ WebViewComponent.propTypes = {
   onWidgetClose: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,
+  onError: PropTypes.func,
 };
 
 WebViewComponent.defaultProps = {
@@ -147,6 +187,7 @@ WebViewComponent.defaultProps = {
   onWidgetClose: null,
   onUnreadCountUpdate: null,
   onCwConversationUpdate: null,
+  onError: null,
 };
 
 export default WebViewComponent; 
