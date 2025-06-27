@@ -1,227 +1,231 @@
-import React, { useState } from 'react';
+import React from "react";
 import {
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   useColorScheme,
-} from 'react-native';
-import { LimeChatWidget } from '@limechat/react-native-widget';
+  TouchableOpacity,
+} from "react-native";
+import { LimeChatWidget } from "@limechat/react-native-widget";
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [showWidget, setShowWidget] = useState(false);
-  const [colorScheme, setColorScheme] = useState('auto');
+  const isDarkMode = useColorScheme() === "dark";
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#121212' : '#f5f5f5',
+    backgroundColor: isDarkMode ? "#121212" : "#f5f5f5",
     flex: 1,
   };
 
   const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone_number: '+1234567890',
+    name: "John Doe",
+    email: "john@example.com",
+    phone_number: "+1234567890",
   };
 
   const customAttributes = {
-    subscription_type: 'premium',
-    app_version: '1.0.0',
-  };
-
-  const toggleColorScheme = () => {
-    const schemes = ['light', 'dark', 'auto'];
-    const currentIndex = schemes.indexOf(colorScheme);
-    const nextIndex = (currentIndex + 1) % schemes.length;
-    setColorScheme(schemes[nextIndex]);
+    subscription_type: "premium",
+    app_version: "1.0.0",
   };
 
   const handleWidgetLoad = () => {
-    console.log('Widget loaded successfully!');
+    console.log("Widget loaded successfully!");
   };
 
   const handleWidgetClose = () => {
-    console.log('Widget closed!');
+    console.log("Widget closed!");
   };
 
-  const handleError = (error, errorInfo) => {
-    console.error('Widget error:', error, errorInfo);
+  const handleError = (error, errorData) => {
+    console.error("Widget error:", errorData);
+    
+    // Handle based on severity
+    switch (error.severity) {
+      case 'critical':
+        console.error('Critical error - widget broken:', error.code);
+        // Could show fallback UI or alert here
+        break;
+      case 'high':
+        console.warn('High severity error:', error.code);
+        // Log to analytics
+        break;
+      case 'medium':
+        console.warn('Medium severity error:', error.code);
+        // Show user notification if needed
+        break;
+      case 'low':
+        console.log('Low severity error:', error.code);
+        // Just log for debugging
+        break;
+      case 'info':
+        console.info('Info:', error.message);
+        // Informational messages like fallback icon usage
+        break;
+    }
+    
+    // Handle specific error types
+    if (error.code === 'WIDGET_ERROR_1000') {
+      console.error('Configuration error - check token and setup:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1100') {
+      console.error('WebView error - check network and URL:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1200') {
+      console.error('Network error - check connectivity:', error.message);
+    } else if (error.code === 'WIDGET_ERROR_1300') {
+      console.error('Component error - UI issue:', error.message);
+    }
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}
-        contentContainerStyle={styles.scrollContent}>
-        
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
+          <Text
+            style={[
+              styles.title,
+              { color: isDarkMode ? "#ffffff" : "#000000" },
+            ]}
+          >
             LimeChat Widget Demo
           </Text>
-          <Text style={[styles.subtitle, { color: isDarkMode ? '#cccccc' : '#666666' }]}>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: isDarkMode ? "#cccccc" : "#666666" },
+            ]}
+          >
             React Native SDK Integration Example
           </Text>
         </View>
 
-        <View style={styles.configSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
-            Current Configuration
-          </Text>
-          
-          <View style={styles.configRow}>
-            <Text style={styles.configLabel}>Color Scheme:</Text>
-            <Text style={styles.configValue}>{colorScheme}</Text>
-          </View>
-        </View>
-
-        <View style={styles.buttonsSection}>
-          <TouchableOpacity
-            style={[styles.button, styles.primaryButton]}
-            onPress={toggleColorScheme}
-          >
-            <Text style={styles.buttonText}>
-              Toggle Color Scheme
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         <View style={styles.infoSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
-            Widget Features
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: isDarkMode ? "#ffffff" : "#000000" },
+            ]}
+          >
+            Default Widget Demo
           </Text>
-          <Text style={[styles.infoText, { color: isDarkMode ? '#cccccc' : '#666666' }]}>
-            • Automatic dark/light mode support{'\n'}
-            • User information pre-filling{'\n'}
-            • Custom attributes support{'\n'}
-            • Error boundary protection{'\n'}
-            • Configurable styling{'\n'}
-            • Accessibility features
+          <Text
+            style={[
+              styles.infoText,
+              { color: isDarkMode ? "#cccccc" : "#666666" },
+            ]}
+          >
+            This demo shows the default LimeChat widget with comprehensive error handling.
+            Check the console to see various events and error handling in action!
           </Text>
         </View>
-      </ScrollView>
 
-      {/* Widget Integration */}
-      <LimeChatWidget
-        websiteToken="your-website-token-here"
-        user={user}
-        locale="en"
-        colorScheme={colorScheme}
-        customAttributes={customAttributes}
-        onWidgetLoad={handleWidgetLoad}
-        onWidgetClose={handleWidgetClose}
-        onError={handleError}
-        style={styles.widgetContainer}
-      />
+        <LimeChatWidget
+          websiteToken="MEFFACy4xaovJayhLjSt836h"
+          user={user}
+          locale="en"
+          customAttributes={customAttributes}
+          onWidgetLoad={handleWidgetLoad}
+          onWidgetClose={handleWidgetClose}
+          onError={handleError}
+          customButton={<TouchableOpacity onPress={() => console.log("Custom button pressed!")}>
+            <Text>Custom Button yo</Text>
+          </TouchableOpacity>}
+          unreadCountStyle={{
+            top: -20,
+          }}
+          unreadCountTextStyle={{
+            color: "white",
+            fontSize: 7,
+          }}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
   },
-  section: {
-    backgroundColor: 'white',
+  configSection: {
     margin: 16,
     padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
-    color: '#333',
   },
-  configItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  configRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   configLabel: {
     fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
+    fontWeight: "500",
   },
   configValue: {
     fontSize: 16,
-    color: '#333',
-    fontWeight: '400',
+    fontWeight: "400",
   },
-  buttonGroup: {
-    gap: 12,
+  buttonsSection: {
+    margin: 16,
   },
   button: {
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   primaryButton: {
-    backgroundColor: '#007bff',
-  },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#007bff',
+    backgroundColor: "#007bff",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: "500",
+    color: "white",
   },
-  secondaryButtonText: {
-    color: '#007bff',
+  infoSection: {
+    margin: 16,
+    padding: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    borderRadius: 8,
   },
-  instructionText: {
+  infoText: {
     fontSize: 14,
     lineHeight: 20,
-    color: '#666',
   },
   widgetContainer: {
     // Custom positioning if needed
   },
-  widgetIcon: {
-    // Custom icon styling if needed
-  },
 });
 
-export default App; 
+export default App;

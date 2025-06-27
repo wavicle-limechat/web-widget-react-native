@@ -14,7 +14,11 @@ const WidgetModal = ({
   colorScheme,
   user,
   customAttributes,
+  cwConversation,
   onWidgetLoad,
+  onUnreadCountUpdate,
+  onCwConversationUpdate,
+  onError,
 }) => {
   const handleClose = () => {
     onClose?.();
@@ -46,8 +50,12 @@ const WidgetModal = ({
             colorScheme={colorScheme}
             user={user}
             customAttributes={customAttributes}
+            cwConversation={cwConversation}
             onWidgetLoad={onWidgetLoad}
             onWidgetClose={handleWidgetClose}
+            onUnreadCountUpdate={onUnreadCountUpdate}
+            onCwConversationUpdate={onCwConversationUpdate}
+            onError={onError}
           />
         </View>
       </SafeAreaView>
@@ -69,7 +77,11 @@ WidgetModal.propTypes = {
     identifier_hash: PropTypes.string,
   }),
   customAttributes: PropTypes.object,
+  cwConversation: PropTypes.object,
   onWidgetLoad: PropTypes.func,
+  onUnreadCountUpdate: PropTypes.func,
+  onCwConversationUpdate: PropTypes.func,
+  onError: PropTypes.func,
 };
 
 WidgetModal.defaultProps = {
@@ -77,7 +89,11 @@ WidgetModal.defaultProps = {
   colorScheme: 'light',
   user: {},
   customAttributes: {},
+  cwConversation: {},
   onWidgetLoad: null,
+  onUnreadCountUpdate: null,
+  onCwConversationUpdate: null,
+  onError: null,
 };
 
 export default WidgetModal; 

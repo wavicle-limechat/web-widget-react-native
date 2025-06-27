@@ -1,39 +1,5 @@
-import {
-    BG_COLOR_DARK,
-    BG_COLOR_WHITE,
-    COLOR_WHITE,
-    POST_MESSAGE_EVENTS,
-    WOOT_PREFIX,
-    ERROR_MESSAGES,
-    NETWORK_CONFIG,
-    CACHE_KEYS,
-} from './constants';
-
-// Optional imports for enhanced features
-let NetInfo = null;
-let AsyncStorage = null;
-
-try {
-  NetInfo = require('@react-native-community/netinfo').default;
-} catch (e) {
-  console.warn('LimeChat: @react-native-community/netinfo not available. Offline detection disabled.');
-}
-
-try {
-  AsyncStorage = require('@react-native-async-storage/async-storage').default;
-} catch (e) {
-  console.warn('LimeChat: @react-native-async-storage/async-storage not available. Caching disabled.');
-}
-
-// Test helper function to inject dependencies
-export const __setTestDependencies = (testDependencies) => {
-  if (testDependencies.AsyncStorage) {
-    AsyncStorage = testDependencies.AsyncStorage;
-  }
-  if (testDependencies.NetInfo) {
-    NetInfo = testDependencies.NetInfo;
-  }
-};
+import { WOOT_PREFIX, POST_MESSAGE_EVENTS, ERROR_CODES } from './constants';
+import { safeJsonParse, WidgetError } from './utils/errorUtils';
 
 /**
  * Check if a string is valid JSON
@@ -45,83 +11,6 @@ export const isJsonString = (string) => {
   } catch (e) {
     return false;
   }
-};
-
-/**
- * Validate URL format
- */
-export const isValidUrl = (string) => {
-  try {
-    const url = new URL(string);
-    return url.protocol === 'http:' || url.protocol === 'https:';
-  } catch (_) {
-    return false;
-  }
-};
-
-/**
- * Sanitize user input to prevent XSS
- */
-export const sanitizeInput = (input) => {
-  if (typeof input !== 'string') return input;
-  return input
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/javascript:/gi, '') // Remove javascript: protocols
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .trim();
-};
-
-/**
- * Validate website token format
- */
-export const isValidWebsiteToken = (token) => {
-  return typeof token === 'string' && token.length > 0 && !/[<>'"&]/.test(token);
-};
-
-/**
- * Check network connectivity (gracefully falls back if NetInfo unavailable)
- */
-export const checkNetworkConnectivity = async () => {
-  if (!NetInfo) {
-    // Fallback: assume online if NetInfo is not available
-    console.warn('LimeChat: Network detection unavailable, assuming online');
-    return true;
-  }
-  
-  try {
-    const netInfo = await NetInfo.fetch();
-    return netInfo.isConnected && netInfo.isInternetReachable;
-  } catch (error) {
-    console.warn('Error checking network connectivity:', error);
-    // Assume online if check fails
-    return true;
-  }
-};
-
-/**
- * Sleep utility for retry delays
- */
-export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Retry function with exponential backoff
- */
-export const retryWithBackoff = async (fn, maxRetries = NETWORK_CONFIG.RETRY_ATTEMPTS) => {
-  let lastError;
-  
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (i === maxRetries - 1) break;
-      
-      const delay = NETWORK_CONFIG.RETRY_DELAY * Math.pow(2, i);
-      await sleep(delay);
-    }
-  }
-  
-  throw lastError;
 };
 
 /**
@@ -139,54 +28,51 @@ export const createWootPostMessage = (object) => {
 export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 
 /**
- * Build the widget URL with all parameters
+ * Safe query string builder - replacement for URLSearchParams for React Native compatibility
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, user, customAttributes }) => {
-  // Validate inputs
-  if (!isValidUrl(baseUrl)) {
-    throw new Error(ERROR_MESSAGES.INVALID_URL);
-  }
+const buildQueryString = (params) => {
+  const queryParts = [];
   
-  if (!isValidWebsiteToken(websiteToken)) {
-    throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
-  }
-
-  const params = new URLSearchParams({
-    website_token: sanitizeInput(websiteToken),
-    locale: sanitizeInput(locale),
-    color_scheme: sanitizeInput(colorScheme),
-  });
-
-  // Add user information if provided (with sanitization)
-  if (user?.name) params.append('user_name', sanitizeInput(user.name));
-  if (user?.email) params.append('user_email', sanitizeInput(user.email));
-  if (user?.phone_number) params.append('user_phone', sanitizeInput(user.phone_number));
-  if (user?.identifier_hash) params.append('identifier_hash', sanitizeInput(user.identifier_hash));
-
-  // Add custom attributes (with validation)
-  if (customAttributes && Object.keys(customAttributes).length > 0) {
-    try {
-      const sanitizedAttributes = Object.keys(customAttributes).reduce((acc, key) => {
-        const value = customAttributes[key];
-        acc[sanitizeInput(key)] = typeof value === 'string' ? sanitizeInput(value) : value;
-        return acc;
-      }, {});
-      params.append('custom_attributes', JSON.stringify(sanitizedAttributes));
-    } catch (error) {
-      console.warn('Error processing custom attributes:', error);
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== null && value !== undefined) {
+      const encodedKey = encodeURIComponent(key);
+      const encodedValue = encodeURIComponent(value);
+      queryParts.push(`${encodedKey}=${encodedValue}`);
     }
   }
-
-  return `${baseUrl}/widget?${params.toString()}`;
+  
+  return queryParts.join('&');
 };
 
 /**
- * Generate JavaScript to inject into WebView for user data and settings
+ * Build the widget URL with parameters
+ */
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, customAttributes, cwConversation }) => {
+  const params = {
+    website_token: websiteToken,
+    locale: locale || 'en',
+    color_scheme: colorScheme || 'light',
+  };
+
+  if (customAttributes && Object.keys(customAttributes).length > 0) {
+    params.custom_attributes = JSON.stringify(customAttributes);
+  }
+
+  if (cwConversation) {
+    params.cw_conversation = cwConversation;
+  }
+
+  const queryString = buildQueryString(params);
+  return `${baseUrl}/widget?${queryString}`;
+};
+
+/**
+ * Generate JavaScript to inject into WebView
  */
 export const generateScripts = ({ colorScheme, user, locale, customAttributes }) => {
   let script = '';
 
-  // Set user data for both widget communication and PrechatForm prefill
+  // Set user data
   if (user && Object.keys(user).length > 0) {
     const userObject = {
       event: POST_MESSAGE_EVENTS.SET_USER,
@@ -195,24 +81,15 @@ export const generateScripts = ({ colorScheme, user, locale, customAttributes })
     };
     script += createWootPostMessage(userObject);
 
-    // Set user data globally for PrechatForm access
+    // Set user data globally for form prefill
     script += `
-      (function() {
-        if (!window.chatwootWebChannel) {
-          window.chatwootWebChannel = {};
-        }
-        window.chatwootWebChannel.rnUser = {
-          name: ${JSON.stringify(user.name || '')},
-          email: ${JSON.stringify(user.email || '')},
-          phone_number: ${JSON.stringify(user.phone_number || '')},
-          identifier: ${JSON.stringify(user.identifier_hash || '')}
-        };
-        
-        // Also set for backward compatibility
-        window.rnUser = window.chatwootWebChannel.rnUser;
-        
-        console.log('LimeChat: User data set for prefill:', window.chatwootWebChannel.rnUser);
-      })();
+      window.chatwootWebChannel = window.chatwootWebChannel || {};
+      window.chatwootWebChannel.rnUser = {
+        name: ${JSON.stringify(user.name || '')},
+        email: ${JSON.stringify(user.email || '')},
+        phone_number: ${JSON.stringify(user.phone_number || '')},
+        identifier: ${JSON.stringify(user.identifier_hash || '')}
+      };
     `;
   }
 
@@ -246,194 +123,78 @@ export const generateScripts = ({ colorScheme, user, locale, customAttributes })
   return script;
 };
 
-/**
- * Determine colors based on color scheme and app theme
- */
-export const findColors = ({ colorScheme, appColorScheme }) => {
-  let headerBackgroundColor = COLOR_WHITE;
-  let mainBackgroundColor = BG_COLOR_WHITE;
-
-  if (colorScheme === 'dark' || (colorScheme === 'auto' && appColorScheme === 'dark')) {
-    headerBackgroundColor = BG_COLOR_DARK;
-    mainBackgroundColor = BG_COLOR_DARK;
-  } else if (colorScheme === 'auto' && appColorScheme === 'light') {
-    headerBackgroundColor = COLOR_WHITE;
-    mainBackgroundColor = BG_COLOR_WHITE;
-  }
-
-  return {
-    headerBackgroundColor,
-    mainBackgroundColor,
-  };
-};
-
-// In-memory cache fallback for when AsyncStorage is not available
-const memoryCache = new Map();
-
-/**
- * Cache management utilities (with fallback to memory cache)
- */
-export const cacheUtils = {
-  async get(key) {
-    if (!AsyncStorage) {
-      // Use memory cache fallback
-      const item = memoryCache.get(key);
-      return item ? item.data : null;
-    }
-    
-    try {
-      const value = await AsyncStorage.getItem(key);
-      if (!value) return null;
-      const item = JSON.parse(value);
-      return item?.data || null;
-    } catch (error) {
-      console.warn(`Error reading cache for key ${key}:`, error);
-      return null;
-    }
-  },
-
-  async set(key, value, ttl = null) {
-    if (!AsyncStorage) {
-      // Use memory cache fallback
-      const item = {
-        data: value,
-        timestamp: Date.now(),
-        ttl,
-      };
-      memoryCache.set(key, item);
-      return;
-    }
-    
-    try {
-      const item = {
-        data: value,
-        timestamp: Date.now(),
-        ttl,
-      };
-      await AsyncStorage.setItem(key, JSON.stringify(item));
-    } catch (error) {
-      console.warn(`Error writing cache for key ${key}:`, error);
-    }
-  },
-
-  async isExpired(key) {
-    try {
-      let item;
-      if (!AsyncStorage) {
-        item = memoryCache.get(key);
-      } else {
-        const value = await AsyncStorage.getItem(key);
-        item = value ? JSON.parse(value) : null;
-      }
-      
-      if (!item || !item.ttl) return false;
-      return Date.now() - item.timestamp > item.ttl;
-    } catch (error) {
-      return true;
-    }
-  },
-
-  async remove(key) {
-    if (!AsyncStorage) {
-      memoryCache.delete(key);
-      return;
-    }
-    
-    try {
-      await AsyncStorage.removeItem(key);
-    } catch (error) {
-      console.warn(`Error removing cache for key ${key}:`, error);
-    }
-  },
-};
-
-/**
- * Fetch widget configuration from the server with caching and error handling
- */
 export const fetchWidgetConfig = async (baseUrl, websiteToken) => {
-  // Validate inputs
-  if (!isValidUrl(baseUrl)) {
-    throw new Error(ERROR_MESSAGES.INVALID_URL);
-  }
-  
-  if (!isValidWebsiteToken(websiteToken)) {
-    throw new Error(ERROR_MESSAGES.INVALID_TOKEN);
-  }
-
-  // Check cache first
-  const cacheKey = `${CACHE_KEYS.WIDGET_CONFIG}_${websiteToken}`;
-  const cachedConfig = await cacheUtils.get(cacheKey);
-  
-  if (cachedConfig && !await cacheUtils.isExpired(cacheKey)) {
-    return cachedConfig;
-  }
-
-  // Check network connectivity
-  const isOnline = await checkNetworkConnectivity();
-  if (!isOnline) {
-    if (cachedConfig) {
-      console.warn('Using cached config due to offline status');
-      return cachedConfig;
-    }
-    throw new Error(ERROR_MESSAGES.NETWORK_ERROR);
-  }
-
-  const fetchConfig = async () => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), NETWORK_CONFIG.REQUEST_TIMEOUT);
-
-    try {
-      const response = await fetch(
-        `${baseUrl}/widget_config?website_token=${encodeURIComponent(websiteToken)}`,
-        {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-        }
+  try {
+    if (!websiteToken) {
+      throw new WidgetError(
+        ERROR_CODES.CONFIG_ERROR,
+        'Website token is required for fetching widget config',
+        null,
+        { baseUrl }
       );
+    }
 
-      clearTimeout(timeoutId);
+    const response = await fetch(
+      `${baseUrl}/widget_config?website_token=${encodeURIComponent(websiteToken)}`
+    );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to fetch widget config'}`);
+    if (!response.ok) {
+      // Check if it's a 401/403 (invalid token) or other API error
+      if (response.status === 401 || response.status === 403) {
+        throw new WidgetError(
+          ERROR_CODES.CONFIG_ERROR,
+          `Invalid website token: HTTP ${response.status}`,
+          null,
+          { baseUrl, websiteToken, status: response.status }
+        );
+      } else {
+        throw new WidgetError(
+          ERROR_CODES.NETWORK_ERROR,
+          `Failed to fetch widget config: HTTP ${response.status}`,
+          null,
+          { baseUrl, websiteToken, status: response.status }
+        );
       }
+    }
 
-      const data = await response.json();
-      
-      let config = data?.config;
-      if (typeof config === 'string') {
-        config = JSON.parse(config) || {};
+    const data = await response.json();
+
+    let config = data?.config || {};
+    if(typeof config === 'string') {
+      // Use safe JSON parsing for nested config strings
+      config = safeJsonParse(config, {});
+      if (config === null) {
+        throw new WidgetError(
+          ERROR_CODES.CONFIG_ERROR,
+          'Widget config contains invalid JSON',
+          null,
+          { rawConfig: data?.config }
+        );
       }
+    }
 
-      // Cache the successful response
-      await cacheUtils.set(cacheKey, config, 5 * 60 * 1000); // 5 minutes TTL
+    // Check if config is empty - this means invalid website token or no configuration set up
+    if (!config || Object.keys(config).length === 0) {
+      throw new WidgetError(
+        ERROR_CODES.CONFIG_ERROR,
+        'No widget configuration found for this website token. Please check your token or set up widget configuration.',
+        null,
+        { baseUrl, websiteToken, receivedConfig: config }
+      );
+    }
 
-      return config;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      
-      if (error.name === 'AbortError') {
-        throw new Error(ERROR_MESSAGES.TIMEOUT_ERROR);
-      }
-      
+    return config;
+  } catch (error) {
+    if (error instanceof WidgetError) {
       throw error;
     }
-  };
-
-  try {
-    return await retryWithBackoff(fetchConfig);
-  } catch (error) {
-    console.error('Error fetching widget config:', error);
     
-    // Return cached config as fallback if available
-    if (cachedConfig) {
-      console.warn('Using stale cached config due to fetch error');
-      return cachedConfig;
-    }
-    
-    throw error;
+    // Handle network errors
+    throw new WidgetError(
+      ERROR_CODES.NETWORK_ERROR,
+      `Network error while fetching widget config: ${error.message}`,
+      error,
+      { baseUrl, websiteToken }
+    );
   }
 }; 

@@ -1,63 +1,61 @@
 import { useEffect, useState } from 'react';
-import { ERROR_MESSAGES } from '../constants';
 import { fetchWidgetConfig } from '../utils';
+import { WidgetError } from '../utils/errorUtils';
 
-const useWidgetConfig = (baseUrl, websiteToken) => {
+const useWidgetConfig = (baseUrl, websiteToken, onError) => {
   const [widgetConfig, setWidgetConfig] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const loadConfig = async () => {
     if (!websiteToken) {
-      setError('Website token is required');
+      const errorMsg = 'Website token is required';
+      setError(errorMsg);
       setIsLoading(false);
       return;
     }
 
-    const loadConfig = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        const config = await fetchWidgetConfig(baseUrl, websiteToken);
-        setWidgetConfig(config);
-      } catch (err) {
-        console.error('Error loading widget config:', err);
-        setError(err.message || ERROR_MESSAGES.FETCH_CONFIG_FAILED);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadConfig();
-  }, [baseUrl, websiteToken]);
-
-  const refetch = () => {
-    if (websiteToken) {
-      const loadConfig = async () => {
-        try {
-          setIsLoading(true);
-          setError(null);
-          
-          const config = await fetchWidgetConfig(baseUrl, websiteToken);
-          setWidgetConfig(config);
-        } catch (err) {
-          console.error('Error refetching widget config:', err);
-          setError(err.message || ERROR_MESSAGES.FETCH_CONFIG_FAILED);
-        } finally {
-          setIsLoading(false);
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const config = await fetchWidgetConfig(baseUrl, websiteToken);
+      setWidgetConfig(config);
+      setError(null); // Clear any previous errors
+    } catch (err) {
+      // Handle both WidgetError and regular errors
+      if (err instanceof WidgetError) {
+        setError(err);
+        // Report to parent component
+        if (onError) {
+          onError(err, err.toJSON());
         }
-      };
-
-      loadConfig();
+      } else {
+        const widgetError = new WidgetError(
+          'WIDGET_ERROR_1900', // Unknown error
+          err.message || 'Failed to load widget config',
+          err,
+          { baseUrl, websiteToken }
+        );
+        setError(widgetError);
+        if (onError) {
+          onError(widgetError, widgetError.toJSON());
+        }
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadConfig();
+  }, [baseUrl, websiteToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     widgetConfig,
     isLoading,
     error,
-    refetch,
+    refetch: loadConfig,
   };
 };
 

@@ -23,9 +23,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "validate": "yarn lint && yarn type-check",
-    "clean": "rm -rf dist",
     "prepare": "echo 'Package prepared'",
-    "prepublishOnly": "yarn validate"
+    "prepublishOnly": "yarn validate",
+    "clean": "rm -rf dist build node_modules yarn.lock .turbo .next .cache",
+    "prepack": "yarn clean && yarn install --frozen-lockfile && yarn build"
   },
   "keywords": [
     "react-native",

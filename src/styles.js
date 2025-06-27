@@ -10,6 +10,24 @@ export const widgetStyles = StyleSheet.create({
   },
   iconButton: {
     backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  unreadCount: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  unreadCountText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   widgetIcon: {
     width: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
@@ -20,17 +38,33 @@ export const widgetStyles = StyleSheet.create({
     width: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
     height: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
     borderRadius: WIDGET_CONFIG.DEFAULT_BORDER_RADIUS,
-    backgroundColor: 'transparent',
+    backgroundColor: '#007bff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconText: {
     fontSize: 24,
-    color: '#007bff',
+    color: 'white',
   },
   loadingText: {
     fontSize: 16,
     color: 'white',
+  },
+  errorContainer: {
+    backgroundColor: '#ff4444',
+    borderRadius: 8,
+    padding: 12,
+    maxWidth: 200,
+  },
+  errorText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  errorDetails: {
+    color: '#ffcccc',
+    fontSize: 10,
+    marginTop: 4,
   },
 });
 
@@ -46,12 +80,6 @@ export const modalStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  headerView: {
-    flex: 0,
-  },
-  mainView: {
-    flex: 1,
-  },
 });
 
 export const webViewStyles = StyleSheet.create({
@@ -59,43 +87,3 @@ export const webViewStyles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export const errorBoundaryStyles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    zIndex: 999,
-  },
-  errorContainer: {
-    backgroundColor: '#ff4444',
-    borderRadius: 8,
-    padding: 12,
-    maxWidth: 200,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  errorTitle: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  errorMessage: {
-    color: 'white',
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  errorDetails: {
-    color: '#ffcccc',
-    fontSize: 10,
-    marginTop: 4,
-    fontFamily: 'monospace',
-  },
-}); 
