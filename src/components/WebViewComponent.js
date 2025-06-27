@@ -18,8 +18,11 @@ const WebViewComponent = ({
   colorScheme,
   user,
   customAttributes,
+  cwConversation,
   onWidgetLoad,
   onWidgetClose,
+  onUnreadCountUpdate,
+  onCwConversationUpdate,
 }) => {
   const [currentUrl, setCurrentUrl] = useState(null);
 
@@ -30,6 +33,7 @@ const WebViewComponent = ({
     colorScheme,
     user,
     customAttributes,
+    cwConversation,
   });
 
   const injectedJavaScript = generateScripts({
@@ -63,7 +67,7 @@ const WebViewComponent = ({
     
     if (isJsonString(message)) {
       const parsedMessage = JSON.parse(message);
-      const { event: eventType, type } = parsedMessage;
+      const { event: eventType, type, count, conversation } = parsedMessage;
       
       if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
         onWidgetLoad?.();
@@ -71,6 +75,14 @@ const WebViewComponent = ({
       
       if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
         onWidgetClose?.();
+      }
+
+      if (eventType === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
+        onUnreadCountUpdate?.(count);
+      }
+
+      if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
+        onCwConversationUpdate?.(conversation);
       }
     }
   };
@@ -118,8 +130,11 @@ WebViewComponent.propTypes = {
     identifier_hash: PropTypes.string,
   }),
   customAttributes: PropTypes.object,
+  cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
+  onUnreadCountUpdate: PropTypes.func,
+  onCwConversationUpdate: PropTypes.func,
 };
 
 WebViewComponent.defaultProps = {
@@ -127,8 +142,11 @@ WebViewComponent.defaultProps = {
   colorScheme: 'light',
   user: {},
   customAttributes: {},
+  cwConversation: null,
   onWidgetLoad: null,
   onWidgetClose: null,
+  onUnreadCountUpdate: null,
+  onCwConversationUpdate: null,
 };
 
 export default WebViewComponent; 

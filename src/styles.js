@@ -10,6 +10,24 @@ export const widgetStyles = StyleSheet.create({
   },
   iconButton: {
     backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  unreadCount: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  unreadCountText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   widgetIcon: {
     width: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
@@ -68,4 +86,4 @@ export const webViewStyles = StyleSheet.create({
   webview: {
     flex: 1,
   },
-}); 
+});

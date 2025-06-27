@@ -1,5 +1,5 @@
 import React from 'react';
-import { ViewStyle } from 'react-native';
+import { ViewStyle, TextStyle } from 'react-native';
 
 export interface LimeChatUser {
   name?: string;
@@ -20,6 +20,8 @@ export interface LimeChatWidgetProps {
   onError?: (error: Error, errorInfo?: any) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;
+  unreadCountStyle?: ViewStyle;
+  unreadCountTextStyle?: TextStyle;
 }
 
 export const LimeChatWidget: React.FC<LimeChatWidgetProps>;
@@ -33,6 +35,7 @@ export function buildWidgetUrl(params: {
   colorScheme?: string;
   user?: LimeChatUser;
   customAttributes?: Record<string, any>;
+  cwConversation?: string;
 }): string;
 
 export function generateScripts(params: {

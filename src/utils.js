@@ -29,7 +29,7 @@ export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 /**
  * Build the widget URL with parameters
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, user, customAttributes }) => {
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, user, customAttributes, cwConversation }) => {
   const params = new URLSearchParams({
     website_token: websiteToken,
     locale: locale || 'en',
@@ -45,6 +45,11 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, use
   // Add custom attributes
   if (customAttributes && Object.keys(customAttributes).length > 0) {
     params.append('custom_attributes', JSON.stringify(customAttributes));
+  }
+
+  // Add cw_conversation if provided
+  if (cwConversation) {
+    params.append('cw_conversation', cwConversation);
   }
 
   return `${baseUrl}/widget?${params.toString()}`;

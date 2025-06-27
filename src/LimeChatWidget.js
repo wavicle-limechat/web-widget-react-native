@@ -1,19 +1,19 @@
-import PropTypes from 'prop-types';
-import React, { useState } from 'react';
-import { View, TouchableOpacity } from 'react-native';
-import ErrorBoundary from './components/ErrorBoundary';
-import WidgetIcon from './components/WidgetIcon';
-import WidgetModal from './components/WidgetModal';
-import { WIDGET_CONFIG } from './constants';
-import useWidgetConfig from './hooks/useWidgetConfig';
-import { widgetStyles } from './styles';
+import PropTypes from "prop-types";
+import React, { useState } from "react";
+import { View, TouchableOpacity, Text } from "react-native";
+import ErrorBoundary from "./components/ErrorBoundary";
+import WidgetIcon from "./components/WidgetIcon";
+import WidgetModal from "./components/WidgetModal";
+import { WIDGET_CONFIG } from "./constants";
+import useWidgetConfig from "./hooks/useWidgetConfig";
+import { widgetStyles } from "./styles";
 
 // Internal baseUrl - not exposed to clients
 const INTERNAL_BASE_URL = WIDGET_CONFIG.DEFAULT_BASE_URL;
 
-const LimeChatWidget = ({ 
-  websiteToken, 
-  user = {}, 
+const LimeChatWidget = ({
+  websiteToken,
+  user = {},
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes = {},
@@ -22,10 +22,17 @@ const LimeChatWidget = ({
   onWidgetClose,
   onError,
   style,
-  iconStyle
+  iconStyle,
+  unreadCountStyle,
+  unreadCountTextStyle,
 }) => {
   const [showWidget, setShowWidget] = useState(false);
-  const { widgetConfig, isLoading, error } = useWidgetConfig(INTERNAL_BASE_URL, websiteToken);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [cwConversation, setCwConversation] = useState(null);
+  const { widgetConfig, isLoading, error } = useWidgetConfig(
+    INTERNAL_BASE_URL,
+    websiteToken
+  );
 
   const handleIconPress = () => {
     setShowWidget(!showWidget);
@@ -37,42 +44,48 @@ const LimeChatWidget = ({
   };
 
   const handleWidgetLoad = () => {
-    console.log('Widget loaded successfully');
+    console.log("Widget loaded successfully");
     onWidgetLoad?.();
   };
 
   const handleError = (error, errorInfo) => {
-    console.error('LimeChat Widget Error:', error);
+    console.error("LimeChat Widget Error:", error);
     onError?.(error, errorInfo);
   };
 
-  const renderIcon = () => {
-    // If custom icon is provided, wrap it in a TouchableOpacity
-    if (customIcon) {
-      return (
-        <TouchableOpacity 
-          onPress={handleIconPress}
-          style={widgetStyles.iconButton}
-          activeOpacity={0.8}
-        >
-          {customIcon}
-        </TouchableOpacity>
-      );
-    }
+  const handleUnreadCountUpdate = (count) => {
+    setUnreadCount(count || 0);
+  };
 
-    // Otherwise, render the default widget icon wrapped in TouchableOpacity
+  const handleCwConversationUpdate = (conversation) => {
+    setCwConversation(conversation);
+  };
+
+  const renderIcon = () => {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={handleIconPress}
         style={widgetStyles.iconButton}
         activeOpacity={0.8}
       >
-        <WidgetIcon
-          widgetConfig={widgetConfig}
-          isLoading={isLoading}
-          error={error}
-          iconStyle={iconStyle}
-        />
+        {unreadCount > 0 && (
+          <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
+            <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
+              {unreadCount}
+            </Text>
+          </View>
+        )}
+
+        {customIcon ? (
+          customIcon
+        ) : (
+          <WidgetIcon
+            widgetConfig={widgetConfig}
+            isLoading={isLoading}
+            error={error}
+            iconStyle={iconStyle}
+          />
+        )}
       </TouchableOpacity>
     );
   };
@@ -91,7 +104,10 @@ const LimeChatWidget = ({
           colorScheme={colorScheme}
           user={user}
           customAttributes={customAttributes}
+          cwConversation={cwConversation}
           onWidgetLoad={handleWidgetLoad}
+          onUnreadCountUpdate={handleUnreadCountUpdate}
+          onCwConversationUpdate={handleCwConversationUpdate}
           onError={onError}
         />
       </View>
@@ -108,7 +124,7 @@ LimeChatWidget.propTypes = {
     identifier_hash: PropTypes.string,
   }),
   locale: PropTypes.string,
-  colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
+  colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
   customAttributes: PropTypes.object,
   customIcon: PropTypes.element,
   onWidgetLoad: PropTypes.func,
@@ -116,6 +132,8 @@ LimeChatWidget.propTypes = {
   onError: PropTypes.func,
   style: PropTypes.object,
   iconStyle: PropTypes.object,
+  unreadCountStyle: PropTypes.object,
+  unreadCountTextStyle: PropTypes.object,
 };
 
 LimeChatWidget.defaultProps = {
@@ -129,6 +147,8 @@ LimeChatWidget.defaultProps = {
   onError: null,
   style: {},
   iconStyle: {},
+  unreadCountStyle: {},
+  unreadCountTextStyle: {},
 };
 
-export default LimeChatWidget; 
+export default LimeChatWidget;

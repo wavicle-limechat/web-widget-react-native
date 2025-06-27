@@ -1,115 +1,94 @@
-import React, { useState } from 'react';
+import React from "react";
 import {
   SafeAreaView,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   useColorScheme,
-} from 'react-native';
-import { LimeChatWidget } from '@limechat/react-native-widget';
+} from "react-native";
+import { LimeChatWidget } from "@limechat/react-native-widget";
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-  const [colorScheme, setColorScheme] = useState('auto');
+  const isDarkMode = useColorScheme() === "dark";
 
   const backgroundStyle = {
-    backgroundColor: isDarkMode ? '#121212' : '#f5f5f5',
+    backgroundColor: isDarkMode ? "#121212" : "#f5f5f5",
     flex: 1,
   };
 
   const user = {
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone_number: '+1234567890',
+    name: "John Doe",
+    email: "john@example.com",
+    phone_number: "+1234567890",
   };
 
   const customAttributes = {
-    subscription_type: 'premium',
-    app_version: '1.0.0',
-  };
-
-  const toggleColorScheme = () => {
-    const schemes = ['light', 'dark', 'auto'];
-    const currentIndex = schemes.indexOf(colorScheme);
-    const nextIndex = (currentIndex + 1) % schemes.length;
-    setColorScheme(schemes[nextIndex]);
+    subscription_type: "premium",
+    app_version: "1.0.0",
   };
 
   const handleWidgetLoad = () => {
-    console.log('Widget loaded successfully!');
+    console.log("Widget loaded successfully!");
   };
 
   const handleWidgetClose = () => {
-    console.log('Widget closed!');
+    console.log("Widget closed!");
   };
 
   const handleError = (error, errorInfo) => {
-    console.error('Widget error:', error, errorInfo);
+    console.error("Widget error:", error, errorInfo);
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
         backgroundColor={backgroundStyle.backgroundColor}
       />
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}
-        contentContainerStyle={styles.scrollContent}>
-        
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.header}>
-          <Text style={[styles.title, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
+          <Text
+            style={[
+              styles.title,
+              { color: isDarkMode ? "#ffffff" : "#000000" },
+            ]}
+          >
             LimeChat Widget Demo
           </Text>
-          <Text style={[styles.subtitle, { color: isDarkMode ? '#cccccc' : '#666666' }]}>
+          <Text
+            style={[
+              styles.subtitle,
+              { color: isDarkMode ? "#cccccc" : "#666666" },
+            ]}
+          >
             React Native SDK Integration Example
           </Text>
         </View>
 
-        <View style={styles.configSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
-            Current Configuration
-          </Text>
-          
-          <View style={styles.configRow}>
-            <Text style={[styles.configLabel, { color: isDarkMode ? '#cccccc' : '#666666' }]}>Color Scheme:</Text>
-            <Text style={[styles.configValue, { color: isDarkMode ? '#ffffff' : '#333333' }]}>{colorScheme}</Text>
-          </View>
-        </View>
-
-        <View style={styles.buttonsSection}>
-          <TouchableOpacity
-            style={[styles.button, styles.primaryButton]}
-            onPress={toggleColorScheme}
-          >
-            <Text style={styles.buttonText}>
-              Toggle Color Scheme
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.infoSection}>
-          <Text style={[styles.sectionTitle, { color: isDarkMode ? '#ffffff' : '#000000' }]}>
-            Widget Features
-          </Text>
-        </View>
+        <LimeChatWidget
+          websiteToken="XouxmSgHSbN853omga3uAZNG"
+          user={user}
+          locale="en"
+          customAttributes={customAttributes}
+          onWidgetLoad={handleWidgetLoad}
+          onWidgetClose={handleWidgetClose}
+          onError={handleError}
+          customIcon={<Text>Custom Icon</Text>}
+          unreadCountStyle={{
+            top: -20,
+          }}
+          unreadCountTextStyle={{
+            color: "white",
+            fontSize: 7,
+          }}
+        />
       </ScrollView>
-
-      {/* Widget Integration */}
-      <LimeChatWidget
-        websiteToken="MEFFACy4xaovJayhLjSt836h"
-        user={user}
-        locale="en"
-        colorScheme={colorScheme}
-        customAttributes={customAttributes}
-        onWidgetLoad={handleWidgetLoad}
-        onWidgetClose={handleWidgetClose}
-        onError={handleError}
-      />
     </SafeAreaView>
   );
 };
@@ -119,45 +98,45 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
+    fontWeight: "bold",
+    color: "white",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
+    color: "rgba(255, 255, 255, 0.8)",
+    textAlign: "center",
   },
   configSection: {
     margin: 16,
     padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 12,
   },
   configRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 8,
   },
   configLabel: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   configValue: {
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: "400",
   },
   buttonsSection: {
     margin: 16,
@@ -166,20 +145,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   primaryButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: "#007bff",
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '500',
-    color: 'white',
+    fontWeight: "500",
+    color: "white",
   },
   infoSection: {
     margin: 16,
     padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     borderRadius: 8,
   },
   infoText: {

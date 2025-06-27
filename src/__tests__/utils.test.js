@@ -88,6 +88,16 @@ describe('Utils', () => {
       expect(url).toContain('locale=en'); // default
       expect(url).toContain('color_scheme=light'); // default
     });
+
+    it('includes cw_conversation when provided', () => {
+      const paramsWithConversation = {
+        ...validParams,
+        cwConversation: 'eyJhbGciOiJIUzI1NiJ9.eyJzb3VyY2VfaWQiOiJjMDUyNWE0Ni1jZTRjLTRhZGMtOWUxNi1iMTI2ZmEyNjQ1ZTIiLCJpbmJveF9pZCI6MzQxODh9.MMNCTPInQRkpKYEMCRyssB1U9z_rOQZt_pzXjXAT1uo',
+      };
+
+      const url = buildWidgetUrl(paramsWithConversation);
+      expect(url).toContain('cw_conversation=eyJhbGciOiJIUzI1NiJ9.eyJzb3VyY2VfaWQiOiJjMDUyNWE0Ni1jZTRjLTRhZGMtOWUxNi1iMTI2ZmEyNjQ1ZTIiLCJpbmJveF9pZCI6MzQxODh9.MMNCTPInQRkpKYEMCRyssB1U9z_rOQZt_pzXjXAT1uo');
+    });
   });
 
   describe('generateScripts', () => {

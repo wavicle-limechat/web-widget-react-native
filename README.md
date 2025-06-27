@@ -325,3 +325,65 @@ export default function App() {
 ```
 
 **Note:** When using `customIcon`, the click handling is automatically managed by the widget. You don't need to add any onPress handlers to your custom icon component.
+
+## Styling
+
+### Unread Count Styling
+
+You can customize the appearance of the unread count badge:
+
+```jsx
+import { LimeChatWidget } from '@limechat/react-native-widget';
+
+export default function App() {
+  return (
+    <LimeChatWidget
+      websiteToken="your-website-token"
+      unreadCountStyle={{
+        backgroundColor: '#ff6b6b',
+        borderRadius: 15,
+        minWidth: 25,
+        height: 25,
+        borderWidth: 2,
+        borderColor: 'white',
+      }}
+      unreadCountTextStyle={{
+        color: 'white',
+        fontSize: 14,
+        fontWeight: '900',
+      }}
+    />
+  );
+}
+```
+
+**Available Style Props:**
+- `unreadCountStyle`: Style for the unread count badge container (ViewStyle)
+- `unreadCountTextStyle`: Style for the unread count number text (TextStyle)
+- `iconStyle`: Style for the widget icon
+- `style`: Style for the main container
+
+## Dynamic Features
+
+### Unread Count
+
+The unread count badge is automatically managed by events from the web widget:
+
+- **Automatic Display**: The unread count badge only appears when there are unread messages (count > 0)
+- **Real-time Updates**: The count updates automatically based on `SET_UNREAD_COUNT` events from the web
+- **Customizable Appearance**: Use `unreadCountStyle` and `unreadCountTextStyle` props to customize the look
+
+### Conversation Continuity
+
+The widget supports conversation continuity through the `cw_conversation` parameter:
+
+- **Automatic Handling**: When the web sends a `SET_CW_CONVERSATION` event, the widget automatically includes this parameter in subsequent widget loads
+- **Seamless Experience**: Users can continue their conversations across app sessions
+- **URL Integration**: The conversation token is automatically appended to the widget URL when available
+
+**Example URL with conversation:**
+```
+https://app.limechat.ai/widget?website_token=your-token&cw_conversation=eyJhbGciOiJIUzI1NiJ9...
+```
+
+These features work automatically and don't require any additional configuration from developers.

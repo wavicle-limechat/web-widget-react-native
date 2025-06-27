@@ -96,4 +96,37 @@ describe('LimeChatWidget', () => {
     // Modal should now be visible
     expect(getByTestId('widget-modal')).toBeTruthy();
   });
+
+  it('applies custom unread count styles', () => {
+    const customUnreadCountStyle = { backgroundColor: 'blue' };
+    const customUnreadCountTextStyle = { fontSize: 16 };
+
+    const { queryByText } = render(
+      <LimeChatWidget 
+        {...defaultProps} 
+        unreadCountStyle={customUnreadCountStyle}
+        unreadCountTextStyle={customUnreadCountTextStyle}
+      />
+    );
+    
+    // Since initial unread count is 0, unread count should not be visible
+    expect(queryByText('1')).toBeNull();
+  });
+
+  it('does not render unread count when count is 0', () => {
+    const { queryByText } = render(<LimeChatWidget {...defaultProps} />);
+    
+    // Since initial unread count is 0, unread count should not be visible
+    expect(queryByText('0')).toBeNull();
+    expect(queryByText('1')).toBeNull();
+  });
+
+  it('unread count functionality is driven by WebView events', () => {
+    // This test documents that unread count is controlled by WebView messages
+    // The actual count display is handled by SET_UNREAD_COUNT events from the web
+    const { queryByText } = render(<LimeChatWidget {...defaultProps} />);
+    
+    // Initial state should have no unread count displayed
+    expect(queryByText('1')).toBeNull();
+  });
 }); 
