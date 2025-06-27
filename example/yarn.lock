@@ -1200,15 +1200,15 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@limechat/react-native-widget@../build-2.tgz":
+"@limechat/react-native-widget@../build-11.tgz":
   version "0.0.3"
-  resolved "../build-2.tgz#d8d1a3e6ef746d03a41abe2b3b0231332222357b"
+  resolved "../build-11.tgz#bc83c50501015fec3ee8d42634922d9909386937"
   dependencies:
     prop-types "^15.8.1"
 
-"@limechat/react-native-widget@../build-3.tgz":
+"@limechat/react-native-widget@../build-12.tgz":
   version "0.0.3"
-  resolved "../build-3.tgz#a4c0334e73c80f3ea34ff9585a4c806b7314de99"
+  resolved "../build-12.tgz#1d4b52794efe18e8e5c7091eb221f1f55523d293"
   dependencies:
     prop-types "^15.8.1"
 
@@ -2299,10 +2299,10 @@ expo-status-bar@~2.2.3:
     react-native-edge-to-edge "1.6.0"
     react-native-is-edge-to-edge "^1.1.6"
 
-expo@~53.0.12:
-  version "53.0.12"
-  resolved "https://registry.yarnpkg.com/expo/-/expo-53.0.12.tgz#5c8b9fa7150b98881ab67e5ec891a5e5c0810006"
-  integrity sha512-dtmED749hkxDWCcvtD++tb8bAm3Twv8qnUOXzVyXA5owNG0mwDIz0HveJTpWK1UzkY4HcTVRezDf0tflZJ+JXQ==
+expo@53.0.13:
+  version "53.0.13"
+  resolved "https://registry.yarnpkg.com/expo/-/expo-53.0.13.tgz#8a4617ca67ac6cfd7c92092370937b38ef5c53b9"
+  integrity sha512-QDdEEbFErUmm2IHR/UPKKIRLN3z5MmN2QLx0aPlOEGOx295buSUE42u6f7TppkgJn0BUX3f7wFaHRo86+G+Trg==
   dependencies:
     "@babel/runtime" "^7.20.0"
     "@expo/cli" "0.24.15"

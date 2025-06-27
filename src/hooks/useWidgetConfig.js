@@ -20,7 +20,6 @@ const useWidgetConfig = (baseUrl, websiteToken) => {
       const config = await fetchWidgetConfig(baseUrl, websiteToken);
       setWidgetConfig(config);
     } catch (err) {
-      console.error('Error loading widget config:', err);
       setError(err.message || 'Failed to load widget config');
     } finally {
       setIsLoading(false);
@@ -29,7 +28,7 @@ const useWidgetConfig = (baseUrl, websiteToken) => {
 
   useEffect(() => {
     loadConfig();
-  }, [baseUrl, websiteToken]);
+  }, [baseUrl, websiteToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     widgetConfig,

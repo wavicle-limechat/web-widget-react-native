@@ -9,11 +9,12 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@limechat/react-native-widget": "../build-3.tgz",
+    "@limechat/react-native-widget": "../build-12.tgz",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/netinfo": "11.4.1",
-    "expo": "~53.0.12",
+    "expo": "53.0.13",
     "expo-status-bar": "~2.2.3",
+    "prop-types": "^15.8.1",
     "react": "19.0.0",
     "react-native": "0.79.4",
     "react-native-modal": "^14.0.0-rc.1",

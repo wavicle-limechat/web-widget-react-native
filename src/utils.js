@@ -29,25 +29,17 @@ export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 /**
  * Build the widget URL with parameters
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, user, customAttributes, cwConversation }) => {
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, customAttributes, cwConversation }) => {
   const params = new URLSearchParams({
     website_token: websiteToken,
     locale: locale || 'en',
     color_scheme: colorScheme || 'light',
   });
 
-  // Add user information if provided
-  if (user?.name) params.append('user_name', user.name);
-  if (user?.email) params.append('user_email', user.email);
-  if (user?.phone_number) params.append('user_phone', user.phone_number);
-  if (user?.identifier_hash) params.append('identifier_hash', user.identifier_hash);
-
-  // Add custom attributes
   if (customAttributes && Object.keys(customAttributes).length > 0) {
     params.append('custom_attributes', JSON.stringify(customAttributes));
   }
 
-  // Add cw_conversation if provided
   if (cwConversation) {
     params.append('cw_conversation', cwConversation);
   }
@@ -112,9 +104,6 @@ export const generateScripts = ({ colorScheme, user, locale, customAttributes })
   return script;
 };
 
-/**
- * Simple widget config fetch
- */
 export const fetchWidgetConfig = async (baseUrl, websiteToken) => {
   try {
     const response = await fetch(
@@ -126,9 +115,14 @@ export const fetchWidgetConfig = async (baseUrl, websiteToken) => {
     }
 
     const data = await response.json();
-    return data?.config || {};
+
+    let config = data?.config || {};
+    if(typeof config === 'string') {
+      config = JSON.parse(config);
+    }
+
+    return config;
   } catch (error) {
-    console.error('Error fetching widget config:', error);
-    return {}; // Return empty config as fallback
+    return {};
   }
 }; 

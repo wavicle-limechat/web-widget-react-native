@@ -44,12 +44,10 @@ const LimeChatWidget = ({
   };
 
   const handleWidgetLoad = () => {
-    console.log("Widget loaded successfully");
     onWidgetLoad?.();
   };
 
   const handleError = (error, errorInfo) => {
-    console.error("LimeChat Widget Error:", error);
     onError?.(error, errorInfo);
   };
 

@@ -72,7 +72,7 @@ const App = () => {
         </View>
 
         <LimeChatWidget
-          websiteToken="XouxmSgHSbN853omga3uAZNG"
+          websiteToken="bf9AG2AjXnzysE5kgBWp8xKN"
           user={user}
           locale="en"
           customAttributes={customAttributes}
