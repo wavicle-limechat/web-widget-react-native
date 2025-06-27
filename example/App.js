@@ -38,11 +38,6 @@ const App = () => {
     console.log("Widget closed!");
   };
 
-  const handleCustomButtonPress = () => {
-    console.log("Custom button pressed! This is my custom action.");
-    // You can add any custom logic here before the widget opens
-  };
-
   const handleError = (error, errorData) => {
     console.error("Widget error:", errorData);
     
@@ -82,29 +77,6 @@ const App = () => {
     }
   };
 
-  // Custom button with its own onPress handler
-  const CustomChatButton = ({ onPress }) => (
-    <TouchableOpacity
-      style={{
-        backgroundColor: '#007bff',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-      }}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <Text style={{ color: 'white', fontSize: 24 }}>💬</Text>
-    </TouchableOpacity>
-  );
-
   return (
     <SafeAreaView style={backgroundStyle}>
       <StatusBar
@@ -142,7 +114,7 @@ const App = () => {
               { color: isDarkMode ? "#ffffff" : "#000000" },
             ]}
           >
-            Custom Button Demo
+            Default Widget Demo
           </Text>
           <Text
             style={[
@@ -150,8 +122,8 @@ const App = () => {
               { color: isDarkMode ? "#cccccc" : "#666666" },
             ]}
           >
-            This demo shows a custom button with its own onPress handler that gets called
-            before opening the widget. Check the console to see both actions happening!
+            This demo shows the default LimeChat widget with comprehensive error handling.
+            Check the console to see various events and error handling in action!
           </Text>
         </View>
 
@@ -163,6 +135,9 @@ const App = () => {
           onWidgetLoad={handleWidgetLoad}
           onWidgetClose={handleWidgetClose}
           onError={handleError}
+          customButton={<TouchableOpacity onPress={() => console.log("Custom button pressed!")}>
+            <Text>Custom Button yo</Text>
+          </TouchableOpacity>}
           unreadCountStyle={{
             top: -20,
           }}

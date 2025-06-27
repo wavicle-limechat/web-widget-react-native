@@ -1,65 +1,53 @@
-# LimeChat React Native Widget
+# LimeChat React Native SDK
 
-React Native SDK for integrating LimeChat's customer support widget into your mobile applications.
+A powerful, easy-to-integrate React Native SDK that brings LimeChat's customer support capabilities directly into your mobile applications. Designed for modern React Native apps with full TypeScript support and cross-platform compatibility.
 
-## Features
+## ✨ Why Choose LimeChat React Native SDK?
 
-- 🚀 **Easy Integration** - Simple setup with just a few lines of code
-- 🎨 **Customizable** - Use your own trigger elements or the default chat icon
-- 📱 **React Native Optimized** - Built specifically for React Native with TypeScript
-- 🔧 **TypeScript Support** - Full TypeScript definitions included
-- 🎯 **Lightweight** - Minimal dependencies and optimized bundle size
-- 🌐 **Cross Platform** - Works on both iOS and Android
+- **🚀 Quick Integration** - Get up and running in minutes with minimal setup
+- **🎨 Fully Customizable** - Match your app's design with custom buttons, colors, and styling
+- **📱 React Native Optimized** - Built specifically for React Native with performance in mind
+- **🔧 TypeScript Ready** - Complete TypeScript definitions for better development experience
+- **🌐 Universal Support** - Works seamlessly on iOS, Android, and Expo projects
+- **🎯 Lightweight** - Minimal bundle impact with optimized dependencies
 
-## Installation
+## 📦 Installation
 
-### Step 1: Install the package
+### Step 1: Install the SDK
 
 ```bash
 # Using yarn (recommended)
-yarn add git+https://github.com/wavicle-limechat/web-widget-react-native.git
+yarn add @limechat/react-native-widget
 
 # Using npm
-npm install git+https://github.com/wavicle-limechat/web-widget-react-native.git
+npm install @limechat/react-native-widget
 ```
 
-### Step 2: Install peer dependencies (Required)
+### Step 2: Install Required Dependencies
 
 ```bash
-# These are required for the widget to work
+# These peer dependencies are required
 yarn add react-native-modal react-native-webview
 
 # Or with npm
 npm install react-native-modal react-native-webview
 ```
 
-### Step 3: iOS setup (iOS only)
+### Step 3: iOS Setup (iOS only)
 
 ```bash
 cd ios && pod install
 ```
 
-> **Important:** The peer dependencies are required and must be installed separately. The widget will not work without `react-native-modal` and `react-native-webview`.
+> **Note:** The peer dependencies `react-native-modal` and `react-native-webview` are required for the SDK to function properly.
 
-### Local Testing
+## 🚀 Quick Start
 
-If you're testing with a local `.tgz` file, follow the same steps but install the local package first:
-
-```bash
-# Install local package
-yarn add ./path/to/limechat-react-native-widget-0.0.1.tgz
-
-# Then install peer dependencies
-yarn add react-native-modal react-native-webview
-```
-
-## Basic Usage
-
-### Simple Integration
+### Basic Implementation
 
 ```tsx
 import React from 'react';
-import LimeChatWidget from '@limechat/react-native-widget';
+import { LimeChatWidget } from '@limechat/react-native-widget';
 
 export default function App() {
   return (
@@ -68,341 +56,347 @@ export default function App() {
       user={{
         name: 'John Doe',
         email: 'john@example.com',
+        phone_number: '+1234567890'
       }}
     />
   );
 }
 ```
 
-### Custom Trigger Element
+### Custom Button Implementation
 
-You can provide your own trigger element as children:
+Create your own chat trigger with custom styling and actions:
 
 ```tsx
 import React from 'react';
-import { Text, View } from 'react-native';
-import LimeChatWidget from '@limechat/react-native-widget';
+import { TouchableOpacity, Text } from 'react-native';
+import { LimeChatWidget } from '@limechat/react-native-widget';
 
 export default function App() {
+  const handleCustomAction = () => {
+    console.log('Tracking chat button press');
+    // Add your analytics or custom logic here
+  };
+
+  const CustomChatButton = ({ onPress }) => (
+    <TouchableOpacity
+      style={{
+        backgroundColor: '#007bff',
+        padding: 15,
+        borderRadius: 25,
+        position: 'absolute',
+        bottom: 50,
+        right: 20,
+      }}
+      onPress={onPress}
+    >
+      <Text style={{ color: 'white', fontWeight: 'bold' }}>
+        💬 Need Help?
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <LimeChatWidget
       websiteToken="your-website-token"
       user={{
-        name: 'John Doe',
-        email: 'john@example.com',
+        name: 'Jane Smith',
+        email: 'jane@example.com',
       }}
-    >
-      <View style={{ 
-        backgroundColor: '#007bff', 
-        padding: 15, 
-        borderRadius: 25 
-      }}>
-        <Text style={{ color: 'white', fontWeight: 'bold' }}>
-          Help & Support
-        </Text>
-      </View>
-    </LimeChatWidget>
+      customButton={<CustomChatButton onPress={handleCustomAction} />}
+    />
   );
 }
 ```
 
-## API Reference
+## 📚 API Reference
 
 ### LimeChatWidget Props
 
-| Prop | Type | Required | Description |
-|------|------|----------|-------------|
-| `websiteToken` | `string` | ✅ | Your LimeChat website token |
-| `user` | `LimeChatUser` | ❌ | User information for the chat session |
-| `locale` | `string` | ❌ | Locale for the widget (default: 'en') |
-| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Color scheme (default: 'light') |
-| `customAttributes` | `Record<string, any>` | ❌ | Custom attributes to pass to the widget |
-| `customButton` | `ReactElement` | ❌ | Custom button component with optional onPress handler |
-| `onWidgetLoad` | `() => void` | ❌ | Callback when widget loads |
-| `onWidgetClose` | `() => void` | ❌ | Callback when widget closes |
-| `onError` | `(error: Error) => void` | ❌ | Callback for error handling |
-| `style` | `ViewStyle` | ❌ | Style for the container |
-| `iconStyle` | `ViewStyle` | ❌ | Style for the default icon |
-| `unreadCountStyle` | `ViewStyle` | ❌ | Style for the unread count badge |
-| `unreadCountTextStyle` | `TextStyle` | ❌ | Style for the unread count text |
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `websiteToken` | `string` | ✅ | Your LimeChat website token from the dashboard |
+| `user` | [`LimeChatUser`](#limechatuser) | ❌ | User information for personalized chat experience |
+| `locale` | `string` | ❌ | Language locale (default: `'en'`) |
+| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Theme preference (default: `'light'`) |
+| `customAttributes` | `Record<string, any>` | ❌ | Additional metadata to pass with the chat session |
+| `customButton` | `ReactElement` | ❌ | Custom trigger component with optional onPress handler |
+| `onWidgetLoad` | `() => void` | ❌ | Callback fired when the chat widget loads successfully |
+| `onWidgetClose` | `() => void` | ❌ | Callback fired when the chat widget is closed |
+| `onError` | [`ErrorHandler`](#error-handling) | ❌ | Callback for handling errors and monitoring |
+| `style` | `ViewStyle` | ❌ | Custom styling for the widget container |
+| `iconStyle` | `ViewStyle` | ❌ | Custom styling for the default chat icon |
+| `unreadCountStyle` | `ViewStyle` | ❌ | Custom styling for the unread message badge |
+| `unreadCountTextStyle` | `TextStyle` | ❌ | Custom styling for the unread count text |
 
-### LimeChatUser Interface
+### LimeChatUser
 
 ```tsx
 interface LimeChatUser {
-  name?: string;
-  email?: string;
-  phone_number?: string;
-  identifier_hash?: string;
+  name?: string;           // User's display name
+  email?: string;          // User's email address
+  phone_number?: string;   // User's phone number (with country code)
+  identifier_hash?: string; // Secure user identifier hash
 }
 ```
 
-## Advanced Usage
+## 🎨 Customization Examples
 
-### Error Handling
-
-```tsx
-import React from 'react';
-import LimeChatWidget from '@limechat/react-native-widget';
-
-export default function App() {
-  const handleError = (error: Error) => {
-    console.error('LimeChat Widget Error:', error);
-    // Handle error (show toast, log to analytics, etc.)
-  };
-
-  const handleWidgetLoad = () => {
-    console.log('Widget loaded successfully');
-  };
-
-  return (
-    <LimeChatWidget
-      websiteToken="your-website-token"
-      onError={handleError}
-      onWidgetLoad={handleWidgetLoad}
-      onWidgetClose={() => console.log('Widget closed')}
-    />
-  );
-}
-```
-
-### Custom Styling
+### Advanced Styling
 
 ```tsx
-import React from 'react';
 import { StyleSheet } from 'react-native';
-import LimeChatWidget from '@limechat/react-native-widget';
 
 const styles = StyleSheet.create({
-  widget: {
+  widgetContainer: {
     position: 'absolute',
     bottom: 100,
-    left: 20, // Position on the left instead of right
+    left: 20, // Position on left instead of right
   },
-  customIcon: {
+  chatIcon: {
     backgroundColor: '#ff6b6b',
-    width: 80,
-    height: 80,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+  },
+  unreadBadge: {
+    backgroundColor: '#ff4757',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  unreadText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 
-export default function App() {
-  return (
-    <LimeChatWidget
-      websiteToken="your-website-token"
-      style={styles.widget}
-      iconStyle={styles.customIcon}
-    />
-  );
-}
+<LimeChatWidget
+  websiteToken="your-token"
+  style={styles.widgetContainer}
+  iconStyle={styles.chatIcon}
+  unreadCountStyle={styles.unreadBadge}
+  unreadCountTextStyle={styles.unreadText}
+/>
 ```
 
-### Using with Context
+### User Context Integration
 
 ```tsx
-import React, { createContext, useContext } from 'react';
-import LimeChatWidget from '@limechat/react-native-widget';
+import React, { useContext } from 'react';
+import { UserContext } from './contexts/UserContext';
 
-const UserContext = createContext(null);
-
-export default function App() {
-  const user = useContext(UserContext);
+export default function ChatIntegration() {
+  const { user, preferences } = useContext(UserContext);
 
   return (
     <LimeChatWidget
       websiteToken="your-website-token"
-      user={user}
-      customAttributes={{
-        plan: 'premium',
-        source: 'mobile_app',
+      user={{
+        name: user.displayName,
+        email: user.email,
+        phone_number: user.phone,
       }}
+      customAttributes={{
+        subscription_plan: user.subscriptionTier,
+        app_version: '2.1.0',
+        user_segment: preferences.segment,
+      }}
+      colorScheme={preferences.theme}
     />
   );
 }
 ```
 
-## TypeScript Support
+## 🛠️ Error Handling
 
-This package is written in TypeScript and includes full type definitions. You'll get excellent IntelliSense and type checking out of the box.
+### Basic Error Handler
 
 ```tsx
-import { LimeChatWidgetProps, LimeChatUser } from '@limechat/react-native-widget';
+const handleChatError = (error, errorData) => {
+  console.error('Chat Error:', {
+    code: error.code,
+    message: error.message,
+    severity: error.severity,
+  });
 
-const widgetProps: LimeChatWidgetProps = {
-  websiteToken: 'your-token',
-  user: {
-    name: 'John Doe',
-    email: 'john@example.com',
-  },
+  // Handle based on severity
+  switch (error.severity) {
+    case 'critical':
+      // Show fallback support option
+      showFallbackSupport();
+      break;
+    case 'high':
+      // Log to analytics service
+      Analytics.track('chat_error', errorData);
+      break;
+    case 'medium':
+      // Show user notification
+      showToast('Chat temporarily unavailable');
+      break;
+    case 'low':
+      // Silent logging for debugging
+      Logger.debug('Chat minor issue', error);
+      break;
+  }
+};
+
+<LimeChatWidget
+  websiteToken="your-token"
+  onError={handleChatError}
+/>
+```
+
+### Advanced Error Monitoring
+
+```tsx
+const handleChatError = (error, errorData) => {
+  // Send to error tracking service
+  if (error.severity === 'critical' || error.severity === 'high') {
+    Sentry.captureException(error, {
+      tags: {
+        component: 'limechat_widget',
+        error_code: error.code,
+      },
+      extra: errorData,
+    });
+  }
+
+  // Show user-appropriate messages
+  const userMessages = {
+    'WIDGET_ERROR_1000': 'Chat setup issue. Please contact support.',
+    'WIDGET_ERROR_1100': 'Chat temporarily unavailable. Please try again.',
+    'WIDGET_ERROR_1200': 'Connection issue. Check your internet connection.',
+    'WIDGET_ERROR_1300': 'Display issue. Refreshing chat interface.',
+  };
+
+  if (userMessages[error.code] && error.severity !== 'low') {
+    showUserNotification(userMessages[error.code]);
+  }
 };
 ```
 
-## Platform-Specific Notes
+## 🌟 Advanced Features
 
-### iOS
+### Real-time Unread Count
 
-- Requires iOS 11.0+
-- WebView permissions are handled automatically
-
-### Android
-
-- Requires Android API level 21+
-- Internet permission is required (automatically added)
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Widget not loading**: Verify your website token is correct
-2. **Modal not appearing**: Ensure `react-native-modal` is properly installed
-3. **WebView issues**: Make sure `react-native-webview` is linked correctly
-
-### Debug Mode
-
-Enable debug logging by checking the console for any error messages:
+The SDK automatically displays unread message counts:
 
 ```tsx
 <LimeChatWidget
   websiteToken="your-token"
-  onError={(error) => {
-    console.error('Widget Error:', error);
-    // Additional debugging
+  unreadCountStyle={{
+    backgroundColor: '#ff4757',
+    top: -8,
+    right: -8,
+  }}
+  unreadCountTextStyle={{
+    fontSize: 11,
+    fontWeight: '900',
   }}
 />
 ```
 
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Support
-
-- 📧 Email: support@limechat.ai
-- 📖 Documentation: https://docs.limechat.ai
-- 🐛 Issues: https://github.com/limechat/react-native-widget/issues
-
-## Custom Button
-
-You can provide your own custom button component instead of using the default widget icon. This allows you to create custom buttons with their own onPress handlers that get called before opening the widget:
-
-```jsx
-import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
-import { LimeChatWidget } from '@limechat/react-native-widget';
-
-// Custom button with its own onPress handler
-const MyCustomButton = ({ onPress }) => (
-  <TouchableOpacity
-    style={{ 
-      width: 60, 
-      height: 60, 
-      backgroundColor: '#007bff', 
-      borderRadius: 30,
-      justifyContent: 'center',
-      alignItems: 'center',
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-    }}
-    onPress={onPress}
-    activeOpacity={0.8}
-  >
-    <Text style={{ color: 'white', fontSize: 18 }}>💬</Text>
-  </TouchableOpacity>
-);
-
-// Or using an image with button functionality
-const MyImageButton = ({ onPress }) => (
-  <TouchableOpacity onPress={onPress} activeOpacity={0.8}>
-    <Image 
-      source={{ uri: 'https://example.com/my-icon.png' }}
-      style={{ width: 60, height: 60, borderRadius: 30 }}
-    />
-  </TouchableOpacity>
-);
-
-export default function App() {
-  const handleCustomButtonPress = () => {
-    console.log('Custom action before opening widget!');
-    // Add your custom logic here (analytics, logging, etc.)
-  };
-
-  return (
-    <LimeChatWidget
-      websiteToken="your-website-token"
-      customButton={<MyCustomButton onPress={handleCustomButtonPress} />}
-      // ... other props
-    />
-  );
-}
-```
-
-**Note:** When using `customButton` with an `onPress` prop, both your custom onPress handler and the widget's default behavior (opening/closing the chat) will be executed. Your custom onPress runs first, followed by the widget opening.
-
-## Styling
-
-### Unread Count Styling
-
-You can customize the appearance of the unread count badge:
-
-```jsx
-import { LimeChatWidget } from '@limechat/react-native-widget';
-
-export default function App() {
-  return (
-    <LimeChatWidget
-      websiteToken="your-website-token"
-      unreadCountStyle={{
-        backgroundColor: '#ff6b6b',
-        borderRadius: 15,
-        minWidth: 25,
-        height: 25,
-        borderWidth: 2,
-        borderColor: 'white',
-      }}
-      unreadCountTextStyle={{
-        color: 'white',
-        fontSize: 14,
-        fontWeight: '900',
-      }}
-    />
-  );
-}
-```
-
-**Available Style Props:**
-- `unreadCountStyle`: Style for the unread count badge container (ViewStyle)
-- `unreadCountTextStyle`: Style for the unread count number text (TextStyle)
-- `iconStyle`: Style for the widget icon
-- `style`: Style for the main container
-
-## Dynamic Features
-
-### Unread Count
-
-The unread count badge is automatically managed by events from the web widget:
-
-- **Automatic Display**: The unread count badge only appears when there are unread messages (count > 0)
-- **Real-time Updates**: The count updates automatically based on `SET_UNREAD_COUNT` events from the web
-- **Customizable Appearance**: Use `unreadCountStyle` and `unreadCountTextStyle` props to customize the look
-
 ### Conversation Continuity
 
-The widget supports conversation continuity through the `cw_conversation` parameter:
+Users can seamlessly continue conversations across app sessions. This feature works automatically with no additional configuration required.
 
-- **Automatic Handling**: When the web sends a `SET_CW_CONVERSATION` event, the widget automatically includes this parameter in subsequent widget loads
-- **Seamless Experience**: Users can continue their conversations across app sessions
-- **URL Integration**: The conversation token is automatically appended to the widget URL when available
+### Multi-language Support
 
-**Example URL with conversation:**
+```tsx
+<LimeChatWidget
+  websiteToken="your-token"
+  locale="es" // Spanish
+  user={{
+    name: 'Juan Pérez',
+    email: 'juan@example.com',
+  }}
+/>
 ```
-https://app.limechat.ai/widget?website_token=your-token&cw_conversation=eyJhbGciOiJIUzI1NiJ9...
+
+## 📱 Platform Compatibility
+
+### iOS Requirements
+- iOS 11.0 or later
+- Automatic WebView permissions handling
+
+### Android Requirements  
+- Android API level 21 (Android 5.0) or later
+- Internet permission (automatically included)
+
+### Expo Compatibility
+- ✅ Expo Managed Workflow
+- ✅ Expo Bare Workflow
+- ✅ Expo Development Build
+
+## 🔧 TypeScript Support
+
+Full TypeScript definitions are included for the best development experience:
+
+```tsx
+import { LimeChatWidgetProps, LimeChatUser } from '@limechat/react-native-widget';
+
+const chatConfig: LimeChatWidgetProps = {
+  websiteToken: 'your-token',
+  user: {
+    name: 'Developer',
+    email: 'dev@company.com',
+  },
+  onError: (error, errorData) => {
+    // Fully typed error handling
+    console.log(error.severity); // TypeScript knows this exists
+  },
+};
 ```
 
-These features work automatically and don't require any additional configuration from developers.
+## 🆘 Troubleshooting
+
+### Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| **Widget not appearing** | Verify your `websiteToken` is correct and active |
+| **App crashes on launch** | Ensure peer dependencies are installed: `react-native-modal` and `react-native-webview` |
+| **Chat not loading** | Check internet connection and firewall settings |
+| **TypeScript errors** | Make sure you're using the latest version with updated type definitions |
+
+### Debug Mode
+
+Enable detailed logging to diagnose issues:
+
+```tsx
+<LimeChatWidget
+  websiteToken="your-token"
+  onError={(error, errorData) => {
+    // Detailed error information
+    console.log('Error Details:', {
+      code: error.code,
+      type: error.type,
+      severity: error.severity,
+      message: error.message,
+      timestamp: error.timestamp,
+      context: errorData,
+    });
+  }}
+  onWidgetLoad={() => console.log('✅ Chat loaded successfully')}
+  onWidgetClose={() => console.log('💬 Chat closed')}
+/>
+```
+
+## 📄 License
+
+MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🤝 Support & Resources
+
+- **Documentation**: [Complete SDK Documentation](https://docs.limechat.ai/react-native)
+- **Support**: [support@limechat.ai](mailto:support@limechat.ai)
+- **Issues**: [GitHub Issues](https://github.com/limechat/react-native-widget/issues)
+- **Community**: [LimeChat Community Forum](https://community.limechat.ai)
+
+---
+
+Made with ❤️ by the LimeChat team
