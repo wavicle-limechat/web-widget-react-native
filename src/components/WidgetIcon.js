@@ -5,25 +5,21 @@ import { widgetStyles } from '../styles';
 import { ERROR_CODES } from '../constants';
 import { WidgetError, reportError } from '../utils/errorUtils';
 
-const WidgetIcon = ({ 
-  widgetConfig, 
-  isLoading, 
-  error, 
+const WidgetIcon = ({
+  widgetConfig,
+  isLoading,
+  error,
   iconStyle,
   onError
 }) => {
   const [imageError, setImageError] = useState(false);
 
   const renderIcon = () => {
-    const iconSource = widgetConfig?.widgetIconMobile || widgetConfig?.widgetIconDesktop;
-    
     if (isLoading) {
-      return (
-        <View style={[widgetStyles.defaultIcon, iconStyle]}>
-          <Text style={widgetStyles.loadingText}>...</Text>
-        </View>
-      );
+      return null;
     }
+
+    const iconSource = widgetConfig?.widgetIconMobile || widgetConfig?.widgetIconDesktop;
 
     // Show fallback icon if there's an error or no icon source
     if (error || !iconSource || imageError) {
@@ -33,14 +29,14 @@ const WidgetIcon = ({
           ERROR_CODES.COMPONENT_ERROR,
           'No custom widget icon configured, using default LimeChat icon',
           null,
-          { 
+          {
             hasConfig: !!widgetConfig,
             configKeys: Object.keys(widgetConfig || {}),
             action: 'usingFallbackIcon'
           }
         );
+
         // This is informational, so we'll log it but not treat as severe
-        console.info('LimeChat Widget: Using default icon -', infoError.message);
         if (onError) {
           // Override severity to be informational
           infoError.severity = 'info';
@@ -49,8 +45,8 @@ const WidgetIcon = ({
       }
 
       return (
-        <Image 
-          source={require('../assets/LC-Icon.png')} 
+        <Image
+          source={require('../assets/LC-Icon.png')}
           style={[widgetStyles.widgetIcon, iconStyle]}
         />
       );
@@ -58,8 +54,8 @@ const WidgetIcon = ({
 
     // Render the configured icon
     return (
-      <Image 
-        source={{ uri: iconSource }} 
+      <Image
+        source={{ uri: iconSource }}
         style={[widgetStyles.widgetIcon, iconStyle]}
         onError={(errorEvent) => {
           setImageError(true);

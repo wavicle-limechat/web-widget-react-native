@@ -1,6 +1,6 @@
 {
   "name": "@limechat/react-native-widget",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "React Native SDK for LimeChat widget integration",
   "main": "index.js",
   "types": "index.d.ts",
@@ -98,7 +98,14 @@
       "src/constants.js",
       "!src/**/*.test.js"
     ],
-    "moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
     "testEnvironment": "node"
   }
-} 
+}
