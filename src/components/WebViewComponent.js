@@ -1,14 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import { Linking } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { POST_MESSAGE_EVENTS, ERROR_CODES } from '../constants';
 import { webViewStyles } from '../styles';
 import {
-    buildWidgetUrl,
-    generateScripts,
-    getMessage,
-    isJsonString
+  buildWidgetUrl,
+  generateScripts,
+  getMessage,
+  isJsonString
 } from '../utils';
 import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
 
@@ -50,13 +49,13 @@ const WebViewComponent = ({
     const isAttachmentUrl = !widgetUrl.includes(request.url);
     // Open the attachments only in the external browser
     const shouldRedirectToBrowser = isMessageView && isAttachmentUrl;
-    
+
     if (shouldRedirectToBrowser) {
       // Use safe URL opening with error handling
       safeOpenURL(request.url).catch(error => {
-        reportError(error, onError, { 
+        reportError(error, onError, {
           action: 'openExternalLink',
-          url: request.url 
+          url: request.url
         });
       });
       return false;
@@ -73,7 +72,7 @@ const WebViewComponent = ({
     try {
       const { data } = event.nativeEvent;
       const message = getMessage(data);
-      
+
       if (isJsonString(message)) {
         // Use safe JSON parsing
         const parsedMessage = safeJsonParse(message);
@@ -87,11 +86,11 @@ const WebViewComponent = ({
         }
 
         const { event: eventType, type, count, conversation } = parsedMessage;
-        
+
         if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
           onWidgetLoad?.();
         }
-        
+
         if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
           onWidgetClose?.();
         }
@@ -114,20 +113,19 @@ const WebViewComponent = ({
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
-    console.error('WebView error: ', nativeEvent);
-    
+
     const error = new WidgetError(
       ERROR_CODES.WEBVIEW_ERROR,
       `WebView failed to load: ${nativeEvent.description || 'Unknown error'}`,
       null,
-      { 
+      {
         nativeEvent,
         url: nativeEvent.url || widgetUrl,
         canGoBack: nativeEvent.canGoBack,
         canGoForward: nativeEvent.canGoForward
       }
     );
-    
+
     reportError(error, onError, { action: 'webViewLoadError' });
   };
 

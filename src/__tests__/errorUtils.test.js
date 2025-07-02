@@ -7,6 +7,26 @@ import {
 } from '../utils/errorUtils';
 import { ERROR_CODES, ERROR_TYPES, ERROR_SEVERITY } from '../constants';
 
+// Suppress console errors and warnings during tests
+// eslint-disable-next-line no-console
+const originalError = console.error;
+// eslint-disable-next-line no-console
+const originalWarn = console.warn;
+
+beforeAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = jest.fn();
+  // eslint-disable-next-line no-console
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = originalError;
+  // eslint-disable-next-line no-console
+  console.warn = originalWarn;
+});
+
 describe('ErrorUtils', () => {
   describe('WidgetError', () => {
     it('should create a WidgetError with correct properties', () => {

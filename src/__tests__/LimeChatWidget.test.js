@@ -3,9 +3,28 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
 
+// Suppress console errors and warnings during tests
+// eslint-disable-next-line no-console
+const originalError = console.error;
+// eslint-disable-next-line no-console
+const originalWarn = console.warn;
+
+beforeAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = jest.fn();
+  // eslint-disable-next-line no-console
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = originalError;
+  // eslint-disable-next-line no-console
+  console.warn = originalWarn;
+});
+
 // Mock the components and hooks
 jest.mock('../components/ErrorBoundary', () => {
-  const { Text } = require('react-native');
   return function MockErrorBoundary({ children }) {
     return children;
   };
@@ -22,9 +41,17 @@ jest.mock('../components/WidgetIcon', () => {
 jest.mock('../components/WidgetModal', () => {
   const React = require('react');
   const { Text } = require('react-native');
-  return function MockWidgetModal({ isVisible }) {
+  const PropTypes = require('prop-types');
+  
+  function MockWidgetModal({ isVisible }) {
     return isVisible ? React.createElement(Text, { testID: 'widget-modal' }, 'Modal') : null;
+  }
+  
+  MockWidgetModal.propTypes = {
+    isVisible: PropTypes.bool,
   };
+  
+  return MockWidgetModal;
 });
 
 jest.mock('../hooks/useWidgetConfig', () => {
@@ -87,11 +114,17 @@ describe('LimeChatWidget', () => {
   it('calls both custom button onPress and opens widget when custom button with onPress is provided', () => {
     const mockCustomOnPress = jest.fn();
     
-    const CustomButton = ({ onPress }) => (
-      <TouchableOpacity testID="custom-button" onPress={onPress}>
-        <Text>Custom Button</Text>
-      </TouchableOpacity>
-    );
+    const CustomButton = ({ onPress }) => {
+      CustomButton.propTypes = {
+        onPress: require('prop-types').func,
+      };
+      
+      return (
+        <TouchableOpacity testID="custom-button" onPress={onPress}>
+          <Text>Custom Button</Text>
+        </TouchableOpacity>
+      );
+    };
 
     const { getByTestId, queryByTestId } = render(
       <LimeChatWidget 
@@ -112,7 +145,7 @@ describe('LimeChatWidget', () => {
   });
 
   it('opens modal when default icon is pressed', () => {
-    const { getByTestId, queryByTestId, getByText } = render(<LimeChatWidget {...defaultProps} />);
+    const { getByTestId, queryByTestId } = render(<LimeChatWidget {...defaultProps} />);
     
     // Initially modal should not be visible
     expect(queryByTestId('widget-modal')).toBeNull();
