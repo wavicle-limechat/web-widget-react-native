@@ -3,6 +3,26 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
 
+// Suppress console errors and warnings during tests
+// eslint-disable-next-line no-console
+const originalError = console.error;
+// eslint-disable-next-line no-console
+const originalWarn = console.warn;
+
+beforeAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = jest.fn();
+  // eslint-disable-next-line no-console
+  console.warn = jest.fn();
+});
+
+afterAll(() => {
+  // eslint-disable-next-line no-console
+  console.error = originalError;
+  // eslint-disable-next-line no-console
+  console.warn = originalWarn;
+});
+
 // Mock the components and hooks
 jest.mock('../components/ErrorBoundary', () => {
   return function MockErrorBoundary({ children }) {
