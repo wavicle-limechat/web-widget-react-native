@@ -13,7 +13,7 @@ export class WidgetError extends Error {
     this.originalError = originalError;
     this.context = context;
     this.timestamp = new Date().toISOString();
-    
+
     // Maintain stack trace for debugging
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, WidgetError);
@@ -24,7 +24,7 @@ export class WidgetError extends Error {
     if (!code || typeof code !== 'string') {
       return ERROR_TYPES.UNKNOWN;
     }
-    
+
     if (code.includes('1000')) {
       return ERROR_TYPES.CONFIGURATION;
     }
@@ -44,18 +44,18 @@ export class WidgetError extends Error {
     if (!code) {
       return ERROR_SEVERITY.LOW;
     }
-    
+
     // Configuration errors are critical - widget can't function
     if (code === ERROR_CODES.CONFIG_ERROR) return ERROR_SEVERITY.CRITICAL;
-    
+
     // WebView and Network errors are high - major functionality affected
     if (code === ERROR_CODES.WEBVIEW_ERROR || code === ERROR_CODES.NETWORK_ERROR) {
       return ERROR_SEVERITY.HIGH;
     }
-    
+
     // Component errors are medium - some functionality affected
     if (code === ERROR_CODES.COMPONENT_ERROR) return ERROR_SEVERITY.MEDIUM;
-    
+
     // Unknown errors are low by default
     return ERROR_SEVERITY.LOW;
   }
@@ -86,40 +86,7 @@ export const safeJsonParse = (jsonString, fallback = null) => {
   try {
     return JSON.parse(jsonString);
   } catch (error) {
-    console.warn('Failed to parse JSON:', error.message);
     return fallback;
-  }
-};
-
-/**
- * Safe async operation wrapper
- */
-export const safeAsync = async (operation, fallback = null, errorCode = ERROR_CODES.UNKNOWN_ERROR) => {
-  try {
-    return await operation();
-  } catch (error) {
-    console.warn(`Safe async operation failed:`, error);
-    throw new WidgetError(
-      errorCode,
-      `Operation failed: ${error.message}`,
-      error,
-      { operation: operation.name || 'anonymous' }
-    );
-  }
-};
-
-/**
- * Validate required props
- */
-export const validateRequiredProps = (props, requiredProps) => {
-  const missing = requiredProps.filter(prop => !props[prop]);
-  if (missing.length > 0) {
-    throw new WidgetError(
-      ERROR_CODES.CONFIG_ERROR,
-      `Missing required props: ${missing.join(', ')}`,
-      null,
-      { missingProps: missing }
-    );
   }
 };
 
@@ -150,7 +117,7 @@ export const safeOpenURL = async (url) => {
  */
 export const reportError = (error, onError, context = {}) => {
   if (!onError) return;
-  
+
   let structuredError;
   if (error instanceof WidgetError) {
     structuredError = error;
@@ -162,11 +129,11 @@ export const reportError = (error, onError, context = {}) => {
       context
     );
   }
-  
+
   // Log error for debugging
   // eslint-disable-next-line no-console
   console.error('LimeChat Widget Error:', structuredError.toJSON());
-  
+
   // Call the user's error handler
   try {
     onError(structuredError, structuredError.toJSON());
@@ -190,7 +157,7 @@ export const validators = {
       );
     }
   },
-  
+
   user: (user) => {
     if (user && typeof user !== 'object') {
       throw new WidgetError(
@@ -201,7 +168,7 @@ export const validators = {
       );
     }
   },
-  
+
   customAttributes: (attributes) => {
     if (attributes && typeof attributes !== 'object') {
       throw new WidgetError(

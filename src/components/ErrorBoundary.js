@@ -17,19 +17,17 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.warn('LimeChat Widget Error Boundary caught an error:', error);
-    
     // Create structured error for component crashes
     const widgetError = new WidgetError(
       ERROR_CODES.COMPONENT_ERROR,
       `Component crashed: ${error.message}`,
       error,
-      { 
+      {
         componentStack: errorInfo.componentStack,
-        errorBoundary: true 
+        errorBoundary: true
       }
     );
-    
+
     // Call the onError prop if provided
     if (this.props.onError) {
       reportError(widgetError, this.props.onError, { source: 'ErrorBoundary' });
@@ -40,7 +38,7 @@ class ErrorBoundary extends React.Component {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       const fallbackComponent = this.props.fallback;
-      
+
       if (fallbackComponent) {
         return fallbackComponent(this.state.error);
       }

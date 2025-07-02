@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image } from 'react-native';
 import { widgetStyles } from '../styles';
 import { ERROR_CODES } from '../constants';
 import { WidgetError, reportError } from '../utils/errorUtils';
