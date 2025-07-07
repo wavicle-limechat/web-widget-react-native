@@ -318,10 +318,20 @@ if ! git push origin "$CURRENT_BRANCH"; then
     # Stash the version change temporarily
     git stash push -m "Temporary stash for prerelease v$NEW_VERSION"
     
-    # Pull latest changes
+    # Configure pull strategy for this operation
+    git config pull.rebase false
+    
+    # Pull latest changes with merge strategy
     if git pull origin "$CURRENT_BRANCH"; then
         # Pop the stash
-        git stash pop
+        if git stash pop; then
+            print_success "Successfully merged remote changes"
+        else
+            print_warning "Stash pop had conflicts. Applying version change manually..."
+            npm version "$NEW_VERSION" --no-git-tag-version
+            git add package.json
+            git commit -m "chore: bump version to v$NEW_VERSION (prerelease)"
+        fi
         
         # Try push again
         if git push origin "$CURRENT_BRANCH"; then
