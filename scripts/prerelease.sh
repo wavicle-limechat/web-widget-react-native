@@ -310,8 +310,42 @@ print_success "Tag v$NEW_VERSION created"
 
 # Push changes
 print_step "Pushing to remote..."
-git push origin "$CURRENT_BRANCH"
-git push origin "v$NEW_VERSION"
+
+# Check if we need to pull first
+if ! git push origin "$CURRENT_BRANCH"; then
+    print_warning "Push failed. Attempting to pull and merge..."
+    
+    # Stash the version change temporarily
+    git stash push -m "Temporary stash for prerelease v$NEW_VERSION"
+    
+    # Pull latest changes
+    if git pull origin "$CURRENT_BRANCH"; then
+        # Pop the stash
+        git stash pop
+        
+        # Try push again
+        if git push origin "$CURRENT_BRANCH"; then
+            print_success "Successfully pushed after merge"
+        else
+            print_error "Push still failed after merge. Please resolve conflicts manually."
+            print_error "Run: git push origin $CURRENT_BRANCH"
+            print_error "Then: git push origin v$NEW_VERSION"
+            exit 1
+        fi
+    else
+        print_error "Failed to pull changes. Please resolve manually."
+        git stash pop
+        exit 1
+    fi
+fi
+
+# Push the tag
+if ! git push origin "v$NEW_VERSION"; then
+    print_error "Failed to push tag. You may need to push it manually:"
+    print_error "git push origin v$NEW_VERSION"
+    exit 1
+fi
+
 print_success "Changes and tag pushed to remote"
 
 # Final success message
