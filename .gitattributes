@@ -1,0 +1,16 @@
+# Export-ignore patterns for git archive
+# These files/directories will be excluded when someone downloads via GitHub
+src/__tests__/ export-ignore
+*.test.js export-ignore
+*.test.ts export-ignore
+babel.config.js export-ignore
+.eslintrc.js export-ignore
+tsconfig.json export-ignore
+jest.config.js export-ignore
+.husky/ export-ignore
+example/ export-ignore
+TROUBLESHOOTING.md export-ignore
+API_REFERENCE.md export-ignore
+ERROR_CODES.md export-ignore
+CHANGELOG.md export-ignore
+.github/ export-ignore 
