@@ -85,7 +85,7 @@ const WebViewComponent = ({
           );
         }
 
-        const { event: eventType, type, count, conversation } = parsedMessage;
+        const { event: eventType, type, count, cw_conversation } = parsedMessage;
 
         if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
           onWidgetLoad?.();
@@ -100,7 +100,7 @@ const WebViewComponent = ({
         }
 
         if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
-          onCwConversationUpdate?.(conversation);
+          onCwConversationUpdate?.(cw_conversation);
         }
       }
     } catch (error) {
