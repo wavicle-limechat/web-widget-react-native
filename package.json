@@ -35,7 +35,8 @@
     "postinstall": "(test -d dist || npm run build || true)",
     "prepublishOnly": "yarn validate",
     "clean": "rm -rf dist build node_modules yarn.lock .turbo .next .cache",
-    "prepack": "yarn clean && yarn install --frozen-lockfile --production=false && yarn build && yarn install --production=true"
+    "prepack": "yarn clean && yarn install --frozen-lockfile --production=false && yarn build && yarn install --production=true",
+    "build-and-test": "./build-and-test.sh"
   },
   "keywords": [
     "react-native",

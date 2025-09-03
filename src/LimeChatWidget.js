@@ -19,6 +19,8 @@ const LimeChatWidget = ({
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes = {},
   customButton = null,
+  conversationToken,
+  onConversationTokenChange,
   onWidgetLoad,
   onWidgetClose,
   onError,
@@ -88,7 +90,13 @@ const LimeChatWidget = ({
   };
 
   const handleCwConversationUpdate = (conversation) => {
-    setCwConversation(conversation);
+    // If external token management is used, call the callback
+    if (onConversationTokenChange) {
+      onConversationTokenChange(conversation);
+    } else {
+      // Otherwise, use internal state management
+      setCwConversation(conversation);
+    }
   };
 
   const renderIcon = () => {
@@ -159,7 +167,7 @@ const LimeChatWidget = ({
           colorScheme={colorScheme}
           user={user}
           customAttributes={customAttributes}
-          cwConversation={cwConversation}
+          cwConversation={conversationToken || cwConversation}
           onWidgetLoad={handleWidgetLoad}
           onUnreadCountUpdate={handleUnreadCountUpdate}
           onCwConversationUpdate={handleCwConversationUpdate}
@@ -182,6 +190,8 @@ LimeChatWidget.propTypes = {
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
   customAttributes: PropTypes.object,
   customButton: PropTypes.element,
+  conversationToken: PropTypes.string,
+  onConversationTokenChange: PropTypes.func,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
   onError: PropTypes.func,
@@ -197,6 +207,8 @@ LimeChatWidget.defaultProps = {
   colorScheme: WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   customAttributes: {},
   customButton: null,
+  conversationToken: null,
+  onConversationTokenChange: null,
   onWidgetLoad: null,
   onWidgetClose: null,
   onError: null,

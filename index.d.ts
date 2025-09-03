@@ -32,6 +32,8 @@ export interface LimeChatWidgetProps {
   colorScheme?: 'light' | 'dark' | 'auto';
   customAttributes?: Record<string, any>;
   customButton?: React.ReactElement;
+  conversationToken?: string;
+  onConversationTokenChange?: (token: string) => void;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
