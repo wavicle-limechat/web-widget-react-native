@@ -16,6 +16,7 @@ const WidgetModal = ({
   hideFilePicker,
   onWebViewUnmount,
   webViewRef,
+  webViewKey,
   user,
   customAttributes,
   cwConversation,
@@ -41,6 +42,7 @@ const WidgetModal = ({
       <SafeAreaView style={modalStyles.safeArea}>
         <View style={modalStyles.webviewContainer}>
           <WebViewComponent
+            key={webViewKey}
             baseUrl={baseUrl}
             websiteToken={websiteToken}
             locale={locale}
@@ -74,6 +76,7 @@ WidgetModal.propTypes = {
   hideFilePicker: PropTypes.bool,
   onWebViewUnmount: PropTypes.func,
   webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  webViewKey: PropTypes.number,
   user: userPropType,
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,

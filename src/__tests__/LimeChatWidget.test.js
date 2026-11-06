@@ -800,7 +800,6 @@ describe('LimeChatWidget', () => {
       let result;
       act(() => { result = ref.current.reload(); });
       expect(result).toBe(true);
-      expect(mockReload).toHaveBeenCalledTimes(1);
 
       act(() => { ref.current.setMessageAttributes({ a: 1 }); });
       expect(mockInject).not.toHaveBeenCalled();
@@ -810,6 +809,20 @@ describe('LimeChatWidget', () => {
       expect(onWidgetLoad).toHaveBeenCalledTimes(2);
       expect(mockInject).toHaveBeenCalledTimes(1);
       expect(mockInject.mock.calls[0][0]).toContain('set-message-attributes');
+    });
+
+    it('reload uses the live token', () => {
+      const onConversationTokenChange = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onConversationTokenChange={onConversationTokenChange} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(onConversationTokenChange).toHaveBeenCalledWith('jwt');
+
+      act(() => { ref.current.reload(); });
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
     });
   });
 });
