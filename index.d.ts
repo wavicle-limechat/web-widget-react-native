@@ -40,6 +40,7 @@ export interface LimeChatWidgetProps {
   onConversationTokenChange?: (token: string) => void;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
+  onMessage?: (message: Record<string, any>) => void;
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;

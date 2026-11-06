@@ -376,6 +376,18 @@ describe('LimeChatWidget', () => {
     expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-jwt');
   });
 
+  it('passes onMessage through the modal to the webview', () => {
+    const onMessage = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onMessage={onMessage} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onMessage({
+      nativeEvent: { data: `${WOOT_PREFIX}{"event":"something-new"}` },
+    }));
+    expect(onMessage).toHaveBeenCalledWith({ event: 'something-new' });
+  });
+
   it('sendMessage returns false while closed and injects when open', () => {
     mockInject.mockClear();
     const ref = React.createRef();

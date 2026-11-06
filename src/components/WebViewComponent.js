@@ -25,6 +25,7 @@ const WebViewComponent = ({
   onWidgetLoad,
   onWebViewUnmount,
   onWidgetClose,
+  onWidgetMessage,
   onUnreadCountUpdate,
   onCwConversationUpdate,
   onError,
@@ -76,18 +77,17 @@ const WebViewComponent = ({
           );
         }
 
-        const { event: eventType, type, count, cw_conversation } = parsedMessage;
+        const { count, cw_conversation } = parsedMessage;
+        const name = parsedMessage.event ?? parsedMessage.type;
 
-        if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
+        if (name === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
           onWidgetClose?.();
-        }
-
-        if (eventType === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
+        } else if (name === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
           onUnreadCountUpdate?.(count);
-        }
-
-        if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
+        } else if (name === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
           onCwConversationUpdate?.(cw_conversation);
+        } else {
+          onWidgetMessage?.(parsedMessage);
         }
       }
     } catch (error) {
@@ -174,6 +174,7 @@ WebViewComponent.propTypes = {
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
+  onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,
   onError: PropTypes.func,

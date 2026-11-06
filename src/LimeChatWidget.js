@@ -25,6 +25,7 @@ const LimeChatWidget = React.forwardRef(({
   onConversationTokenChange,
   onWidgetLoad,
   onWidgetClose,
+  onMessage,
   onError,
   style,
   iconStyle,
@@ -267,6 +268,7 @@ const LimeChatWidget = React.forwardRef(({
           customAttributes={customAttributes}
           cwConversation={conversationToken || cwConversation}
           onWidgetLoad={handleWidgetLoad}
+          onWidgetMessage={onMessage}
           onUnreadCountUpdate={handleUnreadCountUpdate}
           onCwConversationUpdate={handleCwConversationUpdate}
           onError={onError}
@@ -298,6 +300,7 @@ LimeChatWidget.propTypes = {
   onConversationTokenChange: PropTypes.func,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
+  onMessage: PropTypes.func,
   onError: PropTypes.func,
   style: PropTypes.object,
   iconStyle: PropTypes.object,

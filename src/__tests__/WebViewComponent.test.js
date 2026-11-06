@@ -92,4 +92,33 @@ describe('WebViewComponent', () => {
     expect(info.context.url).toBe('https://app.limechat.ai/widget');
     expect(JSON.stringify(info)).not.toContain('secret-jwt');
   });
+
+  describe('onWidgetMessage', () => {
+    const send = (payload) =>
+      mockLastProps.onMessage({ nativeEvent: { data: `chatwoot-widget:${JSON.stringify(payload)}` } });
+    const setup = () => {
+      const handlers = {
+        onWidgetMessage: jest.fn(),
+        onWidgetClose: jest.fn(),
+        onCwConversationUpdate: jest.fn(),
+      };
+      render(<WebViewComponent baseUrl="https://app.limechat.ai" websiteToken="tok" {...handlers} />);
+      return handlers;
+    };
+
+    it('onMessage gets unknown events', () => {
+      const { onWidgetMessage } = setup();
+      send({ event: 'something-new', value: 1 });
+      expect(onWidgetMessage).toHaveBeenCalledWith({ event: 'something-new', value: 1 });
+    });
+
+    it('onMessage does not get close-widget or set-cw-conversation', () => {
+      const { onWidgetMessage, onWidgetClose, onCwConversationUpdate } = setup();
+      send({ type: 'close-widget' });
+      send({ event: 'set-cw-conversation', cw_conversation: 'jwt' });
+      expect(onWidgetClose).toHaveBeenCalledTimes(1);
+      expect(onCwConversationUpdate).toHaveBeenCalledWith('jwt');
+      expect(onWidgetMessage).not.toHaveBeenCalled();
+    });
+  });
 });
