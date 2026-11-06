@@ -37,8 +37,9 @@ const LimeChatWidget = React.forwardRef(({
   const [unreadCount, setUnreadCount] = useState(0);
   const [cwConversation, setCwConversation] = useState(null);
   const [validationError, setValidationError] = useState(null);
-  const [openMessage, setOpenMessage] = useState(null);
   const webViewRef = useRef(null);
+  const pendingOpen = useRef(null);
+  const isWidgetReady = useRef(false);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
@@ -67,7 +68,7 @@ const LimeChatWidget = React.forwardRef(({
         reportError(validationError, onError, { action: 'iconPress' });
         return;
       }
-      setOpenMessage(null);
+      pendingOpen.current = null;
       setShowWidget(!showWidget);
     } catch (error) {
       const widgetError = new WidgetError(
@@ -81,9 +82,17 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const handleModalClose = () => {
-    setOpenMessage(null);
+    pendingOpen.current = null;
     setShowWidget(false);
     onWidgetClose?.();
+  };
+
+  const flushOpen = () => {
+    if (pendingOpen.current === null || !isWidgetReady.current || !webViewRef.current) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.OPEN_WITH_MESSAGE, openMessage: pendingOpen.current })
+    );
+    pendingOpen.current = null;
   };
 
   const open = (message = null) => {
@@ -91,16 +100,9 @@ const LimeChatWidget = React.forwardRef(({
       reportError(validationError, onError, { action: 'open' });
       return;
     }
-    if (showWidget) {
-      if (message !== null) {
-        webViewRef.current?.injectJavaScript(
-          createWootPostMessage({ event: POST_MESSAGE_EVENTS.OPEN_WITH_MESSAGE, openMessage: message })
-        );
-      }
-      return;
-    }
-    setOpenMessage(message);
+    if (message !== null) pendingOpen.current = message;
     setShowWidget(true);
+    flushOpen();
   };
 
   const sendMessage = (event, data = {}) => {
@@ -112,6 +114,8 @@ const LimeChatWidget = React.forwardRef(({
   useImperativeHandle(ref, () => ({ open, sendMessage }));
 
   const handleWidgetLoad = () => {
+    isWidgetReady.current = true;
+    flushOpen();
     onWidgetLoad?.();
   };
 
@@ -200,7 +204,7 @@ const LimeChatWidget = React.forwardRef(({
           locale={locale}
           colorScheme={colorScheme}
           hideFilePicker={hideFilePicker}
-          openMessage={openMessage}
+          onWebViewUnmount={() => { isWidgetReady.current = false; }}
           webViewRef={webViewRef}
           user={user}
           customAttributes={customAttributes}

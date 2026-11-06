@@ -355,7 +355,6 @@ console.log(url);
 - `locale` (string, optional): Language code
 - `colorScheme` (string, optional): Theme preference
 - `hideFilePicker` (boolean, optional): Hide the attachment button
-- `openMessage` (string | object, optional): Message to open the widget with
 - `customAttributes` (object, optional): Additional metadata
 - `cwConversation` (string, optional): Conversation token for continuity
 

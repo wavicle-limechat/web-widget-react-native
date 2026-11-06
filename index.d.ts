@@ -63,7 +63,6 @@ export function buildWidgetUrl(params: {
   locale?: string;
   colorScheme?: string;
   hideFilePicker?: boolean;
-  openMessage?: string | Record<string, unknown>;
   user?: LimeChatUser;
   customAttributes?: Record<string, any>;
   cwConversation?: string;

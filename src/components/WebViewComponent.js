@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { WebView } from 'react-native-webview';
 import { POST_MESSAGE_EVENTS, ERROR_CODES } from '../constants';
 import { webViewStyles } from '../styles';
@@ -18,12 +18,12 @@ const WebViewComponent = ({
   locale,
   colorScheme,
   hideFilePicker,
-  openMessage,
   webViewRef,
   user,
   customAttributes,
   cwConversation,
   onWidgetLoad,
+  onWebViewUnmount,
   onWidgetClose,
   onUnreadCountUpdate,
   onCwConversationUpdate,
@@ -36,11 +36,12 @@ const WebViewComponent = ({
       locale,
       colorScheme,
       hideFilePicker,
-      openMessage,
       customAttributes,
       cwConversation,
     })
   );
+
+  useEffect(() => () => onWebViewUnmount?.(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const injectedJavaScript = generateScripts({ user });
 
@@ -148,7 +149,7 @@ WebViewComponent.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
   hideFilePicker: PropTypes.bool,
-  openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  onWebViewUnmount: PropTypes.func,
   webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   user: PropTypes.shape({
     name: PropTypes.string,

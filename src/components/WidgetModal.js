@@ -13,7 +13,7 @@ const WidgetModal = ({
   locale,
   colorScheme,
   hideFilePicker,
-  openMessage,
+  onWebViewUnmount,
   webViewRef,
   user,
   customAttributes,
@@ -44,7 +44,7 @@ const WidgetModal = ({
             locale={locale}
             colorScheme={colorScheme}
             hideFilePicker={hideFilePicker}
-            openMessage={openMessage}
+            onWebViewUnmount={onWebViewUnmount}
             webViewRef={webViewRef}
             user={user}
             customAttributes={customAttributes}
@@ -69,7 +69,7 @@ WidgetModal.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
   hideFilePicker: PropTypes.bool,
-  openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  onWebViewUnmount: PropTypes.func,
   webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   user: PropTypes.shape({
     name: PropTypes.string,

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
+import { WOOT_PREFIX } from '../constants';
 import { validators } from '../utils/errorUtils';
 
 // Suppress console errors and warnings during tests
@@ -41,28 +42,28 @@ jest.mock('../components/WidgetIcon', () => {
   };
 });
 
-jest.mock('../components/WidgetModal', () => {
+// real WidgetModal and WebViewComponent run; only the native modules are replaced
+let mockKeepModalMounted = false;
+let mockWebViewProps;
+jest.mock('react-native-modal', () => {
   const React = require('react');
-  const { Text } = require('react-native');
-  const PropTypes = require('prop-types');
-  
-  function MockWidgetModal({ isVisible, openMessage, webViewRef }) {
-    if (!isVisible) return null;
-    if (webViewRef) webViewRef.current = { injectJavaScript: mockInject };
-    return React.createElement(
-      Text,
-      { testID: 'widget-modal' },
-      openMessage ? `Modal:${JSON.stringify(openMessage)}` : 'Modal'
-    );
-  }
-  
-  MockWidgetModal.propTypes = {
-    isVisible: PropTypes.bool,
-    openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
-    webViewRef: PropTypes.object,
+  const { View } = require('react-native');
+  // eslint-disable-next-line react/prop-types
+  return function MockModal({ isVisible, children }) {
+    if (!isVisible && !mockKeepModalMounted) return null;
+    return React.createElement(View, { testID: 'widget-modal' }, children);
   };
-  
-  return MockWidgetModal;
+});
+
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  return {
+    WebView: React.forwardRef((props, ref) => {
+      mockWebViewProps = props;
+      React.useImperativeHandle(ref, () => ({ injectJavaScript: mockInject }));
+      return null;
+    }),
+  };
 });
 
 jest.mock('../hooks/useWidgetConfig', () => {
@@ -73,7 +74,14 @@ jest.mock('../hooks/useWidgetConfig', () => {
   }));
 });
 
+const closeFromWidget = () =>
+  mockWebViewProps.onMessage({ nativeEvent: { data: `${WOOT_PREFIX}{"type":"close-widget"}` } });
+
 describe('LimeChatWidget', () => {
+  beforeEach(() => {
+    mockKeepModalMounted = false;
+  });
+
   const defaultProps = {
     websiteToken: 'test-token',
   };
@@ -111,28 +119,80 @@ describe('LimeChatWidget', () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
-  it('opens the widget with a message through the ref handle', () => {
+  it('holds an open message until the webview loads, then sends it once', () => {
+    mockInject.mockClear();
     const ref = React.createRef();
     const { getByTestId, queryByTestId } = render(<LimeChatWidget {...defaultProps} ref={ref} />);
     expect(queryByTestId('widget-modal')).toBeNull();
 
     act(() => ref.current.open('hi'));
-    expect(getByTestId('widget-modal').props.children).toBe('Modal:"hi"');
+    expect(getByTestId('widget-modal')).toBeTruthy();
+    expect(mockWebViewProps.source.uri).not.toContain('lc_open');
+    expect(mockInject).not.toHaveBeenCalled();
+
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).toHaveBeenCalledTimes(1);
+    expect(mockInject.mock.calls[0][0]).toContain('open-with-message');
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"hi"');
+
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).toHaveBeenCalledTimes(1);
   });
 
-  it('opens without a message and sends open-with-message when already open', () => {
+  it('opens without a message and sends open-with-message right away when loaded', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).not.toHaveBeenCalled();
+
+    act(() => ref.current.open('again'));
+    expect(mockInject).toHaveBeenCalledTimes(1);
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"again"');
+  });
+
+  it('still delivers an open message when reopened while the webview is mounted during close', () => {
     mockInject.mockClear();
     const ref = React.createRef();
     const { getByTestId } = render(<LimeChatWidget {...defaultProps} ref={ref} />);
 
     act(() => ref.current.open());
-    expect(getByTestId('widget-modal').props.children).toBe('Modal');
-    expect(mockInject).not.toHaveBeenCalled();
+    act(() => mockWebViewProps.onLoad());
+    mockKeepModalMounted = true;
+    act(() => closeFromWidget());
+    act(() => ref.current.open('back'));
+    mockKeepModalMounted = false;
 
-    act(() => ref.current.open('again'));
+    expect(getByTestId('widget-modal')).toBeTruthy();
     expect(mockInject).toHaveBeenCalledTimes(1);
-    expect(mockInject.mock.calls[0][0]).toContain('open-with-message');
-    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"again"');
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"back"');
+  });
+
+  it('drops a pending open message when the widget is closed', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open('stale'));
+    act(() => closeFromWidget());
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).not.toHaveBeenCalled();
+  });
+
+  it('delivers an open message from a stale open reference after the widget opened', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+    const { open } = ref.current;
+
+    act(() => open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => open('late'));
+    expect(mockInject).toHaveBeenCalledTimes(1);
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"late"');
   });
 
   it('sendMessage returns false while closed and injects when open', () => {
