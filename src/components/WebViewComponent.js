@@ -7,7 +7,8 @@ import {
   buildWidgetUrl,
   generateScripts,
   getMessage,
-  isJsonString
+  isJsonString,
+  shouldOpenExternally,
 } from '../utils';
 import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
 
@@ -25,8 +26,6 @@ const WebViewComponent = ({
   onCwConversationUpdate,
   onError,
 }) => {
-  const [currentUrl, setCurrentUrl] = useState(null);
-
   const [widgetUrl] = useState(() =>
     buildWidgetUrl({
       baseUrl,
@@ -41,12 +40,7 @@ const WebViewComponent = ({
   const injectedJavaScript = generateScripts({ user });
 
   const onShouldStartLoadWithRequest = (request) => {
-    const isMessageView = currentUrl && currentUrl.includes('#/messages');
-    const isAttachmentUrl = !widgetUrl.includes(request.url);
-    // Open the attachments only in the external browser
-    const shouldRedirectToBrowser = isMessageView && isAttachmentUrl;
-
-    if (shouldRedirectToBrowser) {
+    if (shouldOpenExternally(request, baseUrl)) {
       // Use safe URL opening with error handling
       safeOpenURL(request.url).catch(error => {
         reportError(error, onError, {
@@ -58,10 +52,6 @@ const WebViewComponent = ({
     }
 
     return true;
-  };
-
-  const handleWebViewNavigationStateChange = (newNavState) => {
-    setCurrentUrl(newNavState.url);
   };
 
   const handleMessage = (event) => {
@@ -136,7 +126,6 @@ const WebViewComponent = ({
       onLoad={handleLoad}
       onError={handleError}
       onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
-      onNavigationStateChange={handleWebViewNavigationStateChange}
       style={webViewStyles.webview}
       startInLoadingState={true}
       javaScriptEnabled={true}

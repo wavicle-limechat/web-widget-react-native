@@ -5,6 +5,7 @@ import {
   createWootPostMessage,
   getMessage,
   generateScripts,
+  shouldOpenExternally,
 } from '../utils';
 import { WidgetError } from '../utils/errorUtils';
 import { WOOT_PREFIX, POST_MESSAGE_EVENTS } from '../constants';
@@ -155,6 +156,27 @@ describe('Utils', () => {
       expect(url).toContain('color_scheme=light'); // should use default
       expect(url).not.toContain('custom_attributes');
       expect(url).not.toContain('cw_conversation');
+    });
+  });
+
+  describe('shouldOpenExternally', () => {
+    const base = 'https://app.limechat.ai';
+    const nav = (url, isTopFrame = true) => ({ url, isTopFrame });
+
+    it('keeps same-origin urls in the webview', () => {
+      expect(shouldOpenExternally(nav(`${base}/widget?a=1`), base)).toBe(false);
+      expect(shouldOpenExternally(nav(base), base)).toBe(false);
+    });
+
+    it('opens other hosts externally', () => {
+      expect(shouldOpenExternally(nav('https://example.com/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai.evil.com'), base)).toBe(true);
+    });
+
+    it('ignores subframes and internal schemes', () => {
+      expect(shouldOpenExternally(nav('https://example.com/x', false), base)).toBe(false);
+      expect(shouldOpenExternally(nav('about:blank'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('blob:https://app.limechat.ai/1'), base)).toBe(false);
     });
   });
 

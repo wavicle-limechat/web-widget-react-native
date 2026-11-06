@@ -25,6 +25,14 @@ export const createWootPostMessage = (object) =>
 export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 
 /**
+ * Whether a webview navigation should leave the webview and open in the system browser
+ */
+export const shouldOpenExternally = ({ url, isTopFrame }, baseUrl) => {
+  if (isTopFrame === false || /^(about|blob|data):/.test(url)) return false;
+  return url !== baseUrl && !url.startsWith(`${baseUrl}/`);
+};
+
+/**
  * Safe query string builder - replacement for URLSearchParams for React Native compatibility
  */
 const buildQueryString = (params) => {
