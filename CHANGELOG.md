@@ -4,27 +4,45 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 ## [Unreleased]
 
+> **Upgrade note: unverified contact update.** User details passed to the SDK reach the widget through `rnUser` with no verification. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone. If you use identity validation, pass `identifier` and `identifier_hash` so the contact is verified.
+
 ### Added
+- `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
+- `reload()` on the ref handle
+- `onMessage` prop, for widget messages that are not close, unread or token events. The widget sends none today
+- `custom_attributes` on `user`
 - `baseUrl`, `hideFilePicker` and `unreadCount` props
 - `ref` handle with `open(message)` and `sendMessage(event, data)`
 - `identifier` on `user`; `set-user` is sent only with both `identifier` and `identifier_hash`
 
 ### Fixed
+- Main frame HTTP errors reach `onError`, with `statusCode` and `url` in the context
+- `set-user` is sent once per page
+- The live token is kept under external token management, and clearing the `conversationToken` prop drops it
+- An old page's token event after `reload()` is ignored
+- An empty conversation token from the widget is ignored
+- `onWidgetLoad` still fires when `onConversationTokenChange` throws
+- The unread badge caps at `99+`
+- The same origin check compares scheme, host and port, and reads ipv6 hosts and backslashes like a browser
+- Empty `open` messages are ignored
 - Apostrophes no longer break injected scripts
 - Native messages use the `chatwoot-widget:` prefix the widget reads
 - The webview no longer reloads when the conversation token arrives
 - Links to other origins open outside the webview
 - Exports declared in `index.d.ts` now exist at runtime
 - Invalid props no longer loop and spam `onError` on React 18
-- `open(message)` is sent after the widget loads, so contact data is set first. A failed page load still loses it, and `onError` fires
 - Load errors no longer include the conversation token or open message
-- `open(message)` waits for the widget to be listening, not only `onLoad`, so Android's early load event cannot drop it
 - Web links open without `canOpenURL`, which can return false on Android 11+
 - `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
 
 ### Changed
 - The widget url is built when the widget opens. Changing `locale` or `customAttributes` while it is open applies on the next open
-- `onWidgetLoad` fires once on the first open
+- `onWidgetLoad` fires once per page load, when the widget is ready (page loaded and widget listening), not on the first open. A failed page gives no `onWidgetLoad`
+- `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message is not retried if the page failed: call `reload()`
+- At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
+
+### Deprecated
+- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent. Removed at the next major
 
 ### Removed
 - Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received
