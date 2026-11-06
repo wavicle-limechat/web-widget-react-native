@@ -146,7 +146,16 @@ const LimeChatWidget = React.forwardRef(({
     return true;
   };
 
-  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes }));
+  const reload = () => {
+    if (!webViewRef.current) return false;
+    isWidgetReady.current = false;
+    hasLoaded.current = false;
+    widgetListening.current = false;
+    webViewRef.current.reload();
+    return true;
+  };
+
+  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload }));
 
   // the widget adds its message listener after onload, and android can fire onLoad
   // before that. set-cw-conversation is sent in the same task as the listener, so

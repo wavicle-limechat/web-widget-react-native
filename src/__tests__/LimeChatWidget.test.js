@@ -27,6 +27,7 @@ afterAll(() => {
 
 // Mock the components and hooks
 const mockInject = jest.fn();
+const mockReload = jest.fn();
 
 jest.mock('../components/ErrorBoundary', () => {
   return function MockErrorBoundary({ children }) {
@@ -60,7 +61,7 @@ jest.mock('react-native-webview', () => {
   return {
     WebView: React.forwardRef((props, ref) => {
       mockWebViewProps = props;
-      React.useImperativeHandle(ref, () => ({ injectJavaScript: mockInject }));
+      React.useImperativeHandle(ref, () => ({ injectJavaScript: mockInject, reload: mockReload }));
       return null;
     }),
   };
@@ -592,6 +593,47 @@ describe('LimeChatWidget', () => {
       makeReady();
       act(() => { ref.current.setMessageAttributes(attributes); });
       expect(postedBy(attributeCalls()[0][0]).attributes).toEqual(attributes);
+    });
+  });
+
+  describe('reload', () => {
+    beforeEach(() => {
+      mockInject.mockClear();
+      mockReload.mockClear();
+    });
+
+    it('reload returns false while closed', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+      let result;
+      act(() => { result = ref.current.reload(); });
+      expect(result).toBe(false);
+      expect(mockReload).not.toHaveBeenCalled();
+    });
+
+    it('reload resets ready, so attributes wait and onWidgetLoad fires again', () => {
+      const onWidgetLoad = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+
+      let result;
+      act(() => { result = ref.current.reload(); });
+      expect(result).toBe(true);
+      expect(mockReload).toHaveBeenCalledTimes(1);
+
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      expect(mockInject).not.toHaveBeenCalled();
+
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(onWidgetLoad).toHaveBeenCalledTimes(2);
+      expect(mockInject).toHaveBeenCalledTimes(1);
+      expect(mockInject.mock.calls[0][0]).toContain('set-message-attributes');
     });
   });
 });

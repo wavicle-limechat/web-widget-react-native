@@ -52,6 +52,7 @@ export interface LimeChatWidgetHandle {
   open(message?: string | { content?: string; submitted_values?: unknown }): void;
   sendMessage(event: string, data?: Record<string, unknown>): boolean;
   setMessageAttributes(attributes: Record<string, unknown>): boolean;
+  reload(): boolean;
 }
 
 declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;
