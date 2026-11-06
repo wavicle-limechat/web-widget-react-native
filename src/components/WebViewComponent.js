@@ -23,6 +23,7 @@ const WebViewComponent = ({
   cwConversation,
   onWidgetLoad,
   onLoadFailed,
+  onProcessGone,
   onWebViewUnmount,
   onWidgetClose,
   onWidgetMessage,
@@ -125,6 +126,8 @@ const WebViewComponent = ({
       onLoad={onWidgetLoad}
       onError={handleError}
       onHttpError={handleHttpError}
+      onContentProcessDidTerminate={onProcessGone}
+      onRenderProcessGone={onProcessGone}
       onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
       style={webViewStyles.webview}
       startInLoadingState={true}
@@ -152,6 +155,7 @@ WebViewComponent.propTypes = {
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
   onLoadFailed: PropTypes.func,
+  onProcessGone: PropTypes.func,
   onWidgetClose: PropTypes.func,
   onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,

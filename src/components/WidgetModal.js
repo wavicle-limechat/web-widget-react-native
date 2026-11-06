@@ -22,6 +22,7 @@ const WidgetModal = ({
   cwConversation,
   onWidgetLoad,
   onLoadFailed,
+  onProcessGone,
   onWidgetMessage,
   onUnreadCountUpdate,
   onCwConversationUpdate,
@@ -56,6 +57,7 @@ const WidgetModal = ({
             cwConversation={cwConversation}
             onWidgetLoad={onWidgetLoad}
             onLoadFailed={onLoadFailed}
+            onProcessGone={onProcessGone}
             onWidgetClose={onClose}
             onWidgetMessage={onWidgetMessage}
             onUnreadCountUpdate={onUnreadCountUpdate}
@@ -84,6 +86,7 @@ WidgetModal.propTypes = {
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
   onLoadFailed: PropTypes.func,
+  onProcessGone: PropTypes.func,
   onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,

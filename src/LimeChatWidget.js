@@ -50,6 +50,7 @@ const LimeChatWidget = React.forwardRef(({
   const reloadedAt = useRef(0);
   const heldToken = useRef(null);
   const loadFailed = useRef(false);
+  const processRecoveryUsed = useRef(false);
   const lastTokenProp = useRef(conversationToken);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
@@ -174,6 +175,30 @@ const LimeChatWidget = React.forwardRef(({
     return true;
   };
 
+  // the web process died: reload once, then report until the page is ready again
+  const handleProcessGone = () => {
+    isWidgetReady.current = false;
+    hasLoaded.current = false;
+    widgetListening.current = false;
+    heldToken.current = null;
+    if (processRecoveryUsed.current) {
+      loadFailed.current = true;
+      reportError(
+        new WidgetError(
+          ERROR_CODES.WEBVIEW_ERROR,
+          'Widget web process died again before ready',
+          null,
+          { action: 'webViewProcessGone' }
+        ),
+        onError,
+        { action: 'webViewProcessGone' }
+      );
+      return;
+    }
+    processRecoveryUsed.current = true;
+    reload();
+  };
+
   useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload }));
 
   // the widget adds its message listener after onload, and android can fire onLoad
@@ -183,6 +208,7 @@ const LimeChatWidget = React.forwardRef(({
   const markReady = () => {
     if (isWidgetReady.current || !hasLoaded.current || !widgetListening.current) return false;
     isWidgetReady.current = true;
+    processRecoveryUsed.current = false;
     flushAttributes();
     flushOpen();
     return true;
@@ -298,6 +324,7 @@ const LimeChatWidget = React.forwardRef(({
             loadFailed.current = false;
           }}
           onLoadFailed={() => { loadFailed.current = true; }}
+          onProcessGone={handleProcessGone}
           webViewRef={webViewRef}
           webViewKey={webViewKey}
           user={user}

@@ -809,6 +809,78 @@ describe('LimeChatWidget', () => {
     });
   });
 
+  describe('process death', () => {
+    const ready = () => {
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+    };
+
+    it.each(['onContentProcessDidTerminate', 'onRenderProcessGone'])(
+      'process death reloads once, then reports until ready (%s)',
+      (prop) => {
+        const onError = jest.fn();
+        const ref = React.createRef();
+        render(<LimeChatWidget {...defaultProps} onError={onError} ref={ref} />);
+        act(() => ref.current.open());
+        ready();
+        const mounts = mockWebViewMounts;
+
+        // first death: remount, no error
+        act(() => mockWebViewProps[prop]());
+        expect(mockWebViewMounts).toBe(mounts + 1);
+        expect(onError).not.toHaveBeenCalled();
+
+        // second death before ready: no remount, one error
+        act(() => mockWebViewProps[prop]());
+        expect(mockWebViewMounts).toBe(mounts + 1);
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError.mock.calls[0][0].code).toBe('WIDGET_ERROR_1100');
+        expect(onError.mock.calls[0][0].message).toBe('Widget web process died again before ready');
+        expect(onError.mock.calls[0][1].context.action).toBe('webViewProcessGone');
+
+        // a later reload still loads the page
+        act(() => { ref.current.reload(); });
+        expect(mockWebViewMounts).toBe(mounts + 2);
+
+        // ready resets the flag, so the next death reloads again
+        ready();
+        act(() => mockWebViewProps[prop]());
+        expect(mockWebViewMounts).toBe(mounts + 3);
+        expect(onError).toHaveBeenCalledTimes(1);
+      }
+    );
+
+    it('open with a message after the second death retries the page', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onError={jest.fn()} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onRenderProcessGone());
+      act(() => mockWebViewProps.onRenderProcessGone());
+      const mounts = mockWebViewMounts;
+
+      act(() => ref.current.open('hi'));
+      expect(mockWebViewMounts).toBe(mounts + 1);
+    });
+
+    it('held work goes out at ready after a process death', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      ready();
+      mockInject.mockClear();
+
+      act(() => mockWebViewProps.onRenderProcessGone());
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      act(() => ref.current.open('hi'));
+      expect(mockInject).not.toHaveBeenCalled();
+
+      ready();
+      expect(mockInject).toHaveBeenCalledTimes(2);
+      expect(mockInject.mock.calls[0][0]).toContain('set-message-attributes');
+      expect(mockInject.mock.calls[1][0]).toContain('open-with-message');
+    });
+  });
+
   describe('reload', () => {
     beforeEach(() => {
       mockInject.mockClear();
