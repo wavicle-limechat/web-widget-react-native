@@ -184,6 +184,7 @@ LimeChatWidget.propTypes = {
     name: PropTypes.string,
     email: PropTypes.string,
     phone_number: PropTypes.string,
+    identifier: PropTypes.string,
     identifier_hash: PropTypes.string,
   }),
   locale: PropTypes.string,

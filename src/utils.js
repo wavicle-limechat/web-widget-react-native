@@ -66,28 +66,26 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, cus
 /**
  * Generate JavaScript to inject into WebView
  */
+const whenWidgetReady = (script) =>
+  `(function(){var run=function(){${script}};if(document.readyState==='complete'){run();}else{window.addEventListener('load',run);}})();`;
+
 export const generateScripts = ({ user }) => {
-  let script = '';
+  if (!user || Object.keys(user).length === 0) return '';
 
-  // Set user data
-  if (user && Object.keys(user).length > 0) {
-    const userObject = {
-      event: POST_MESSAGE_EVENTS.SET_USER,
-      identifier: user.identifier_hash,
-      user,
-    };
-    script += createWootPostMessage(userObject);
+  // read by the widget at send time and for pre-chat prefill
+  let script = `
+    window.chatwootWebChannel = window.chatwootWebChannel || {};
+    window.chatwootWebChannel.rnUser = ${JSON.stringify({
+      name: user.name || '',
+      email: user.email || '',
+      phone_number: user.phone_number || '',
+    })};
+  `;
 
-    // Set user data globally for form prefill
-    script += `
-      window.chatwootWebChannel = window.chatwootWebChannel || {};
-      window.chatwootWebChannel.rnUser = {
-        name: ${JSON.stringify(user.name || '')},
-        email: ${JSON.stringify(user.email || '')},
-        phone_number: ${JSON.stringify(user.phone_number || '')},
-        identifier: ${JSON.stringify(user.identifier_hash || '')}
-      };
-    `;
+  if (user.identifier && user.identifier_hash) {
+    script += whenWidgetReady(
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user })
+    );
   }
 
   return script;

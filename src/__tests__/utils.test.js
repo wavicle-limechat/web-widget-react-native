@@ -159,15 +159,28 @@ describe('Utils', () => {
   });
 
   describe('generateScripts', () => {
-    it('generates user data scripts', () => {
-      const userData = {
-        user: { name: 'John Doe', email: 'john@example.com' },
-      };
-
-      const scripts = generateScripts(userData);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_USER);
-      expect(scripts).not.toContain('set-locale');
+    it('generates rnUser without set-user when identifier is missing', () => {
+      const scripts = generateScripts({
+        user: { name: 'John Doe', email: 'john@example.com', identifier_hash: 'hash-1' },
+      });
+      expect(scripts).toContain('rnUser');
       expect(scripts).toContain('john@example.com');
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
+      expect(scripts).not.toContain('set-locale');
+    });
+
+    it('generates set-user when identifier and hash are both present', () => {
+      const scripts = generateScripts({
+        user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },
+      });
+      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_USER);
+      expect(scripts).toContain('"identifier":"id-1"');
+      expect(scripts).toContain('chatwoot-widget:');
+    });
+
+    it('does not generate set-user for a hash without identifier', () => {
+      const scripts = generateScripts({ user: { identifier_hash: 'hash-1' } });
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
     });
 
     it('handles empty user data', () => {

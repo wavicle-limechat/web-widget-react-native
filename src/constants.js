@@ -1,4 +1,4 @@
-export const WOOT_PREFIX = 'limechat-widget:';
+export const WOOT_PREFIX = 'chatwoot-widget:';
 
 export const POST_MESSAGE_EVENTS = {
   SET_LOCALE: 'set-locale',

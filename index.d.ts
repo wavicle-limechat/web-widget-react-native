@@ -5,6 +5,7 @@ export interface LimeChatUser {
   name?: string;
   email?: string;
   phone_number?: string;
+  identifier?: string;
   identifier_hash?: string;
 }
 
