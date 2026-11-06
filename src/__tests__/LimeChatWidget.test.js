@@ -308,6 +308,28 @@ describe('LimeChatWidget', () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
+  it('a throwing token callback reaches onError when the event comes first', () => {
+    const onError = jest.fn();
+    const onWidgetLoad = jest.fn();
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget
+        {...defaultProps}
+        onConversationTokenChange={() => { throw new Error('host bug'); }}
+        onWidgetLoad={onWidgetLoad}
+        onError={onError}
+        ref={ref}
+      />
+    );
+
+    act(() => ref.current.open());
+    act(() => widgetListens());
+    act(() => mockWebViewProps.onLoad());
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0][1].context.action).toBe('conversationToken');
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+  });
+
   it('ignores an empty conversation token', () => {
     const onConversationTokenChange = jest.fn();
     const ref = React.createRef();

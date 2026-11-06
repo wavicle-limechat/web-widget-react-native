@@ -228,6 +228,8 @@ const LimeChatWidget = React.forwardRef(({
     heldToken.current = null;
     try {
       if (token !== null) deliverToken(token);
+    } catch (error) {
+      reportError(error, onError, { action: 'conversationToken' });
     } finally {
       if (firstReady) onWidgetLoad?.();
     }
@@ -248,6 +250,8 @@ const LimeChatWidget = React.forwardRef(({
     const firstReady = markReady();
     try {
       deliverToken(conversation);
+    } catch (error) {
+      reportError(error, onError, { action: 'conversationToken' });
     } finally {
       if (firstReady) onWidgetLoad?.();
     }
