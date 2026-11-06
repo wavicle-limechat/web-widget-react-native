@@ -180,6 +180,24 @@ describe('Utils', () => {
       expect(shouldOpenExternally(nav('https://app.limechat.ai.evil.com'), base)).toBe(true);
     });
 
+    it('treats upper case host and an explicit default port as same origin', () => {
+      expect(shouldOpenExternally(nav('https://APP.LimeChat.ai/widget'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai:443/widget'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('HTTPS://app.limechat.ai/widget'), base)).toBe(false);
+    });
+
+    it('keeps a query with no path inside the webview', () => {
+      expect(shouldOpenExternally(nav(`${base}?a=1`), base)).toBe(false);
+      expect(shouldOpenExternally(nav(`${base}#top`), base)).toBe(false);
+    });
+
+    it('opens userinfo, other ports, other schemes and mailto externally', () => {
+      expect(shouldOpenExternally(nav('https://app.limechat.ai@evil.com/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai:8443/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('http://app.limechat.ai/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('mailto:a@b.com'), base)).toBe(true);
+    });
+
     it('ignores subframes and internal schemes', () => {
       expect(shouldOpenExternally(nav('https://example.com/x', false), base)).toBe(false);
       expect(shouldOpenExternally(nav('about:blank'), base)).toBe(false);

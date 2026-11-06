@@ -24,12 +24,22 @@ export const createWootPostMessage = (object) =>
  */
 export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 
+const DEFAULT_PORTS = { http: '80', https: '443' };
+
+// scheme, host and port, same rule as android and ios. no URL class, rn's is partial
+const originOf = (url) => {
+  const match = /^([a-z][a-z0-9+.-]*):\/\/(?:[^/?#]*@)?([^/?#:]*)(?::(\d+))?/i.exec(url);
+  if (!match) return null;
+  const scheme = match[1].toLowerCase();
+  return `${scheme}://${match[2].toLowerCase()}:${match[3] || DEFAULT_PORTS[scheme] || ''}`;
+};
+
 /**
  * Whether a webview navigation should leave the webview and open in the system browser
  */
 export const shouldOpenExternally = ({ url, isTopFrame }, baseUrl) => {
   if (isTopFrame === false || /^(about|blob|data):/.test(url)) return false;
-  return url !== baseUrl && !url.startsWith(`${baseUrl}/`);
+  return originOf(url) !== originOf(baseUrl);
 };
 
 /**
