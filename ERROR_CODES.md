@@ -44,6 +44,7 @@ These errors relate to the chat interface loading and display.
 - Chat interface failed to load
 - The page loaded with an HTTP error (for example 500). `context` has `statusCode` and `url`, without the query string
 - JavaScript errors in the chat window
+- The web process died again before the page was ready (`context.action` is `webViewProcessGone`). The SDK reloads once after the first death and does not reload after the second. The page is blank, so let the customer close the widget
 - Network connectivity issues during chat
 
 **Example handling:**

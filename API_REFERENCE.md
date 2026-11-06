@@ -55,7 +55,7 @@ interface LimeChatUser {
   phone_number?: string;   // Phone with country code (e.g., +1234567890)
   identifier?: string;     // Your own stable user id
   identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
-  custom_attributes?: Record<string, any>; // Attributes saved on the contact
+  custom_attributes?: Record<string, any>; // Sent with every message the customer types
 }
 ```
 
@@ -63,7 +63,7 @@ interface LimeChatUser {
 
 Without them the details are sent unverified. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone.
 
-`user.custom_attributes` are saved on the contact. The `customAttributes` prop is separate. It goes in the widget url for the session.
+User custom attributes go with every message the customer types, not onto the contact. The `customAttributes` prop is separate. It goes in the widget url for the session.
 
 ##### `baseUrl` (string)
 
@@ -241,7 +241,7 @@ Called with the conversation token the widget reports. Empty tokens are ignored.
 
 ##### `onMessage` ((message: object) => void)
 
-Called with parsed messages from the widget that are not close, unread count or token events. The widget sends none today.
+Called with parsed messages from the widget that are not close or token events. The widget sends none today.
 
 ##### `onWidgetClose` (() => void)
 
@@ -300,16 +300,21 @@ widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
 
 | Method | Behaviour |
 |--------|-----------|
-| `open(message)` | Shows the widget. Sends the message now if the widget is ready. Otherwise holds it and sends at ready. An empty string or object only shows the widget. Closing the widget drops a held message. If the page failed to load, nothing retries: call `reload()`, or close and open again. |
+| `open(message)` | Shows the widget. Sends the message now if the widget is ready. Otherwise holds it and sends at ready. An empty string or object only shows the widget. Closing the widget drops a held message. If the page failed to load, a message remounts the page and is sent at ready. `open()` with no message does not retry: call `reload()`. |
 | `setMessageAttributes(attributes)` | Attaches attributes to the customer's next message. Returns `false` for an empty object, a non-object, an array, or a value `JSON.stringify` rejects. Merged with earlier calls and held until ready, then sent before the open message. Needs a widget build that contains `c8126fb7cd`. |
 | `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
-| `reload()` | Reloads the page. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
+| `reload()` | Remounts the webview with the live conversation token. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
 
 #### Message attributes
 
 - Pass JSON values. A `NaN` becomes `null`, a `Date` becomes an ISO string, and an unknown object is sent with its fields.
 - The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
 - If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
+- After the customer's message is sent, the widget clears the attributes. If that message fails, the widget keeps them for the next one. Attributes already sent to the widget are lost on a page reload. Attributes still held are kept.
+
+#### Web process death
+
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that, so the app must let the customer close the widget on this error. A later `reload()` or `open(message)` loads the page again. The next ready resets this.
 
 ---
 

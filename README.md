@@ -126,7 +126,7 @@ export default function App() {
 | `customButton` | `ReactElement` | ❌ | Custom trigger component with optional onPress handler |
 | `onWidgetLoad` | `() => void` | ❌ | Called once per page load, when the widget is ready. It is not called if the page fails or loads but never mounts |
 | `onWidgetClose` | `() => void` | ❌ | Callback fired when the chat widget is closed |
-| `onMessage` | `(message: object) => void` | ❌ | Called with messages from the widget that are not close, unread or token events. The widget sends none today |
+| `onMessage` | `(message: object) => void` | ❌ | Called with messages from the widget that are not close or token events. The widget sends none today |
 | `onError` | [`ErrorHandler`](#error-handling) | ❌ | Callback for handling errors and monitoring |
 | `style` | `ViewStyle` | ❌ | Custom styling for the widget container |
 | `iconStyle` | `ViewStyle` | ❌ | Custom styling for the default chat icon |
@@ -143,11 +143,13 @@ interface LimeChatUser {
   phone_number?: string;   // User's phone number (with country code)
   identifier?: string;     // Your own stable user id
   identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
-  custom_attributes?: Record<string, any>; // Attributes saved on the contact
+  custom_attributes?: Record<string, any>; // Sent with every message the customer types
 }
 ```
 
 `identifier_hash` only works together with `identifier`. The widget verifies the user only when both are set.
+
+User custom attributes go with every message the customer types, not onto the contact.
 
 Without them the details are sent unverified. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone.
 
@@ -170,9 +172,9 @@ widgetRef.current.reload();                // false if the widget is closed
 
 - `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget.
 - Closing the widget drops a held `open` message.
-- If the page fails to load, a held message stays held and nothing retries. Call `reload()`, or close and open again.
+- If the page fails to load, a held message stays held. `open(message)` with a message remounts the page and sends the message at ready. `open()` with no message does not retry: call `reload()`.
 - `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.
-- `reload()` reloads the page. Held attributes and the open message are sent when the new page is ready.
+- `reload()` remounts the webview with the live conversation token. Held attributes and the open message are sent when the new page is ready.
 
 ### Message attributes
 
@@ -183,10 +185,13 @@ widgetRef.current.reload();                // false if the widget is closed
 - Calls are merged and held until the widget is ready. They are sent once, before the open message.
 - The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
 - If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
+- After the customer's message is sent, the widget clears the attributes. If that message fails, the widget keeps them for the next one. Attributes already sent to the widget are lost on a page reload. Attributes still held are kept.
 
 ### Ready
 
 The widget is ready when the page has loaded and the widget is listening. At ready, the SDK sends held attributes, then the held open message, then calls `onConversationTokenChange`, then `onWidgetLoad`. `onWidgetLoad` runs once per page load, so a `reload()` fires it again.
+
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that, so the app must let the customer close the widget on this error. A later `reload()` or `open(message)` loads the page again. The next ready resets this.
 
 A page that returns 200 but never mounts gives no `onWidgetLoad` and no error. An HTTP error on the page reaches `onError`.
 
