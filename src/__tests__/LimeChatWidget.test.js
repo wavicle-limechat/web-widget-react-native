@@ -305,6 +305,19 @@ describe('LimeChatWidget', () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
+  it('ignores an empty conversation token', () => {
+    const onConversationTokenChange = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onConversationTokenChange={onConversationTokenChange} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => mockWebViewProps.onMessage({
+      nativeEvent: { data: '{"event":"set-cw-conversation","cw_conversation":" "}' },
+    }));
+    expect(onConversationTokenChange).not.toHaveBeenCalled();
+  });
+
   it('does not resend on a repeat set-cw-conversation', () => {
     mockInject.mockClear();
     const ref = React.createRef();

@@ -183,6 +183,7 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const deliverToken = (conversation) => {
+    if (typeof conversation !== 'string' || !conversation.trim()) return;
     setCwConversation(conversation);
     onConversationTokenChange?.(conversation);
   };
