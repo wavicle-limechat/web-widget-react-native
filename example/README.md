@@ -4,7 +4,6 @@ This is an example React Native app built with Expo that demonstrates how to int
 
 ## Features
 
-- 🌓 **Dark/Light Mode Support**: Automatic theme switching based on system preferences
 - 👤 **User Pre-filling**: Demonstrate user information integration
 - 🎨 **Custom Styling**: Show how to customize widget appearance
 - 📱 **Mobile Optimized**: Built specifically for React Native/Expo
@@ -43,7 +42,6 @@ Before running the app, make sure to update the `websiteToken` in `App.js`:
   websiteToken="your-actual-website-token-here"  // Replace with your token
   user={user}
   locale="en"
-  colorScheme={colorScheme}
   customAttributes={customAttributes}
   onWidgetLoad={handleWidgetLoad}
   onWidgetClose={handleWidgetClose}
@@ -58,7 +56,6 @@ The example demonstrates these key LimeChat Widget properties:
 - `websiteToken`: Your LimeChat website token
 - `user`: User information object (name, email, phone)
 - `locale`: Language locale (e.g., 'en', 'es', 'fr')
-- `colorScheme`: Theme preference ('light', 'dark', 'auto')
 - `customAttributes`: Additional user metadata
 - `onWidgetLoad`: Callback when widget loads successfully
 - `onWidgetClose`: Callback when widget is closed
@@ -79,9 +76,8 @@ example/
 
 The app includes interactive elements to test different widget configurations:
 
-1. **Color Scheme Toggle**: Tap the button to cycle through light, dark, and auto modes
-2. **Widget Interaction**: The widget icon should appear and be interactive
-3. **Console Logging**: Check the console for widget lifecycle events
+1. **Widget Interaction**: The widget icon should appear and be interactive
+2. **Console Logging**: Check the console for widget lifecycle events
 
 ## Troubleshooting
 

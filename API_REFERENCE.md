@@ -85,23 +85,6 @@ Language code for the chat interface. Default: `'en'`
 
 **Supported locales**: `'en'`, `'es'`, `'fr'`, `'de'`, `'pt'`, and more.
 
-##### `colorScheme` ('light' | 'dark' | 'auto')
-
-Theme for the chat interface. Default: `'light'`
-
-```javascript
-<LimeChatWidget
-  websiteToken="your-token"
-  colorScheme="dark"
-/>
-```
-
-- `'light'`: Light theme
-- `'dark'`: Dark theme  
-- `'auto'`: Follows system theme
-
-Note: `colorScheme` has no visible effect today. The widget does not read it yet.
-
 ##### `customAttributes` (Record<string, any>)
 
 Additional metadata to pass with the chat session.
@@ -302,7 +285,6 @@ interface LimeChatWidgetProps {
   baseUrl?: string;
   user?: LimeChatUser;
   locale?: string;
-  colorScheme?: 'light' | 'dark' | 'auto';
   hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   customButton?: React.ReactElement;
@@ -339,7 +321,6 @@ const url = buildWidgetUrl({
   baseUrl: 'https://app.limechat.ai',
   websiteToken: 'your-token',
   locale: 'en',
-  colorScheme: 'light',
   customAttributes: {
     plan: 'premium'
   }
@@ -353,7 +334,6 @@ console.log(url);
 - `baseUrl` (string): LimeChat base URL
 - `websiteToken` (string): Your website token
 - `locale` (string, optional): Language code
-- `colorScheme` (string, optional): Theme preference
 - `hideFilePicker` (boolean, optional): Hide the attachment button
 - `customAttributes` (object, optional): Additional metadata
 - `cwConversation` (string, optional): Conversation token for continuity
@@ -462,7 +442,6 @@ const ChatIntegration = () => {
         identifier_hash: user.secureHash
       }}
       locale={preferences.language || 'en'}
-      colorScheme={preferences.theme || 'light'}
       customAttributes={{
         subscription_tier: user.subscriptionTier,
         account_type: user.accountType,

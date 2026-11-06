@@ -119,7 +119,6 @@ export default function App() {
 | `user` | [`LimeChatUser`](#limechatuser) | ❌ | User information for personalized chat experience |
 | `baseUrl` | `string` | ❌ | LimeChat base URL (default: `'https://app.limechat.ai'`) |
 | `locale` | `string` | ❌ | Language locale (default: `'en'`) |
-| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Theme preference (default: `'light'`). The widget has no visible theme change for this today |
 | `hideFilePicker` | `boolean` | ❌ | Hide the attachment button in the chat (default: `false`) |
 | `customAttributes` | `Record<string, any>` | ❌ | Additional metadata to pass with the chat session |
 | `customButton` | `ReactElement` | ❌ | Custom trigger component with optional onPress handler |
@@ -228,7 +227,6 @@ export default function ChatIntegration() {
         app_version: '2.1.0',
         user_segment: preferences.segment,
       }}
-      colorScheme={preferences.theme}
     />
   );
 }
