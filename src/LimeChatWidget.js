@@ -40,6 +40,7 @@ const LimeChatWidget = React.forwardRef(({
   const webViewRef = useRef(null);
   const pendingOpen = useRef(null);
   const isWidgetReady = useRef(false);
+  const lastValidationMessage = useRef(null);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
@@ -48,8 +49,11 @@ const LimeChatWidget = React.forwardRef(({
       validators.websiteToken(websiteToken);
       validators.user(user);
       validators.customAttributes(customAttributes);
+      lastValidationMessage.current = null;
       setValidationError(null);
     } catch (error) {
+      if (lastValidationMessage.current === error.message) return;
+      lastValidationMessage.current = error.message;
       setValidationError(error);
       reportError(error, onError, { action: 'propValidation' });
     }

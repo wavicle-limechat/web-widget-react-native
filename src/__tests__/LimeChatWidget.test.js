@@ -119,6 +119,33 @@ describe('LimeChatWidget', () => {
     expect(onError).toHaveBeenCalledTimes(1);
   });
 
+  it('reports the same validation error once when onError sets host state', () => {
+    const real = validators.websiteToken;
+    let calls = 0;
+    const spy = jest.spyOn(validators, 'websiteToken').mockImplementation((token) => {
+      calls += 1;
+      if (calls > 50) return true;
+      return real(token);
+    });
+    const onError = jest.fn();
+    const Host = () => {
+      const [, setCount] = React.useState(0);
+      return (
+        <LimeChatWidget
+          websiteToken=""
+          onError={(e) => {
+            onError(e);
+            setCount((c) => c + 1);
+          }}
+        />
+      );
+    };
+    render(<Host />);
+    spy.mockRestore();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
   it('holds an open message until the webview loads, then sends it once', () => {
     mockInject.mockClear();
     const ref = React.createRef();
