@@ -93,6 +93,29 @@ describe('WebViewComponent', () => {
     expect(JSON.stringify(info)).not.toContain('secret-jwt');
   });
 
+  describe('data and blob urls', () => {
+    const setup = () => {
+      render(<WebViewComponent baseUrl="https://app.limechat.ai" websiteToken="tok" />);
+      return mockLastProps.onShouldStartLoadWithRequest;
+    };
+
+    it('a top frame data or blob url is blocked and not opened', () => {
+      const { Linking } = require('react-native');
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue();
+      const shouldStart = setup();
+
+      expect(shouldStart({ url: 'data:text/html,<b>x</b>', isTopFrame: true })).toBe(false);
+      expect(shouldStart({ url: 'blob:https://app.limechat.ai/abc' })).toBe(false);
+      expect(open).not.toHaveBeenCalled();
+      open.mockRestore();
+    });
+
+    it('a subframe blob url loads', () => {
+      const shouldStart = setup();
+      expect(shouldStart({ url: 'blob:https://app.limechat.ai/abc', isTopFrame: false })).toBe(true);
+    });
+  });
+
   describe('onWidgetMessage', () => {
     const send = (payload) =>
       mockLastProps.onMessage({ nativeEvent: { data: JSON.stringify(payload) } });

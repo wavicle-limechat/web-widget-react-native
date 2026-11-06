@@ -48,6 +48,7 @@ const WebViewComponent = ({
   const injectedJavaScript = generateScripts({ user });
 
   const onShouldStartLoadWithRequest = (request) => {
+    if (request.isTopFrame !== false && /^(blob|data):/.test(request.url)) return false;
     if (shouldOpenExternally(request, baseUrl)) {
       // Use safe URL opening with error handling
       safeOpenURL(request.url).catch(error => {
