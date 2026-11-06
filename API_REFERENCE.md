@@ -55,10 +55,15 @@ interface LimeChatUser {
   phone_number?: string;   // Phone with country code (e.g., +1234567890)
   identifier?: string;     // Your own stable user id
   identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
+  custom_attributes?: Record<string, any>; // Attributes saved on the contact
 }
 ```
 
 `identifier_hash` needs `identifier`. The widget verifies the user only when both are set.
+
+Without them the details are sent unverified. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone.
+
+`user.custom_attributes` are saved on the contact. The `customAttributes` prop is separate. It goes in the widget url for the session.
 
 ##### `baseUrl` (string)
 
@@ -70,7 +75,7 @@ Hide the attachment button in the chat. Default: `false`.
 
 ##### `unreadCount` (number)
 
-Unread count shown on the badge. Set by the host app. `0` hides the badge.
+Number shown on the badge, capped at `99+`. Set by the host app. `0` hides the badge. The widget does not update it.
 
 ##### `locale` (string)
 
@@ -107,6 +112,22 @@ Additional metadata to pass with the chat session.
 - User segmentation
 - Purchase history
 - Geographic region
+
+##### `conversationToken` (string)
+
+Token of the conversation to continue. It wins over the token the widget reported. The widget url is built when the widget opens, so a change applies on the next open.
+
+Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Use this on logout. If you never pass the prop, remount the widget with a new `key` when the user changes.
+
+```javascript
+const [token, setToken] = useState(storedToken);
+
+<LimeChatWidget
+  websiteToken="your-token"
+  conversationToken={token}
+  onConversationTokenChange={(next) => { saveToken(next); setToken(next); }}
+/>
+```
 
 ##### `customButton` (ReactElement)
 
@@ -200,7 +221,9 @@ Custom styling for the unread count text.
 
 ##### `onWidgetLoad` (() => void)
 
-Called when the chat widget loads successfully.
+Called once per page load, when the widget is ready: the page has loaded and the widget is listening. Held attributes, the held open message and `onConversationTokenChange` run first. A `reload()` fires it again.
+
+It is not called if the page fails or loads but never mounts. A page that returns 200 and never mounts gives no error either. An HTTP error on the page reaches `onError`.
 
 ```javascript
 <LimeChatWidget
@@ -211,6 +234,14 @@ Called when the chat widget loads successfully.
   }}
 />
 ```
+
+##### `onConversationTokenChange` ((token: string) => void)
+
+Called with the conversation token the widget reports. Empty tokens are ignored. Store it and pass it back through `conversationToken` to continue the conversation after a restart.
+
+##### `onMessage` ((message: object) => void)
+
+Called with parsed messages from the widget that are not close, unread count or token events. The widget sends none today.
 
 ##### `onWidgetClose` (() => void)
 
@@ -247,6 +278,53 @@ Called when an error occurs. See [Error Handling Guide](./ERROR_CODES.md) for de
 />
 ```
 
+### Ref handle
+
+```typescript
+interface LimeChatWidgetHandle {
+  open(message?: string | { content?: string; submitted_values?: unknown }): void;
+  sendMessage(event: string, data?: Record<string, unknown>): boolean;
+  setMessageAttributes(attributes: Record<string, unknown>): boolean;
+  reload(): boolean;
+}
+```
+
+```javascript
+const widgetRef = useRef(null);
+
+<LimeChatWidget ref={widgetRef} websiteToken="your-token" />
+
+widgetRef.current.open('Hi, I need help');
+widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
+```
+
+| Method | Behaviour |
+|--------|-----------|
+| `open(message)` | Shows the widget. Sends the message now if the widget is ready. Otherwise holds it and sends at ready. An empty string or object only shows the widget. Closing the widget drops a held message. If the page failed to load, nothing retries: call `reload()`, or close and open again. |
+| `setMessageAttributes(attributes)` | Attaches attributes to the customer's next message. Returns `false` for an empty object, a non-object, an array, or a value `JSON.stringify` rejects. Merged with earlier calls and held until ready, then sent before the open message. Needs a widget build that contains `c8126fb7cd`. |
+| `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
+| `reload()` | Reloads the page. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
+
+#### Message attributes
+
+- Pass JSON values. A `NaN` becomes `null`, a `Date` becomes an ISO string, and an unknown object is sent with its fields.
+- The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
+- If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
+
+---
+
+## Callback names across the LimeChat SDKs
+
+| Concept | Android | React Native | iOS |
+|---------|---------|--------------|-----|
+| loaded | `onLoaded` | `onWidgetLoad` | `widgetDidLoad` |
+| close | `onClose` | `onWidgetClose` | `widgetDidRequestClose` |
+| error | `onError` | `onError` | `widgetDidReceiveError` |
+| message | `onMessage` | `onMessage` | `widgetDidReceiveMessage` |
+| token | `onConversationTokenChange` | `onConversationTokenChange` | `widgetDidChangeConversationToken` |
+| identifier hash | `identifierHash` | `identifier_hash` | `identifierHash` |
+| phone | `phoneNumber` | `phone_number` | `phoneNumber` |
+
 ---
 
 ## Type Definitions
@@ -277,9 +355,7 @@ interface WidgetErrorData {
 }
 ```
 
-### Props and ref handle
-
-`LimeChatWidgetProps`, `LimeChatUser` and `LimeChatWidgetHandle` are declared in [`index.d.ts`](./index.d.ts). The props are listed above.
+All types are declared in [`index.d.ts`](./index.d.ts).
 
 ---
 
