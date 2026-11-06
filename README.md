@@ -164,47 +164,6 @@ widgetRef.current.sendMessage('set-label', { label: 'vip' }); // false if the wi
 
 ## 🎨 Customization Examples
 
-### Advanced Styling
-
-```tsx
-import { StyleSheet } from 'react-native';
-
-const styles = StyleSheet.create({
-  widgetContainer: {
-    position: 'absolute',
-    bottom: 100,
-    left: 20, // Position on left instead of right
-  },
-  chatIcon: {
-    backgroundColor: '#ff6b6b',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-  unreadBadge: {
-    backgroundColor: '#ff4757',
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  unreadText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-});
-
-<LimeChatWidget
-  websiteToken="your-token"
-  style={styles.widgetContainer}
-  iconStyle={styles.chatIcon}
-  unreadCountStyle={styles.unreadBadge}
-  unreadCountTextStyle={styles.unreadText}
-/>
-```
-
 ### User Context Integration
 
 ```tsx
@@ -271,34 +230,7 @@ const handleChatError = (error, errorData) => {
 />
 ```
 
-### Advanced Error Monitoring
-
-```tsx
-const handleChatError = (error, errorData) => {
-  // Send to error tracking service
-  if (error.severity === 'critical' || error.severity === 'high') {
-    Sentry.captureException(error, {
-      tags: {
-        component: 'limechat_widget',
-        error_code: error.code,
-      },
-      extra: errorData,
-    });
-  }
-
-  // Show user-appropriate messages
-  const userMessages = {
-    'WIDGET_ERROR_1000': 'Chat setup issue. Please contact support.',
-    'WIDGET_ERROR_1100': 'Chat temporarily unavailable. Please try again.',
-    'WIDGET_ERROR_1200': 'Connection issue. Check your internet connection.',
-    'WIDGET_ERROR_1300': 'Display issue. Refreshing chat interface.',
-  };
-
-  if (userMessages[error.code] && error.severity !== 'low') {
-    showUserNotification(userMessages[error.code]);
-  }
-};
-```
+See [ERROR_CODES.md](./ERROR_CODES.md) for the error codes, monitoring and recovery examples.
 
 ## 🌟 Advanced Features
 
@@ -384,28 +316,8 @@ const chatConfig: LimeChatWidgetProps = {
 | **Chat not loading** | Check internet connection and firewall settings |
 | **TypeScript errors** | Make sure you're using the latest version with updated type definitions |
 
-### Debug Mode
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for more, including debug logging.
 
-Enable detailed logging to diagnose issues:
-
-```tsx
-<LimeChatWidget
-  websiteToken="your-token"
-  onError={(error, errorData) => {
-    // Detailed error information
-    console.log('Error Details:', {
-      code: error.code,
-      type: error.type,
-      severity: error.severity,
-      message: error.message,
-      timestamp: error.timestamp,
-      context: errorData,
-    });
-  }}
-  onWidgetLoad={() => console.log('✅ Chat loaded successfully')}
-  onWidgetClose={() => console.log('💬 Chat closed')}
-/>
-```
 
 ## 📄 License
 

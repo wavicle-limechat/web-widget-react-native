@@ -93,11 +93,9 @@ cd ios && pod install
 
 2. **Check Import Statement**:
    ```typescript
-   // ✅ Correct import
+   // both work
    import { LimeChatWidget } from '@limechat/react-native-widget';
-   
-   // ❌ Incorrect
-   import LimeChatWidget from '@limechat/react-native-widget';
+   // import LimeChatWidget from '@limechat/react-native-widget';
    ```
 
 3. **Type your props correctly**:
@@ -247,16 +245,7 @@ const checkNetworkAndInitChat = async () => {
 
 ---
 
-## 🔍 Common Error Codes
-
-| Error Code | Meaning | Quick Fix |
-|------------|---------|-----------|
-| `WIDGET_ERROR_1000` | Configuration issue | Check website token, user data format |
-| `WIDGET_ERROR_1100` | Chat interface problem | Check network, try refreshing |
-| `WIDGET_ERROR_1200` | Network connection issue | Verify internet connection |
-| `WIDGET_ERROR_1300` | UI rendering issue | Usually minor, check console for details |
-
-For detailed error handling, see our [Error Handling Guide](./ERROR_CODES.md).
+For error codes, see the [Error Handling Guide](./ERROR_CODES.md).
 
 ---
 
@@ -340,33 +329,6 @@ Please gather this information:
 - Include "React Native SDK" in subject line
 - Attach relevant code snippets and error logs
 - Mention your LimeChat plan for faster response
-
----
-
-## 🔄 Regular Maintenance
-
-### Keep Dependencies Updated
-
-```bash
-# Check for updates
-yarn outdated
-
-# Update LimeChat SDK
-yarn add @limechat/react-native-widget@latest
-
-# Update peer dependencies
-yarn add react-native-modal@latest react-native-webview@latest
-
-# iOS only - update pods
-cd ios && pod update
-```
-
-### Monitor Console for Warnings
-
-Watch for these patterns in your logs:
-- `LimeChat Widget Error:` - SDK errors
-- `Widget loaded successfully` - Successful initialization
-- Network-related warnings
 
 ---
 

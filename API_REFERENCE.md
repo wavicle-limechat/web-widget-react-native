@@ -277,34 +277,9 @@ interface WidgetErrorData {
 }
 ```
 
-### LimeChatWidgetProps
+### Props and ref handle
 
-```typescript
-interface LimeChatWidgetProps {
-  websiteToken: string;
-  baseUrl?: string;
-  user?: LimeChatUser;
-  locale?: string;
-  hideFilePicker?: boolean;
-  customAttributes?: Record<string, any>;
-  customButton?: React.ReactElement;
-  onWidgetLoad?: () => void;
-  onWidgetClose?: () => void;
-  onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
-  style?: ViewStyle;
-  iconStyle?: ViewStyle;
-  unreadCount?: number;
-  unreadCountStyle?: ViewStyle;
-  unreadCountTextStyle?: TextStyle;
-}
-
-interface LimeChatWidgetHandle {
-  open(message?: string | { content?: string; submitted_values?: unknown }): void;
-  sendMessage(event: string, data?: Record<string, unknown>): boolean;
-}
-```
-
-The component accepts a `ref` of type `LimeChatWidgetHandle`.
+`LimeChatWidgetProps`, `LimeChatUser` and `LimeChatWidgetHandle` are declared in [`index.d.ts`](./index.d.ts). The props are listed above.
 
 ---
 
@@ -360,7 +335,7 @@ const ChatIntegration = () => {
       code: error.code,
       severity: error.severity,
       message: error.message,
-      userAgent: errorData.userAgent
+      context: errorData.context
     });
 
     // Track errors for monitoring
@@ -439,7 +414,8 @@ const ChatIntegration = () => {
         name: user.displayName,
         email: user.email,
         phone_number: user.phone,
-        identifier_hash: user.secureHash
+        identifier: user.id,
+        identifier_hash: user.secureHash // computed on your server
       }}
       locale={preferences.language || 'en'}
       customAttributes={{
@@ -465,53 +441,6 @@ const ChatIntegration = () => {
 };
 
 export default ChatIntegration;
-```
-
-### Testing and Development Setup
-
-```javascript
-// Development component with comprehensive logging
-const DevChatWidget = () => {
-  const [logs, setLogs] = useState([]);
-
-  const addLog = (message) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-    console.log(`[DevChat] ${message}`);
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      {/* Development logs */}
-      {__DEV__ && (
-        <View style={{ height: 200, backgroundColor: '#f0f0f0', padding: 10 }}>
-          <Text style={{ fontWeight: 'bold' }}>Development Logs:</Text>
-          <ScrollView style={{ flex: 1 }}>
-            {logs.map((log, index) => (
-              <Text key={index} style={{ fontSize: 12, fontFamily: 'monospace' }}>
-                {log}
-              </Text>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      <LimeChatWidget
-        websiteToken="your-test-token"
-        user={{
-          name: 'Test User',
-          email: 'test@example.com'
-        }}
-        onWidgetLoad={() => addLog('✅ Widget loaded successfully')}
-        onWidgetClose={() => addLog('📱 Widget closed')}
-        onError={(error, errorData) => {
-          addLog(`❌ Error: ${error.code} - ${error.message}`);
-          addLog(`   Severity: ${error.severity}`);
-          addLog(`   Context: ${JSON.stringify(errorData.context || {})}`);
-        }}
-      />
-    </View>
-  );
-};
 ```
 
 ---
@@ -542,52 +471,6 @@ const DevChatWidget = () => {
     paddingBottom: Platform.OS === 'android' ? 20 : 0
   }}
 />
-```
-
----
-
-## Performance Tips
-
-### Optimize Re-renders
-
-```javascript
-// Memoize user object to prevent unnecessary re-renders
-const user = useMemo(() => ({
-  name: userData.name,
-  email: userData.email,
-  phone_number: userData.phone
-}), [userData.name, userData.email, userData.phone]);
-
-// Memoize custom attributes
-const customAttributes = useMemo(() => ({
-  subscription_plan: userPlan,
-  app_version: APP_VERSION
-}), [userPlan]);
-
-<LimeChatWidget
-  websiteToken="your-token"
-  user={user}
-  customAttributes={customAttributes}
-/>
-```
-
-### Lazy Loading
-
-```javascript
-// Lazy load chat widget when needed
-const [showChat, setShowChat] = useState(false);
-
-return (
-  <View>
-    {showChat ? (
-      <LimeChatWidget websiteToken="your-token" />
-    ) : (
-      <TouchableOpacity onPress={() => setShowChat(true)}>
-        <Text>Load Chat</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-);
 ```
 
 ---

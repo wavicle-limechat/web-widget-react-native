@@ -42,6 +42,7 @@ These errors relate to the chat interface loading and display.
 
 **Common scenarios:**
 - Chat interface failed to load
+- The page loaded with an HTTP error (for example 500). `context` has `statusCode` and `url`, without the query string
 - JavaScript errors in the chat window
 - Network connectivity issues during chat
 
@@ -204,7 +205,6 @@ const handleChatError = (error, errorData) => {
     severity: error.severity,
     message: error.message,
     timestamp: error.timestamp,
-    userAgent: errorData.userAgent,
     context: errorData.context,
   });
 
