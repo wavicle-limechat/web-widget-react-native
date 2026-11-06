@@ -7,6 +7,7 @@ export interface LimeChatUser {
   phone_number?: string;
   identifier?: string;
   identifier_hash?: string;
+  custom_attributes?: Record<string, any>;
 }
 
 export interface WidgetError {

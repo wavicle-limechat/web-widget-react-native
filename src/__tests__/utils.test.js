@@ -212,6 +212,25 @@ describe('Utils', () => {
       expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
     });
 
+    const rnUserOf = (scripts) => {
+      const win = {};
+      // eslint-disable-next-line no-new-func
+      new Function('window', 'document', scripts)(win, { readyState: 'loading' });
+      return win.chatwootWebChannel.rnUser;
+    };
+
+    it('rnUser carries custom_attributes when set', () => {
+      const scripts = generateScripts({
+        user: { name: 'John', custom_attributes: { plan: 'gold', n: 2 } },
+      });
+      expect(rnUserOf(scripts).custom_attributes).toEqual({ plan: 'gold', n: 2 });
+    });
+
+    it('rnUser has no custom_attributes key when unset', () => {
+      const scripts = generateScripts({ user: { name: 'John' } });
+      expect(rnUserOf(scripts)).toEqual({ name: 'John', email: '', phone_number: '' });
+    });
+
     it('set-user script posts once when injected twice', () => {
       const scripts = generateScripts({
         user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },

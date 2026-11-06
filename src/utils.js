@@ -95,6 +95,7 @@ export const generateScripts = ({ user }) => {
       name: user.name || '',
       email: user.email || '',
       phone_number: user.phone_number || '',
+      ...(user.custom_attributes ? { custom_attributes: user.custom_attributes } : {}),
     })};
   `;
 

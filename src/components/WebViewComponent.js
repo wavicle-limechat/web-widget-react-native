@@ -168,6 +168,7 @@ WebViewComponent.propTypes = {
     phone_number: PropTypes.string,
     identifier: PropTypes.string,
     identifier_hash: PropTypes.string,
+    custom_attributes: PropTypes.object,
   }),
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,

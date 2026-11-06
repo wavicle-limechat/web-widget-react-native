@@ -256,6 +256,7 @@ LimeChatWidget.propTypes = {
     phone_number: PropTypes.string,
     identifier: PropTypes.string,
     identifier_hash: PropTypes.string,
+    custom_attributes: PropTypes.object,
   }),
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
