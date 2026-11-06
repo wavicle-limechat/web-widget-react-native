@@ -106,7 +106,10 @@ const LimeChatWidget = React.forwardRef(({
       reportError(validationError, onError, { action: 'open' });
       return;
     }
-    if (message !== null) pendingOpen.current = message;
+    const hasMessage = typeof message === 'string'
+      ? message.length > 0
+      : !!message && Object.keys(message).length > 0;
+    if (hasMessage) pendingOpen.current = message;
     setShowWidget(true);
     flushOpen();
   };

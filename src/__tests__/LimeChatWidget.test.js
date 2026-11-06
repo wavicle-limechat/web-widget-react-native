@@ -329,6 +329,22 @@ describe('LimeChatWidget', () => {
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"late"');
   });
 
+  it('open with an empty string or object shows the widget and sends nothing', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    const { getByTestId } = render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open(''));
+    expect(getByTestId('widget-modal')).toBeTruthy();
+    act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
+    expect(mockInject).not.toHaveBeenCalled();
+
+    act(() => ref.current.open({}));
+    act(() => ref.current.open(''));
+    expect(mockInject).not.toHaveBeenCalled();
+  });
+
   it('sendMessage returns false while closed and injects when open', () => {
     mockInject.mockClear();
     const ref = React.createRef();
