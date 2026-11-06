@@ -62,7 +62,7 @@ describe('WebViewComponent', () => {
     );
 
     mockLastProps.onMessage({
-      nativeEvent: { data: 'chatwoot-widget:{"event":"set-cw-conversation","cw_conversation":"secret-jwt"}' },
+      nativeEvent: { data: '{"event":"set-cw-conversation","cw_conversation":"secret-jwt"}' },
     });
 
     expect(onError).toHaveBeenCalledTimes(1);
@@ -95,7 +95,7 @@ describe('WebViewComponent', () => {
 
   describe('onWidgetMessage', () => {
     const send = (payload) =>
-      mockLastProps.onMessage({ nativeEvent: { data: `chatwoot-widget:${JSON.stringify(payload)}` } });
+      mockLastProps.onMessage({ nativeEvent: { data: JSON.stringify(payload) } });
     const setup = () => {
       const handlers = {
         onWidgetMessage: jest.fn(),

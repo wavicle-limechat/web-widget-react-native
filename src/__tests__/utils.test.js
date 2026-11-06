@@ -1,9 +1,7 @@
 import {
-  isJsonString,
   buildWidgetUrl,
   fetchWidgetConfig,
   createWootPostMessage,
-  getMessage,
   generateScripts,
   shouldOpenExternally,
 } from '../utils';
@@ -14,21 +12,6 @@ describe('Utils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     global.fetch = jest.fn();
-  });
-
-  describe('isJsonString', () => {
-    it('returns true for valid JSON strings', () => {
-      expect(isJsonString('{"key": "value"}')).toBe(true);
-      expect(isJsonString('[]')).toBe(true);
-      expect(isJsonString('null')).toBe(true);
-      expect(isJsonString('"string"')).toBe(true);
-    });
-
-    it('returns false for invalid JSON strings', () => {
-      expect(isJsonString('invalid json')).toBe(false);
-      expect(isJsonString('{key: value}')).toBe(false);
-      expect(isJsonString('')).toBe(false);
-    });
   });
 
   describe('createWootPostMessage', () => {
@@ -47,14 +30,6 @@ describe('Utils', () => {
       new Function('window', script)({ postMessage: (msg) => posted.push(msg) });
       expect(posted).toHaveLength(1);
       expect(JSON.parse(posted[0].replace(WOOT_PREFIX, ''))).toEqual(object);
-    });
-  });
-
-  describe('getMessage', () => {
-    it('removes the widget prefix from messages', () => {
-      const message = 'test message';
-      const data = `${WOOT_PREFIX}${message}`;
-      expect(getMessage(data)).toBe(message);
     });
   });
 

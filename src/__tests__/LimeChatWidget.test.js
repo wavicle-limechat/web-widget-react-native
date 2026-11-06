@@ -77,11 +77,11 @@ jest.mock('../hooks/useWidgetConfig', () => {
 
 const widgetListens = () =>
   mockWebViewProps.onMessage({
-    nativeEvent: { data: `${WOOT_PREFIX}{"event":"set-cw-conversation","cw_conversation":"jwt"}` },
+    nativeEvent: { data: '{"event":"set-cw-conversation","cw_conversation":"jwt"}' },
   });
 
 const closeFromWidget = () =>
-  mockWebViewProps.onMessage({ nativeEvent: { data: `${WOOT_PREFIX}{"type":"close-widget"}` } });
+  mockWebViewProps.onMessage({ nativeEvent: { data: '{"type":"close-widget"}' } });
 
 describe('LimeChatWidget', () => {
   beforeEach(() => {
@@ -383,7 +383,7 @@ describe('LimeChatWidget', () => {
 
     act(() => ref.current.open());
     act(() => mockWebViewProps.onMessage({
-      nativeEvent: { data: `${WOOT_PREFIX}{"event":"something-new"}` },
+      nativeEvent: { data: '{"event":"something-new"}' },
     }));
     expect(onMessage).toHaveBeenCalledWith({ event: 'something-new' });
   });

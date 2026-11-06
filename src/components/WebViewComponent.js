@@ -6,8 +6,6 @@ import { webViewStyles } from '../styles';
 import {
   buildWidgetUrl,
   generateScripts,
-  getMessage,
-  isJsonString,
   shouldOpenExternally,
 } from '../utils';
 import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
@@ -63,32 +61,20 @@ const WebViewComponent = ({
 
   const handleMessage = (event) => {
     try {
-      const { data } = event.nativeEvent;
-      const message = getMessage(data);
+      const parsedMessage = safeJsonParse(event.nativeEvent.data);
+      if (!parsedMessage || typeof parsedMessage !== 'object') return;
 
-      if (isJsonString(message)) {
-        // Use safe JSON parsing
-        const parsedMessage = safeJsonParse(message);
-        if (!parsedMessage) {
-          throw new WidgetError(
-            ERROR_CODES.WEBVIEW_ERROR,
-            'Failed to parse WebView message as JSON',
-            null
-          );
-        }
+      const { count, cw_conversation } = parsedMessage;
+      const name = parsedMessage.event ?? parsedMessage.type;
 
-        const { count, cw_conversation } = parsedMessage;
-        const name = parsedMessage.event ?? parsedMessage.type;
-
-        if (name === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
-          onWidgetClose?.();
-        } else if (name === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
-          onUnreadCountUpdate?.(count);
-        } else if (name === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
-          onCwConversationUpdate?.(cw_conversation);
-        } else {
-          onWidgetMessage?.(parsedMessage);
-        }
+      if (name === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
+        onWidgetClose?.();
+      } else if (name === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
+        onUnreadCountUpdate?.(count);
+      } else if (name === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
+        onCwConversationUpdate?.(cw_conversation);
+      } else {
+        onWidgetMessage?.(parsedMessage);
       }
     } catch (error) {
       reportError(error, onError, {
@@ -143,7 +129,6 @@ const WebViewComponent = ({
       allowsInlineMediaPlayback={true}
       injectedJavaScript={injectedJavaScript}
       scalesPageToFit={false}
-      useWebKit={true}
       sharedCookiesEnabled={true}
       scrollEnabled={true}
     />

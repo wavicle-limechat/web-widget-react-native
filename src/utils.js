@@ -2,27 +2,10 @@ import { WOOT_PREFIX, POST_MESSAGE_EVENTS, ERROR_CODES } from './constants';
 import { safeJsonParse, WidgetError } from './utils/errorUtils';
 
 /**
- * Check if a string is valid JSON
- */
-export const isJsonString = (string) => {
-  try {
-    JSON.parse(string);
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-
-/**
  * Create a post message script for WebView communication
  */
 export const createWootPostMessage = (object) =>
   `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
-
-/**
- * Extract message from post message data
- */
-export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
 
 const DEFAULT_PORTS = { http: '80', https: '443' };
 
