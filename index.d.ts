@@ -63,7 +63,6 @@ export function buildWidgetUrl(params: {
   locale?: string;
   colorScheme?: string;
   hideFilePicker?: boolean;
-  user?: LimeChatUser;
   customAttributes?: Record<string, any>;
   cwConversation?: string;
 }): string;
@@ -121,7 +120,7 @@ export class WidgetError extends Error {
   constructor(code: string, message: string, originalError?: Error, context?: Record<string, any>);
   code: string;
   type: string;
-  severity: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   originalError?: Error;
   context: Record<string, any>;
   timestamp: string;
