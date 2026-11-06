@@ -42,6 +42,7 @@ export interface LimeChatWidgetProps {
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;
+  unreadCount?: number;
   unreadCountStyle?: ViewStyle;
   unreadCountTextStyle?: TextStyle;
 }

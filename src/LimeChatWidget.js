@@ -26,6 +26,7 @@ const LimeChatWidget = React.forwardRef(({
   onError,
   style,
   iconStyle,
+  unreadCount: unreadCountProp,
   unreadCountStyle,
   unreadCountTextStyle,
 }, ref) => {
@@ -36,6 +37,7 @@ const LimeChatWidget = React.forwardRef(({
   const [validationError, setValidationError] = useState(null);
   const [openMessage, setOpenMessage] = useState(null);
   const webViewRef = useRef(null);
+  const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
   useEffect(() => {
@@ -135,10 +137,10 @@ const LimeChatWidget = React.forwardRef(({
     if (customButton) {
       return (
         <View style={widgetStyles.iconButton}>
-          {unreadCount > 0 && (
+          {shownUnreadCount > 0 && (
             <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
               <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-                {unreadCount}
+                {shownUnreadCount}
               </Text>
             </View>
           )}
@@ -164,10 +166,10 @@ const LimeChatWidget = React.forwardRef(({
         style={widgetStyles.iconButton}
         activeOpacity={0.8}
       >
-        {unreadCount > 0 && (
+        {shownUnreadCount > 0 && (
           <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
             <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-              {unreadCount}
+              {shownUnreadCount}
             </Text>
           </View>
         )}
@@ -235,6 +237,7 @@ LimeChatWidget.propTypes = {
   onError: PropTypes.func,
   style: PropTypes.object,
   iconStyle: PropTypes.object,
+  unreadCount: PropTypes.number,
   unreadCountStyle: PropTypes.object,
   unreadCountTextStyle: PropTypes.object,
 };
