@@ -47,6 +47,7 @@ const LimeChatWidget = React.forwardRef(({
   const widgetListening = useRef(false);
   const lastValidationMessage = useRef(null);
   const reloadedAt = useRef(0);
+  const heldToken = useRef(null);
   const lastTokenProp = useRef(conversationToken);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
@@ -159,6 +160,7 @@ const LimeChatWidget = React.forwardRef(({
   const reload = () => {
     if (!webViewRef.current) return false;
     reloadedAt.current = Date.now();
+    heldToken.current = null;
     isWidgetReady.current = false;
     hasLoaded.current = false;
     widgetListening.current = false;
@@ -180,9 +182,20 @@ const LimeChatWidget = React.forwardRef(({
     return true;
   };
 
+  const deliverToken = (conversation) => {
+    setCwConversation(conversation);
+    onConversationTokenChange?.(conversation);
+  };
+
+  // the token goes to the host after held attributes and open, as on android and ios
   const handleWidgetLoad = () => {
     hasLoaded.current = true;
-    if (markReady()) onWidgetLoad?.();
+    const firstReady = markReady();
+    if (heldToken.current !== null) {
+      deliverToken(heldToken.current);
+      heldToken.current = null;
+    }
+    if (firstReady) onWidgetLoad?.();
   };
 
   const handleUnreadCountUpdate = (count) => {
@@ -193,9 +206,12 @@ const LimeChatWidget = React.forwardRef(({
     // the old page can still answer after a reload started
     if (timestamp < reloadedAt.current) return;
     widgetListening.current = true;
+    if (!hasLoaded.current) {
+      heldToken.current = conversation;
+      return;
+    }
     const firstReady = markReady();
-    setCwConversation(conversation);
-    onConversationTokenChange?.(conversation);
+    deliverToken(conversation);
     if (firstReady) onWidgetLoad?.();
   };
 
@@ -266,6 +282,7 @@ const LimeChatWidget = React.forwardRef(({
             isWidgetReady.current = false;
             hasLoaded.current = false;
             widgetListening.current = false;
+            heldToken.current = null;
           }}
           webViewRef={webViewRef}
           user={user}

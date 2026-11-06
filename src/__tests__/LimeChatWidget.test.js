@@ -258,6 +258,32 @@ describe('LimeChatWidget', () => {
     expect(calls).toEqual(['token', 'loaded']);
   });
 
+  it.each([
+    ['onLoad first', () => { act(() => mockWebViewProps.onLoad()); act(() => widgetListens()); }],
+    ['token event first', () => { act(() => widgetListens()); act(() => mockWebViewProps.onLoad()); }],
+  ])('sends attributes and open before the token and loaded, %s', (_name, signals) => {
+    const calls = [];
+    mockInject.mockReset();
+    mockInject.mockImplementation((js) => {
+      calls.push(js.includes('set-message-attributes') ? 'attrs' : 'open');
+    });
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget
+        {...defaultProps}
+        onConversationTokenChange={() => calls.push('token')}
+        onWidgetLoad={() => calls.push('loaded')}
+        ref={ref}
+      />
+    );
+
+    act(() => ref.current.open('hi'));
+    act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+    signals();
+    expect(calls).toEqual(['attrs', 'open', 'token', 'loaded']);
+    mockInject.mockReset();
+  });
+
   it('does not resend on a repeat set-cw-conversation', () => {
     mockInject.mockClear();
     const ref = React.createRef();
@@ -355,6 +381,7 @@ describe('LimeChatWidget', () => {
 
     act(() => ref.current.open());
     expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    act(() => mockWebViewProps.onLoad());
     act(() => widgetListens());
     expect(onConversationTokenChange).toHaveBeenCalledWith('jwt');
 
@@ -383,6 +410,7 @@ describe('LimeChatWidget', () => {
     const { rerender } = render(<LimeChatWidget {...props} conversationToken="userA" ref={ref} />);
 
     act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
     act(() => widgetListens());
     act(() => closeFromWidget());
 
@@ -392,6 +420,7 @@ describe('LimeChatWidget', () => {
     expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
 
     // next user gets their own live token
+    act(() => mockWebViewProps.onLoad());
     act(() => widgetListens());
     act(() => closeFromWidget());
     act(() => ref.current.open());
