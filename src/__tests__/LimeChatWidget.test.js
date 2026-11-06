@@ -346,6 +346,36 @@ describe('LimeChatWidget', () => {
     expect(mockInject).not.toHaveBeenCalled();
   });
 
+  it('reopen keeps the live token when the host has a callback but no prop', () => {
+    const onConversationTokenChange = jest.fn();
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget {...defaultProps} onConversationTokenChange={onConversationTokenChange} ref={ref} />
+    );
+
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    act(() => widgetListens());
+    expect(onConversationTokenChange).toHaveBeenCalledWith('jwt');
+
+    act(() => closeFromWidget());
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
+  });
+
+  it('a host token prop wins over the live token', () => {
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget {...defaultProps} conversationToken="host-jwt" onConversationTokenChange={jest.fn()} ref={ref} />
+    );
+
+    act(() => ref.current.open());
+    act(() => widgetListens());
+    act(() => closeFromWidget());
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-jwt');
+  });
+
   it('sendMessage returns false while closed and injects when open', () => {
     mockInject.mockClear();
     const ref = React.createRef();

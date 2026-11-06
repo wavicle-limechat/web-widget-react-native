@@ -185,13 +185,8 @@ const LimeChatWidget = React.forwardRef(({
   const handleCwConversationUpdate = (conversation) => {
     widgetListening.current = true;
     const firstReady = markReady();
-    // If external token management is used, call the callback
-    if (onConversationTokenChange) {
-      onConversationTokenChange(conversation);
-    } else {
-      // Otherwise, use internal state management
-      setCwConversation(conversation);
-    }
+    setCwConversation(conversation);
+    onConversationTokenChange?.(conversation);
     if (firstReady) onWidgetLoad?.();
   };
 
