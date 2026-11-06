@@ -52,7 +52,7 @@ const buildQueryString = (params) => {
 /**
  * Build the widget URL with parameters
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, customAttributes, cwConversation }) => {
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hideFilePicker, customAttributes, cwConversation }) => {
   const params = {
     website_token: websiteToken,
     locale: locale || 'en',
@@ -65,6 +65,10 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, cus
 
   if (cwConversation) {
     params.cw_conversation = cwConversation;
+  }
+
+  if (hideFilePicker) {
+    params.hide_file_picker = 'true';
   }
 
   const queryString = buildQueryString(params);

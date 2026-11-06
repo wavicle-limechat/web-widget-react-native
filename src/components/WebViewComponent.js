@@ -17,6 +17,7 @@ const WebViewComponent = ({
   websiteToken,
   locale,
   colorScheme,
+  hideFilePicker,
   user,
   customAttributes,
   cwConversation,
@@ -32,6 +33,7 @@ const WebViewComponent = ({
       websiteToken,
       locale,
       colorScheme,
+      hideFilePicker,
       customAttributes,
       cwConversation,
     })
@@ -145,6 +147,7 @@ WebViewComponent.propTypes = {
   websiteToken: PropTypes.string.isRequired,
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
+  hideFilePicker: PropTypes.bool,
   user: PropTypes.shape({
     name: PropTypes.string,
     email: PropTypes.string,

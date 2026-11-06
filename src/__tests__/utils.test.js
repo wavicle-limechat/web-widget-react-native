@@ -129,6 +129,13 @@ describe('Utils', () => {
       expect(decodeURIComponent(url)).toContain('café résumé 中文');
     });
 
+    it('adds hide_file_picker only when hideFilePicker is true', () => {
+      const base = { baseUrl: 'https://app.limechat.ai', websiteToken: 'test-token' };
+      expect(buildWidgetUrl({ ...base, hideFilePicker: true })).toContain('hide_file_picker=true');
+      expect(buildWidgetUrl(base)).not.toContain('hide_file_picker');
+      expect(buildWidgetUrl({ ...base, hideFilePicker: false })).not.toContain('hide_file_picker');
+    });
+
     it('handles empty custom attributes object', () => {
       const paramsWithEmptyAttributes = {
         baseUrl: 'https://app.limechat.ai',

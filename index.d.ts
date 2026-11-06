@@ -32,6 +32,7 @@ export interface LimeChatWidgetProps {
   user?: LimeChatUser;
   locale?: string;
   colorScheme?: 'light' | 'dark' | 'auto';
+  hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   customButton?: React.ReactElement;
   conversationToken?: string;

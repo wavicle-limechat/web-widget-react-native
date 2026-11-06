@@ -15,6 +15,7 @@ const LimeChatWidget = ({
   user = {},
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
+  hideFilePicker = false,
   customAttributes = {},
   customButton = null,
   conversationToken,
@@ -164,6 +165,7 @@ const LimeChatWidget = ({
           websiteToken={websiteToken}
           locale={locale}
           colorScheme={colorScheme}
+          hideFilePicker={hideFilePicker}
           user={user}
           customAttributes={customAttributes}
           cwConversation={conversationToken || cwConversation}
@@ -189,6 +191,7 @@ LimeChatWidget.propTypes = {
   }),
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
+  hideFilePicker: PropTypes.bool,
   customAttributes: PropTypes.object,
   customButton: PropTypes.element,
   conversationToken: PropTypes.string,
