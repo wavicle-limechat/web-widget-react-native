@@ -99,14 +99,14 @@ const WebViewComponent = ({
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
-    const { url, ...safeEvent } = nativeEvent;
+    const { url, code, description, domain } = nativeEvent;
 
     const error = new WidgetError(
       ERROR_CODES.WEBVIEW_ERROR,
       `WebView failed to load: ${nativeEvent.description || 'Unknown error'}`,
       null,
       {
-        nativeEvent: safeEvent,
+        nativeEvent: { code, description, domain },
         // the query string holds the conversation token and custom attributes
         url: (url || widgetUrl).split('?')[0],
         canGoBack: nativeEvent.canGoBack,

@@ -38,6 +38,7 @@ describe('WebViewComponent', () => {
         description: 'offline',
         url: 'https://app.limechat.ai/widget?cw_conversation=secret-jwt&lc_open_message=hi',
         canGoBack: false,
+        title: 'https://app.limechat.ai/widget?cw_conversation=secret-jwt',
       },
     });
 
