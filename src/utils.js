@@ -81,6 +81,10 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hid
 const whenWidgetReady = (script) =>
   `(function(){var run=function(){${script}};if(document.readyState==='complete'){run();}else{window.addEventListener('load',run);}})();`;
 
+// android re-runs the injected script on each page finish, so guard per document
+const sendOnce = (script) =>
+  `if(!window.__limechatSetUserSent){window.__limechatSetUserSent=true;${script}}`;
+
 export const generateScripts = ({ user }) => {
   if (!user || Object.keys(user).length === 0) return '';
 
@@ -96,7 +100,7 @@ export const generateScripts = ({ user }) => {
 
   if (user.identifier && user.identifier_hash) {
     script += whenWidgetReady(
-      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user })
+      sendOnce(createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user }))
     );
   }
 

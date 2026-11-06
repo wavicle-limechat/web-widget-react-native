@@ -212,6 +212,20 @@ describe('Utils', () => {
       expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
     });
 
+    it('set-user script posts once when injected twice', () => {
+      const scripts = generateScripts({
+        user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },
+      });
+      const win = { postMessage: jest.fn() };
+      const doc = { readyState: 'complete' };
+      // eslint-disable-next-line no-new-func
+      const run = new Function('window', 'document', scripts);
+      run(win, doc);
+      run(win, doc);
+      expect(win.postMessage).toHaveBeenCalledTimes(1);
+      expect(win.postMessage.mock.calls[0][0]).toContain('set-user');
+    });
+
     it('handles empty user data', () => {
       const scripts = generateScripts({});
       expect(scripts).toBe('');
