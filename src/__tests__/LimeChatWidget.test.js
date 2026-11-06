@@ -196,7 +196,7 @@ describe('LimeChatWidget', () => {
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"hi"');
   });
 
-  it('calls onWidgetLoad once when onLoad fires twice', () => {
+  it('calls onWidgetLoad once when onLoad and the widget event each fire twice', () => {
     const onWidgetLoad = jest.fn();
     const ref = React.createRef();
     render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
@@ -204,7 +204,57 @@ describe('LimeChatWidget', () => {
     act(() => ref.current.open());
     act(() => mockWebViewProps.onLoad());
     act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
+    act(() => widgetListens());
     expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onWidgetLoad on onLoad alone', () => {
+    const onWidgetLoad = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    expect(onWidgetLoad).not.toHaveBeenCalled();
+  });
+
+  it('calls onWidgetLoad once at ready, whichever signal comes last', () => {
+    const onWidgetLoad = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    expect(onWidgetLoad).not.toHaveBeenCalled();
+    act(() => widgetListens());
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+
+    // widget event first, then onLoad, on a fresh webview
+    act(() => closeFromWidget());
+    act(() => ref.current.open());
+    act(() => widgetListens());
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+    act(() => mockWebViewProps.onLoad());
+    expect(onWidgetLoad).toHaveBeenCalledTimes(2);
+  });
+
+  it('calls onWidgetLoad after onConversationTokenChange', () => {
+    const calls = [];
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget
+        {...defaultProps}
+        onConversationTokenChange={() => calls.push('token')}
+        onWidgetLoad={() => calls.push('loaded')}
+        ref={ref}
+      />
+    );
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
+    expect(calls).toEqual(['token', 'loaded']);
   });
 
   it('does not resend on a repeat set-cw-conversation', () => {

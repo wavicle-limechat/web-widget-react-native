@@ -121,18 +121,18 @@ const LimeChatWidget = React.forwardRef(({
 
   // the widget adds its message listener after onload, and android can fire onLoad
   // before that. set-cw-conversation is sent in the same task as the listener, so
-  // the held open message goes out only after both onLoad and that event.
+  // ready needs both onLoad and that event.
+  // returns true the first time the widget is ready on this webview load
   const markReady = () => {
-    if (!hasLoaded.current || !widgetListening.current) return;
+    if (isWidgetReady.current || !hasLoaded.current || !widgetListening.current) return false;
     isWidgetReady.current = true;
     flushOpen();
+    return true;
   };
 
   const handleWidgetLoad = () => {
-    const firstLoad = !hasLoaded.current;
     hasLoaded.current = true;
-    markReady();
-    if (firstLoad) onWidgetLoad?.();
+    if (markReady()) onWidgetLoad?.();
   };
 
   const handleError = (error, errorInfo) => {
@@ -145,7 +145,7 @@ const LimeChatWidget = React.forwardRef(({
 
   const handleCwConversationUpdate = (conversation) => {
     widgetListening.current = true;
-    markReady();
+    const firstReady = markReady();
     // If external token management is used, call the callback
     if (onConversationTokenChange) {
       onConversationTokenChange(conversation);
@@ -153,6 +153,7 @@ const LimeChatWidget = React.forwardRef(({
       // Otherwise, use internal state management
       setCwConversation(conversation);
     }
+    if (firstReady) onWidgetLoad?.();
   };
 
   const renderIcon = () => {
