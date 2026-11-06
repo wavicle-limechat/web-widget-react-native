@@ -41,6 +41,7 @@ User information for personalizing the chat experience.
     name: 'John Doe',
     email: 'john@example.com',
     phone_number: '+1234567890',
+    identifier: 'user-123',
     identifier_hash: 'secure_user_hash'
   }}
 />
@@ -52,9 +53,24 @@ interface LimeChatUser {
   name?: string;           // User's display name
   email?: string;          // User's email address  
   phone_number?: string;   // Phone with country code (e.g., +1234567890)
-  identifier_hash?: string; // Secure identifier for user verification
+  identifier?: string;     // Your own stable user id
+  identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
 }
 ```
+
+`identifier_hash` needs `identifier`. The widget verifies the user only when both are set.
+
+##### `baseUrl` (string)
+
+LimeChat base URL. Default: `'https://app.limechat.ai'`. Trailing slashes are removed.
+
+##### `hideFilePicker` (boolean)
+
+Hide the attachment button in the chat. Default: `false`.
+
+##### `unreadCount` (number)
+
+Unread count shown on the badge. Set by the host app. `0` hides the badge.
 
 ##### `locale` (string)
 
@@ -83,6 +99,8 @@ Theme for the chat interface. Default: `'light'`
 - `'light'`: Light theme
 - `'dark'`: Dark theme  
 - `'auto'`: Follows system theme
+
+Note: `colorScheme` has no visible effect today. The widget does not read it yet.
 
 ##### `customAttributes` (Record<string, any>)
 
@@ -281,9 +299,11 @@ interface WidgetErrorData {
 ```typescript
 interface LimeChatWidgetProps {
   websiteToken: string;
+  baseUrl?: string;
   user?: LimeChatUser;
   locale?: string;
   colorScheme?: 'light' | 'dark' | 'auto';
+  hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   customButton?: React.ReactElement;
   onWidgetLoad?: () => void;
@@ -291,10 +311,18 @@ interface LimeChatWidgetProps {
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;
+  unreadCount?: number;
   unreadCountStyle?: ViewStyle;
   unreadCountTextStyle?: TextStyle;
 }
+
+interface LimeChatWidgetHandle {
+  open(message?: string | { content?: string; submitted_values?: unknown }): void;
+  sendMessage(event: string, data?: Record<string, unknown>): boolean;
+}
 ```
+
+The component accepts a `ref` of type `LimeChatWidgetHandle`.
 
 ---
 
@@ -312,10 +340,6 @@ const url = buildWidgetUrl({
   websiteToken: 'your-token',
   locale: 'en',
   colorScheme: 'light',
-  user: {
-    name: 'John Doe',
-    email: 'john@example.com'
-  },
   customAttributes: {
     plan: 'premium'
   }
@@ -330,7 +354,8 @@ console.log(url);
 - `websiteToken` (string): Your website token
 - `locale` (string, optional): Language code
 - `colorScheme` (string, optional): Theme preference
-- `user` (LimeChatUser, optional): User information
+- `hideFilePicker` (boolean, optional): Hide the attachment button
+- `openMessage` (string | object, optional): Message to open the widget with
 - `customAttributes` (object, optional): Additional metadata
 - `cwConversation` (string, optional): Conversation token for continuity
 

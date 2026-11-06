@@ -117,8 +117,10 @@ export default function App() {
 |----------|------|----------|-------------|
 | `websiteToken` | `string` | ✅ | Your LimeChat website token from the dashboard |
 | `user` | [`LimeChatUser`](#limechatuser) | ❌ | User information for personalized chat experience |
+| `baseUrl` | `string` | ❌ | LimeChat base URL (default: `'https://app.limechat.ai'`) |
 | `locale` | `string` | ❌ | Language locale (default: `'en'`) |
-| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Theme preference (default: `'light'`) |
+| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Theme preference (default: `'light'`). The widget has no visible theme change for this today |
+| `hideFilePicker` | `boolean` | ❌ | Hide the attachment button in the chat (default: `false`) |
 | `customAttributes` | `Record<string, any>` | ❌ | Additional metadata to pass with the chat session |
 | `customButton` | `ReactElement` | ❌ | Custom trigger component with optional onPress handler |
 | `onWidgetLoad` | `() => void` | ❌ | Callback fired when the chat widget loads successfully |
@@ -126,6 +128,7 @@ export default function App() {
 | `onError` | [`ErrorHandler`](#error-handling) | ❌ | Callback for handling errors and monitoring |
 | `style` | `ViewStyle` | ❌ | Custom styling for the widget container |
 | `iconStyle` | `ViewStyle` | ❌ | Custom styling for the default chat icon |
+| `unreadCount` | `number` | ❌ | Unread count shown on the badge. Set by the host app |
 | `unreadCountStyle` | `ViewStyle` | ❌ | Custom styling for the unread message badge |
 | `unreadCountTextStyle` | `TextStyle` | ❌ | Custom styling for the unread count text |
 
@@ -136,8 +139,26 @@ interface LimeChatUser {
   name?: string;           // User's display name
   email?: string;          // User's email address
   phone_number?: string;   // User's phone number (with country code)
-  identifier_hash?: string; // Secure user identifier hash
+  identifier?: string;     // Your own stable user id
+  identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
 }
+```
+
+`identifier_hash` only works together with `identifier`. The widget verifies the user only when both are set.
+
+### Ref handle
+
+`LimeChatWidget` accepts a `ref` with these methods:
+
+```tsx
+const widgetRef = useRef(null);
+
+<LimeChatWidget ref={widgetRef} websiteToken="your-token" />
+
+widgetRef.current.open();                 // open the widget
+widgetRef.current.open('Hi, I need help'); // open with a message
+widgetRef.current.open({ content: 'Hi', submitted_values: {} });
+widgetRef.current.sendMessage('set-label', { label: 'vip' }); // false if the widget is closed
 ```
 
 ## 🎨 Customization Examples
@@ -281,13 +302,14 @@ const handleChatError = (error, errorData) => {
 
 ## 🌟 Advanced Features
 
-### Real-time Unread Count
+### Unread Count
 
-The SDK automatically displays unread message counts:
+The unread badge is driven by the host app through `unreadCount`:
 
 ```tsx
 <LimeChatWidget
   websiteToken="your-token"
+  unreadCount={3}
   unreadCountStyle={{
     backgroundColor: '#ff4757',
     top: -8,
@@ -302,7 +324,7 @@ The SDK automatically displays unread message counts:
 
 ### Conversation Continuity
 
-Users can seamlessly continue conversations across app sessions. This feature works automatically with no additional configuration required.
+The SDK keeps the conversation token in memory only. To continue a conversation across app launches, store the token from `onConversationTokenChange` and pass it back through `conversationToken`.
 
 ### Multi-language Support
 
@@ -321,7 +343,6 @@ Users can seamlessly continue conversations across app sessions. This feature wo
 
 ### iOS Requirements
 - iOS 11.0 or later
-- Automatic WebView permissions handling
 
 ### Android Requirements  
 - Android API level 21 (Android 5.0) or later
