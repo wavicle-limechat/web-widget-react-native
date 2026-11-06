@@ -59,6 +59,7 @@ export interface LimeChatWidgetHandle {
 declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;
 
 export default LimeChatWidget;
+export { LimeChatWidget };
 
 // Advanced use cases
 export function buildWidgetUrl(params: {
