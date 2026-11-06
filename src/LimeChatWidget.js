@@ -9,11 +9,9 @@ import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
 
-// Internal baseUrl - not exposed to clients
-const INTERNAL_BASE_URL = WIDGET_CONFIG.DEFAULT_BASE_URL;
-
 const LimeChatWidget = ({
   websiteToken,
+  baseUrl = WIDGET_CONFIG.DEFAULT_BASE_URL,
   user = {},
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
@@ -29,6 +27,7 @@ const LimeChatWidget = ({
   unreadCountStyle,
   unreadCountTextStyle,
 }) => {
+  const widgetBaseUrl = baseUrl.replace(/\/+$/, '');
   const [showWidget, setShowWidget] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [cwConversation, setCwConversation] = useState(null);
@@ -48,7 +47,7 @@ const LimeChatWidget = ({
   }, [websiteToken, user, customAttributes, onError]);
 
   const { widgetConfig, isLoading, error } = useWidgetConfig(
-    INTERNAL_BASE_URL,
+    widgetBaseUrl,
     websiteToken,
     onError
   );
@@ -161,7 +160,7 @@ const LimeChatWidget = ({
         <WidgetModal
           isVisible={showWidget}
           onClose={handleModalClose}
-          baseUrl={INTERNAL_BASE_URL}
+          baseUrl={widgetBaseUrl}
           websiteToken={websiteToken}
           locale={locale}
           colorScheme={colorScheme}
@@ -180,6 +179,7 @@ const LimeChatWidget = ({
 
 LimeChatWidget.propTypes = {
   websiteToken: PropTypes.string.isRequired,
+  baseUrl: PropTypes.string,
   user: PropTypes.shape({
     name: PropTypes.string,
     email: PropTypes.string,

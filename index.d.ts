@@ -28,6 +28,7 @@ export interface WidgetErrorData {
 
 export interface LimeChatWidgetProps {
   websiteToken: string;
+  baseUrl?: string;
   user?: LimeChatUser;
   locale?: string;
   colorScheme?: 'light' | 'dark' | 'auto';

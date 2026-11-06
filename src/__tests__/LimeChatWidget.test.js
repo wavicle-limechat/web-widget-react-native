@@ -55,19 +55,33 @@ jest.mock('../components/WidgetModal', () => {
 });
 
 jest.mock('../hooks/useWidgetConfig', () => {
-  return function useWidgetConfig() {
-    return {
-      widgetConfig: {},
-      isLoading: false,
-      error: null,
-    };
-  };
+  return jest.fn(() => ({
+    widgetConfig: {},
+    isLoading: false,
+    error: null,
+  }));
 });
 
 describe('LimeChatWidget', () => {
   const defaultProps = {
     websiteToken: 'test-token',
   };
+
+  it('passes a trimmed baseUrl to useWidgetConfig', () => {
+    const useWidgetConfig = require('../hooks/useWidgetConfig');
+    useWidgetConfig.mockClear();
+    render(<LimeChatWidget {...defaultProps} baseUrl="https://staging.example.com//" />);
+
+    expect(useWidgetConfig.mock.calls[0][0]).toBe('https://staging.example.com');
+  });
+
+  it('uses the default baseUrl when none is given', () => {
+    const useWidgetConfig = require('../hooks/useWidgetConfig');
+    useWidgetConfig.mockClear();
+    render(<LimeChatWidget {...defaultProps} />);
+
+    expect(useWidgetConfig.mock.calls[0][0]).toBe('https://app.limechat.ai');
+  });
 
   it('renders default widget icon when no customButton is provided', () => {
     const { getByTestId } = render(<LimeChatWidget {...defaultProps} />);
