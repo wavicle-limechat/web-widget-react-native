@@ -72,8 +72,7 @@ const WebViewComponent = ({
           throw new WidgetError(
             ERROR_CODES.WEBVIEW_ERROR,
             'Failed to parse WebView message as JSON',
-            null,
-            { rawMessage: message }
+            null
           );
         }
 
@@ -93,22 +92,23 @@ const WebViewComponent = ({
       }
     } catch (error) {
       reportError(error, onError, {
-        action: 'handleWebViewMessage',
-        eventData: event.nativeEvent.data
+        action: 'handleWebViewMessage'
       });
     }
   };
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
+    const { url, ...safeEvent } = nativeEvent;
 
     const error = new WidgetError(
       ERROR_CODES.WEBVIEW_ERROR,
       `WebView failed to load: ${nativeEvent.description || 'Unknown error'}`,
       null,
       {
-        nativeEvent,
-        url: nativeEvent.url || widgetUrl,
+        nativeEvent: safeEvent,
+        // the query string holds the conversation token and custom attributes
+        url: (url || widgetUrl).split('?')[0],
         canGoBack: nativeEvent.canGoBack,
         canGoForward: nativeEvent.canGoForward
       }

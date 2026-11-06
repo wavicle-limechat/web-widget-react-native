@@ -21,4 +21,50 @@ describe('WebViewComponent', () => {
     rerender(<WebViewComponent {...props} cwConversation="jwt-1" />);
     expect(mockLastProps.source.uri).toBe(firstUri);
   });
+
+  it('keeps the token and open message out of load error context', () => {
+    const onError = jest.fn();
+    const props = {
+      baseUrl: 'https://app.limechat.ai',
+      websiteToken: 'tok',
+      cwConversation: 'secret-jwt',
+      customAttributes: { plan: 'gold' },
+      onError,
+    };
+    render(<WebViewComponent {...props} />);
+
+    mockLastProps.onError({
+      nativeEvent: {
+        description: 'offline',
+        url: 'https://app.limechat.ai/widget?cw_conversation=secret-jwt&lc_open_message=hi',
+        canGoBack: false,
+      },
+    });
+
+    const json = JSON.stringify(onError.mock.calls[0][1]);
+    expect(json).not.toContain('secret-jwt');
+    expect(json).not.toContain('cw_conversation');
+    expect(json).not.toContain('lc_open_');
+    expect(onError.mock.calls[0][1].context.url).toBe('https://app.limechat.ai/widget');
+  });
+
+  it('keeps the raw message out of error context when the token callback throws', () => {
+    const onError = jest.fn();
+    const onCwConversationUpdate = jest.fn(() => { throw new Error('boom'); });
+    render(
+      <WebViewComponent
+        baseUrl="https://app.limechat.ai"
+        websiteToken="tok"
+        onError={onError}
+        onCwConversationUpdate={onCwConversationUpdate}
+      />
+    );
+
+    mockLastProps.onMessage({
+      nativeEvent: { data: 'chatwoot-widget:{"event":"set-cw-conversation","cw_conversation":"secret-jwt"}' },
+    });
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(onError.mock.calls[0][1])).not.toContain('secret-jwt');
+  });
 });
