@@ -16,11 +16,8 @@ export const isJsonString = (string) => {
 /**
  * Create a post message script for WebView communication
  */
-export const createWootPostMessage = (object) => {
-  const stringifyObject = `'${WOOT_PREFIX}${JSON.stringify(object)}'`;
-  const script = `window.postMessage(${stringifyObject});`;
-  return script;
-};
+export const createWootPostMessage = (object) =>
+  `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
 
 /**
  * Extract message from post message data

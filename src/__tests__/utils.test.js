@@ -34,8 +34,18 @@ describe('Utils', () => {
     it('creates properly formatted post message scripts', () => {
       const object = { event: 'test', data: 'value' };
       const result = createWootPostMessage(object);
-      const expected = `window.postMessage('${WOOT_PREFIX}${JSON.stringify(object)}');`;
+      const expected = `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
       expect(result).toBe(expected);
+    });
+
+    it('survives apostrophes, backslashes and newlines', () => {
+      const object = { name: "O'Brien", path: 'a\\b', text: 'l1\nl2' };
+      const script = createWootPostMessage(object);
+      const posted = [];
+      // eslint-disable-next-line no-new-func
+      new Function('window', script)({ postMessage: (msg) => posted.push(msg) });
+      expect(posted).toHaveLength(1);
+      expect(JSON.parse(posted[0].replace(WOOT_PREFIX, ''))).toEqual(object);
     });
   });
 
