@@ -3,6 +3,7 @@ import React from 'react';
 import { SafeAreaView, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { modalStyles } from '../styles';
+import { userPropType } from '../utils/propTypes';
 import WebViewComponent from './WebViewComponent';
 
 const WidgetModal = ({
@@ -73,14 +74,7 @@ WidgetModal.propTypes = {
   hideFilePicker: PropTypes.bool,
   onWebViewUnmount: PropTypes.func,
   webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone_number: PropTypes.string,
-    identifier: PropTypes.string,
-    identifier_hash: PropTypes.string,
-    custom_attributes: PropTypes.object,
-  }),
+  user: userPropType,
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,

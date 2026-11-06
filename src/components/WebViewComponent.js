@@ -9,6 +9,7 @@ import {
   shouldOpenExternally,
 } from '../utils';
 import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
+import { userPropType } from '../utils/propTypes';
 
 const WebViewComponent = ({
   baseUrl,
@@ -143,14 +144,7 @@ WebViewComponent.propTypes = {
   hideFilePicker: PropTypes.bool,
   onWebViewUnmount: PropTypes.func,
   webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone_number: PropTypes.string,
-    identifier: PropTypes.string,
-    identifier_hash: PropTypes.string,
-    custom_attributes: PropTypes.object,
-  }),
+  user: userPropType,
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,

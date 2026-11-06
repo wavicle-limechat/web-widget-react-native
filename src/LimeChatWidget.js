@@ -9,6 +9,7 @@ import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
 import { createWootPostMessage } from "./utils";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
+import { userPropType } from "./utils/propTypes";
 
 const EMPTY_OBJECT = {};
 
@@ -275,14 +276,7 @@ LimeChatWidget.displayName = 'LimeChatWidget';
 LimeChatWidget.propTypes = {
   websiteToken: PropTypes.string.isRequired,
   baseUrl: PropTypes.string,
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone_number: PropTypes.string,
-    identifier: PropTypes.string,
-    identifier_hash: PropTypes.string,
-    custom_attributes: PropTypes.object,
-  }),
+  user: userPropType,
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
   hideFilePicker: PropTypes.bool,
