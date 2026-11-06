@@ -37,12 +37,7 @@ const WebViewComponent = ({
     cwConversation,
   });
 
-  const injectedJavaScript = generateScripts({
-    user,
-    locale,
-    customAttributes,
-    colorScheme,
-  });
+  const injectedJavaScript = generateScripts({ user });
 
   const onShouldStartLoadWithRequest = (request) => {
     const isMessageView = currentUrl && currentUrl.includes('#/messages');

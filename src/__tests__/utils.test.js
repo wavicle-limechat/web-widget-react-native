@@ -162,16 +162,11 @@ describe('Utils', () => {
     it('generates user data scripts', () => {
       const userData = {
         user: { name: 'John Doe', email: 'john@example.com' },
-        locale: 'en',
-        colorScheme: 'dark',
-        customAttributes: { plan: 'premium' }
       };
 
       const scripts = generateScripts(userData);
       expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_USER);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_LOCALE);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_COLOR_SCHEME);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_CUSTOM_ATTRIBUTES);
+      expect(scripts).not.toContain('set-locale');
       expect(scripts).toContain('john@example.com');
     });
 

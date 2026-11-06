@@ -66,7 +66,7 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, cus
 /**
  * Generate JavaScript to inject into WebView
  */
-export const generateScripts = ({ colorScheme, user, locale, customAttributes }) => {
+export const generateScripts = ({ user }) => {
   let script = '';
 
   // Set user data
@@ -88,33 +88,6 @@ export const generateScripts = ({ colorScheme, user, locale, customAttributes })
         identifier: ${JSON.stringify(user.identifier_hash || '')}
       };
     `;
-  }
-
-  // Set locale
-  if (locale) {
-    const localeObject = { 
-      event: POST_MESSAGE_EVENTS.SET_LOCALE, 
-      locale 
-    };
-    script += createWootPostMessage(localeObject);
-  }
-
-  // Set custom attributes
-  if (customAttributes && Object.keys(customAttributes).length > 0) {
-    const attributeObject = {
-      event: POST_MESSAGE_EVENTS.SET_CUSTOM_ATTRIBUTES,
-      customAttributes,
-    };
-    script += createWootPostMessage(attributeObject);
-  }
-
-  // Set color scheme
-  if (colorScheme) {
-    const themeObject = { 
-      event: POST_MESSAGE_EVENTS.SET_COLOR_SCHEME, 
-      darkMode: colorScheme === 'dark' 
-    };
-    script += createWootPostMessage(themeObject);
   }
 
   return script;
