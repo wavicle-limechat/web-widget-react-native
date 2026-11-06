@@ -46,6 +46,7 @@ jest.mock('../components/WidgetIcon', () => {
 // real WidgetModal and WebViewComponent run; only the native modules are replaced
 let mockKeepModalMounted = false;
 let mockWebViewProps;
+let mockWebViewMounts = 0;
 jest.mock('react-native-modal', () => {
   const React = require('react');
   const { View } = require('react-native');
@@ -61,6 +62,8 @@ jest.mock('react-native-webview', () => {
   return {
     WebView: React.forwardRef((props, ref) => {
       mockWebViewProps = props;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      React.useEffect(() => { mockWebViewMounts += 1; }, []);
       React.useImperativeHandle(ref, () => ({ injectJavaScript: mockInject, reload: mockReload }));
       return null;
     }),
@@ -769,6 +772,40 @@ describe('LimeChatWidget', () => {
       makeReady();
       act(() => { ref.current.setMessageAttributes(attributes); });
       expect(postedBy(attributeCalls()[0][0]).attributes).toEqual(attributes);
+    });
+  });
+
+  describe('failed page', () => {
+    const failLoad = () =>
+      mockWebViewProps.onError({ nativeEvent: { description: 'offline', url: 'https://x/y' } });
+
+    it('open with a message after a failed load remounts and sends at ready', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => failLoad());
+      const mounts = mockWebViewMounts;
+      mockInject.mockClear();
+
+      act(() => ref.current.open('hi'));
+      expect(mockWebViewMounts).toBe(mounts + 1);
+      expect(mockInject).not.toHaveBeenCalled();
+
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(mockInject).toHaveBeenCalledTimes(1);
+      expect(mockInject.mock.calls[0][0]).toContain('open-with-message');
+    });
+
+    it('open with no message after a failed load does not remount', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onHttpError({ nativeEvent: { statusCode: 500, url: 'https://x/y' } }));
+      const mounts = mockWebViewMounts;
+
+      act(() => ref.current.open());
+      expect(mockWebViewMounts).toBe(mounts);
     });
   });
 

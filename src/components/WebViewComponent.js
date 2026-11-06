@@ -22,6 +22,7 @@ const WebViewComponent = ({
   customAttributes,
   cwConversation,
   onWidgetLoad,
+  onLoadFailed,
   onWebViewUnmount,
   onWidgetClose,
   onWidgetMessage,
@@ -101,6 +102,7 @@ const WebViewComponent = ({
       }
     );
 
+    onLoadFailed?.();
     reportError(error, onError, { action: 'webViewLoadError' });
   };
 
@@ -111,6 +113,7 @@ const WebViewComponent = ({
       null,
       { statusCode: nativeEvent.statusCode, url: (nativeEvent.url || widgetUrl).split('?')[0] }
     );
+    onLoadFailed?.();
     reportError(error, onError, { action: 'webViewHttpError' });
   };
 
@@ -148,6 +151,7 @@ WebViewComponent.propTypes = {
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
+  onLoadFailed: PropTypes.func,
   onWidgetClose: PropTypes.func,
   onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,

@@ -49,6 +49,7 @@ const LimeChatWidget = React.forwardRef(({
   const lastValidationMessage = useRef(null);
   const reloadedAt = useRef(0);
   const heldToken = useRef(null);
+  const loadFailed = useRef(false);
   const lastTokenProp = useRef(conversationToken);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
@@ -124,6 +125,10 @@ const LimeChatWidget = React.forwardRef(({
       : !!message && Object.keys(message).length > 0;
     if (hasMessage) pendingOpen.current = message;
     setShowWidget(true);
+    if (hasMessage && loadFailed.current) {
+      reload();
+      return;
+    }
     flushOpen();
   };
 
@@ -290,7 +295,9 @@ const LimeChatWidget = React.forwardRef(({
             hasLoaded.current = false;
             widgetListening.current = false;
             heldToken.current = null;
+            loadFailed.current = false;
           }}
+          onLoadFailed={() => { loadFailed.current = true; }}
           webViewRef={webViewRef}
           webViewKey={webViewKey}
           user={user}

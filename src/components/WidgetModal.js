@@ -21,6 +21,7 @@ const WidgetModal = ({
   customAttributes,
   cwConversation,
   onWidgetLoad,
+  onLoadFailed,
   onWidgetMessage,
   onUnreadCountUpdate,
   onCwConversationUpdate,
@@ -54,6 +55,7 @@ const WidgetModal = ({
             customAttributes={customAttributes}
             cwConversation={cwConversation}
             onWidgetLoad={onWidgetLoad}
+            onLoadFailed={onLoadFailed}
             onWidgetClose={onClose}
             onWidgetMessage={onWidgetMessage}
             onUnreadCountUpdate={onUnreadCountUpdate}
@@ -81,6 +83,7 @@ WidgetModal.propTypes = {
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
+  onLoadFailed: PropTypes.func,
   onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,
