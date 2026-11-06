@@ -191,11 +191,13 @@ const LimeChatWidget = React.forwardRef(({
   const handleWidgetLoad = () => {
     hasLoaded.current = true;
     const firstReady = markReady();
-    if (heldToken.current !== null) {
-      deliverToken(heldToken.current);
-      heldToken.current = null;
+    const token = heldToken.current;
+    heldToken.current = null;
+    try {
+      if (token !== null) deliverToken(token);
+    } finally {
+      if (firstReady) onWidgetLoad?.();
     }
-    if (firstReady) onWidgetLoad?.();
   };
 
   const handleUnreadCountUpdate = (count) => {
@@ -211,8 +213,11 @@ const LimeChatWidget = React.forwardRef(({
       return;
     }
     const firstReady = markReady();
-    deliverToken(conversation);
-    if (firstReady) onWidgetLoad?.();
+    try {
+      deliverToken(conversation);
+    } finally {
+      if (firstReady) onWidgetLoad?.();
+    }
   };
 
   const renderIcon = () => {

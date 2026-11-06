@@ -284,6 +284,27 @@ describe('LimeChatWidget', () => {
     mockInject.mockReset();
   });
 
+  it('calls onWidgetLoad even when the token callback throws', () => {
+    const onWidgetLoad = jest.fn();
+    const onError = jest.fn();
+    const ref = React.createRef();
+    render(
+      <LimeChatWidget
+        {...defaultProps}
+        onConversationTokenChange={() => { throw new Error('host bug'); }}
+        onWidgetLoad={onWidgetLoad}
+        onError={onError}
+        ref={ref}
+      />
+    );
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
   it('does not resend on a repeat set-cw-conversation', () => {
     mockInject.mockClear();
     const ref = React.createRef();
