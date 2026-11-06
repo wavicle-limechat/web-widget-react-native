@@ -2,6 +2,7 @@ import React from 'react';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
+import { validators } from '../utils/errorUtils';
 
 // Suppress console errors and warnings during tests
 // eslint-disable-next-line no-console
@@ -91,6 +92,23 @@ describe('LimeChatWidget', () => {
     render(<LimeChatWidget {...defaultProps} />);
 
     expect(useWidgetConfig.mock.calls[0][0]).toBe('https://app.limechat.ai');
+  });
+
+  it('reports invalid props once and does not loop when user and customAttributes are omitted', () => {
+    // cap failures so a render loop ends the test instead of hanging it
+    const real = validators.websiteToken;
+    let calls = 0;
+    const spy = jest.spyOn(validators, 'websiteToken').mockImplementation((token) => {
+      calls += 1;
+      if (calls > 50) return true;
+      return real(token);
+    });
+    const onError = jest.fn();
+    render(<LimeChatWidget websiteToken="" onError={onError} />);
+    spy.mockRestore();
+
+    expect(calls).toBe(1);
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 
   it('opens the widget with a message through the ref handle', () => {

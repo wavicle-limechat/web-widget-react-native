@@ -10,14 +10,16 @@ import { widgetStyles } from "./styles";
 import { createWootPostMessage } from "./utils";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
 
+const EMPTY_OBJECT = {};
+
 const LimeChatWidget = React.forwardRef(({
   websiteToken,
   baseUrl = WIDGET_CONFIG.DEFAULT_BASE_URL,
-  user = {},
+  user = EMPTY_OBJECT,
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
   hideFilePicker = false,
-  customAttributes = {},
+  customAttributes = EMPTY_OBJECT,
   customButton = null,
   conversationToken,
   onConversationTokenChange,
