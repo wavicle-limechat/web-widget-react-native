@@ -173,6 +173,12 @@ describe('Utils', () => {
       expect(shouldOpenExternally(nav('mailto:a@b.com'), base)).toBe(true);
     });
 
+    it('reads ipv6 hosts and backslashes the way a browser does', () => {
+      expect(shouldOpenExternally(nav('http://[::2]:9999/x'), 'http://[::1]:9999')).toBe(true);
+      expect(shouldOpenExternally(nav('http://[::1]:9999/x'), 'http://[::1]:9999')).toBe(false);
+      expect(shouldOpenExternally(nav('https://evil.com\\@app.limechat.ai/x'), base)).toBe(true);
+    });
+
     it('ignores subframes and internal schemes', () => {
       expect(shouldOpenExternally(nav('https://example.com/x', false), base)).toBe(false);
       expect(shouldOpenExternally(nav('about:blank'), base)).toBe(false);

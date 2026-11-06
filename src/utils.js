@@ -11,7 +11,7 @@ const DEFAULT_PORTS = { http: '80', https: '443' };
 
 // scheme, host and port, same rule as android and ios. no URL class, rn's is partial
 const originOf = (url) => {
-  const match = /^([a-z][a-z0-9+.-]*):\/\/(?:[^/?#]*@)?([^/?#:]*)(?::(\d+))?/i.exec(url);
+  const match = /^([a-z][a-z0-9+.-]*):\/\/(?:[^/?#\\]*@)?(\[[^\]]*\]|[^/?#:\\]*)(?::(\d+))?/i.exec(url);
   if (!match) return null;
   const scheme = match[1].toLowerCase();
   return `${scheme}://${match[2].toLowerCase()}:${match[3] || DEFAULT_PORTS[scheme] || ''}`;
