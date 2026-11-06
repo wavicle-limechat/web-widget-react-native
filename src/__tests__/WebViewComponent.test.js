@@ -115,9 +115,9 @@ describe('WebViewComponent', () => {
     it('onMessage does not get close-widget or set-cw-conversation', () => {
       const { onWidgetMessage, onWidgetClose, onCwConversationUpdate } = setup();
       send({ type: 'close-widget' });
-      send({ event: 'set-cw-conversation', cw_conversation: 'jwt' });
+      send({ event: 'set-cw-conversation', cw_conversation: 'jwt', timestamp: 42 });
       expect(onWidgetClose).toHaveBeenCalledTimes(1);
-      expect(onCwConversationUpdate).toHaveBeenCalledWith('jwt');
+      expect(onCwConversationUpdate).toHaveBeenCalledWith('jwt', 42);
       expect(onWidgetMessage).not.toHaveBeenCalled();
     });
   });

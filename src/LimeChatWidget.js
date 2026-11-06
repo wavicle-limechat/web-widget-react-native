@@ -46,6 +46,7 @@ const LimeChatWidget = React.forwardRef(({
   const hasLoaded = useRef(false);
   const widgetListening = useRef(false);
   const lastValidationMessage = useRef(null);
+  const reloadedAt = useRef(0);
   const lastTokenProp = useRef(conversationToken);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
@@ -157,6 +158,7 @@ const LimeChatWidget = React.forwardRef(({
 
   const reload = () => {
     if (!webViewRef.current) return false;
+    reloadedAt.current = Date.now();
     isWidgetReady.current = false;
     hasLoaded.current = false;
     widgetListening.current = false;
@@ -187,7 +189,9 @@ const LimeChatWidget = React.forwardRef(({
     setUnreadCount(count || 0);
   };
 
-  const handleCwConversationUpdate = (conversation) => {
+  const handleCwConversationUpdate = (conversation, timestamp) => {
+    // the old page can still answer after a reload started
+    if (timestamp < reloadedAt.current) return;
     widgetListening.current = true;
     const firstReady = markReady();
     setCwConversation(conversation);

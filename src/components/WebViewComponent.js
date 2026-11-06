@@ -73,7 +73,7 @@ const WebViewComponent = ({
       } else if (name === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
         onUnreadCountUpdate?.(count);
       } else if (name === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
-        onCwConversationUpdate?.(cw_conversation);
+        onCwConversationUpdate?.(cw_conversation, parsedMessage.timestamp);
       } else {
         onWidgetMessage?.(parsedMessage);
       }

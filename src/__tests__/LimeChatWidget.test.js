@@ -404,6 +404,40 @@ describe('LimeChatWidget', () => {
     expect(mockWebViewProps.source.uri).toContain('cw_conversation=userC');
   });
 
+  it('an old page token event after reload does not mark ready', () => {
+    const now = jest.spyOn(Date, 'now');
+    const withTimestamp = (timestamp) =>
+      mockWebViewProps.onMessage({
+        nativeEvent: { data: JSON.stringify({ event: 'set-cw-conversation', cw_conversation: 'jwt', timestamp }) },
+      });
+    const onWidgetLoad = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => withTimestamp(900));
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+
+    now.mockReturnValue(1000);
+    act(() => { ref.current.reload(); });
+    mockInject.mockClear();
+    act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+    act(() => ref.current.open('hi'));
+
+    // the old page answers after the reload started, then the new page loads
+    act(() => withTimestamp(950));
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).not.toHaveBeenCalled();
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+
+    // the new page answers
+    act(() => withTimestamp(1100));
+    expect(mockInject).toHaveBeenCalledTimes(2);
+    expect(onWidgetLoad).toHaveBeenCalledTimes(2);
+    now.mockRestore();
+  });
+
   it('passes onMessage through the modal to the webview', () => {
     const onMessage = jest.fn();
     const ref = React.createRef();
