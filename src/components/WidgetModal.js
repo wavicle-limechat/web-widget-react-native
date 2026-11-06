@@ -86,16 +86,4 @@ WidgetModal.propTypes = {
   onError: PropTypes.func,
 };
 
-WidgetModal.defaultProps = {
-  locale: 'en',
-  colorScheme: 'light',
-  user: {},
-  customAttributes: {},
-  cwConversation: null,
-  onWidgetLoad: null,
-  onUnreadCountUpdate: null,
-  onCwConversationUpdate: null,
-  onError: null,
-};
-
 export default WidgetModal; 

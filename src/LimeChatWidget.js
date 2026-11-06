@@ -242,21 +242,4 @@ LimeChatWidget.propTypes = {
   unreadCountTextStyle: PropTypes.object,
 };
 
-LimeChatWidget.defaultProps = {
-  user: {},
-  locale: WIDGET_CONFIG.DEFAULT_LOCALE,
-  colorScheme: WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
-  customAttributes: {},
-  customButton: null,
-  conversationToken: null,
-  onConversationTokenChange: null,
-  onWidgetLoad: null,
-  onWidgetClose: null,
-  onError: null,
-  style: {},
-  iconStyle: {},
-  unreadCountStyle: {},
-  unreadCountTextStyle: {},
-};
-
 export default LimeChatWidget;

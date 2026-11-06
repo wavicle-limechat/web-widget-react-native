@@ -82,12 +82,4 @@ WidgetIcon.propTypes = {
   onError: PropTypes.func,
 };
 
-WidgetIcon.defaultProps = {
-  widgetConfig: {},
-  isLoading: false,
-  error: null,
-  iconStyle: {},
-  onError: null,
-};
-
 export default WidgetIcon; 

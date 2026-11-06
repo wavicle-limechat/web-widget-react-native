@@ -166,17 +166,4 @@ WebViewComponent.propTypes = {
   onError: PropTypes.func,
 };
 
-WebViewComponent.defaultProps = {
-  locale: 'en',
-  colorScheme: 'light',
-  user: {},
-  customAttributes: {},
-  cwConversation: null,
-  onWidgetLoad: null,
-  onWidgetClose: null,
-  onUnreadCountUpdate: null,
-  onCwConversationUpdate: null,
-  onError: null,
-};
-
 export default WebViewComponent; 
