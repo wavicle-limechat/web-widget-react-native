@@ -68,4 +68,28 @@ describe('WebViewComponent', () => {
     expect(onError).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(onError.mock.calls[0][1])).not.toContain('secret-jwt');
   });
+
+  it('reports a main page http error without the query string', () => {
+    const onError = jest.fn();
+    render(
+      <WebViewComponent
+        baseUrl="https://app.limechat.ai"
+        websiteToken="tok"
+        cwConversation="secret-jwt"
+        onError={onError}
+      />
+    );
+
+    mockLastProps.onHttpError({
+      nativeEvent: { statusCode: 503, url: 'https://app.limechat.ai/widget?cw_conversation=secret-jwt' },
+    });
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    const [error, info] = onError.mock.calls[0];
+    expect(error.message).toBe('WebView HTTP error: 503');
+    expect(error.code).toBe('WIDGET_ERROR_1100');
+    expect(info.context.statusCode).toBe(503);
+    expect(info.context.url).toBe('https://app.limechat.ai/widget');
+    expect(JSON.stringify(info)).not.toContain('secret-jwt');
+  });
 });

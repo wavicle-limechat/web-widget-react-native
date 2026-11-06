@@ -117,6 +117,16 @@ const WebViewComponent = ({
     reportError(error, onError, { action: 'webViewLoadError' });
   };
 
+  const handleHttpError = ({ nativeEvent }) => {
+    const error = new WidgetError(
+      ERROR_CODES.WEBVIEW_ERROR,
+      `WebView HTTP error: ${nativeEvent.statusCode}`,
+      null,
+      { statusCode: nativeEvent.statusCode, url: (nativeEvent.url || widgetUrl).split('?')[0] }
+    );
+    reportError(error, onError, { action: 'webViewHttpError' });
+  };
+
   const handleLoad = () => {
     onWidgetLoad?.();
   };
@@ -128,6 +138,7 @@ const WebViewComponent = ({
       onMessage={handleMessage}
       onLoad={handleLoad}
       onError={handleError}
+      onHttpError={handleHttpError}
       onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
       style={webViewStyles.webview}
       startInLoadingState={true}
