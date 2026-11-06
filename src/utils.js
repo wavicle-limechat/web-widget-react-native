@@ -48,6 +48,7 @@ const buildQueryString = (params) => {
 export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hideFilePicker, customAttributes, cwConversation }) => {
   const params = {
     website_token: websiteToken,
+    platform: 'react-native',
     locale: locale || 'en',
     color_scheme: colorScheme || 'light',
   };

@@ -62,6 +62,11 @@ describe('Utils', () => {
       expect(url).not.toContain('cw_conversation');
     });
 
+    it('the url has platform react-native after website_token', () => {
+      const url = buildWidgetUrl(validParams);
+      expect(url).toContain('website_token=test-token&platform=react-native&locale=en');
+    });
+
     it('handles missing optional parameters', () => {
       const minimalParams = {
         baseUrl: 'https://app.limechat.ai',
