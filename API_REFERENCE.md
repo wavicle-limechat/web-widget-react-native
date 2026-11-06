@@ -305,12 +305,7 @@ widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
 | `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
 | `reload()` | Remounts the webview with the live conversation token. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
 
-#### Message attributes
-
-- Pass JSON values. A `NaN` becomes `null`, a `Date` becomes an ISO string, and an unknown object is sent with its fields.
-- The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
-- If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
-- After the customer's message is sent, the widget clears the attributes. If that message fails, the widget keeps them for the next one. Attributes already sent to the widget are lost on a page reload. Attributes still held are kept.
+For the attribute notes (JSON values, the auto-start `Hi`, closing, failed sends and reload), see [Message attributes](./README.md#message-attributes) in the README.
 
 #### Web process death
 

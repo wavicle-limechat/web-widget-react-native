@@ -101,7 +101,7 @@ To integrate the LimeChat Widget into your own React Native app:
 
 1. Install the required dependencies:
    ```bash
-   npm install @limechat/react-native-widget react-native-webview react-native-modal @react-native-async-storage/async-storage @react-native-community/netinfo
+   npm install @limechat/react-native-widget react-native-webview react-native-modal
    ```
 
 2. Import and use the widget:
