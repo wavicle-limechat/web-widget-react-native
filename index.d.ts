@@ -62,28 +62,15 @@ export function buildWidgetUrl(params: {
   websiteToken: string;
   locale?: string;
   colorScheme?: string;
-  user?: LimeChatUser;
-  customAttributes?: Record<string, any>;
-  cwConversation?: string;
-}): string;
-
-export function createWidgetUrl(params: {
-  baseUrl: string;
-  websiteToken: string;
-  locale?: string;
-  colorScheme?: string;
+  hideFilePicker?: boolean;
+  openMessage?: string | Record<string, unknown>;
   user?: LimeChatUser;
   customAttributes?: Record<string, any>;
   cwConversation?: string;
 }): string;
 
 // Essential utilities for advanced use cases
-export function generateScripts(params: {
-  colorScheme?: string;
-  user?: LimeChatUser;
-  locale?: string;
-  customAttributes?: Record<string, any>;
-}): string;
+export function generateScripts(params: { user?: LimeChatUser }): string;
 
 // Constants for external configuration
 export const POST_MESSAGE_EVENTS: {
