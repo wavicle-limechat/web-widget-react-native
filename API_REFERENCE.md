@@ -309,7 +309,7 @@ For the attribute notes (JSON values, the auto-start `Hi`, closing, failed sends
 
 #### Web process death
 
-If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that, so the app must let the customer close the widget on this error. A later `reload()` or `open(message)` loads the page again. The next ready resets this.
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
 
 ---
 
