@@ -34,22 +34,6 @@ export const widgetStyles = StyleSheet.create({
     height: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
     borderRadius: WIDGET_CONFIG.DEFAULT_BORDER_RADIUS,
   },
-  defaultIcon: {
-    width: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
-    height: WIDGET_CONFIG.DEFAULT_ICON_SIZE,
-    borderRadius: WIDGET_CONFIG.DEFAULT_BORDER_RADIUS,
-    backgroundColor: '#007bff',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  iconText: {
-    fontSize: 24,
-    color: 'white',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: 'white',
-  },
   errorContainer: {
     backgroundColor: '#ff4444',
     borderRadius: 8,

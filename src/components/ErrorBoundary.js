@@ -36,14 +36,6 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      // You can render any custom fallback UI
-      const fallbackComponent = this.props.fallback;
-
-      if (fallbackComponent) {
-        return fallbackComponent(this.state.error);
-      }
-
-      // Default fallback UI
       return (
         <View style={widgetStyles.errorContainer}>
           <Text style={widgetStyles.errorText}>
@@ -65,12 +57,10 @@ class ErrorBoundary extends React.Component {
 ErrorBoundary.propTypes = {
   children: PropTypes.node.isRequired,
   onError: PropTypes.func,
-  fallback: PropTypes.func,
 };
 
 ErrorBoundary.defaultProps = {
   onError: null,
-  fallback: null,
 };
 
 export default ErrorBoundary; 

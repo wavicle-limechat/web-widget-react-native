@@ -12,10 +12,6 @@ export const POST_MESSAGE_EVENTS = {
   SET_UNREAD_COUNT: 'set-unread-count',
 };
 
-export const COLOR_WHITE = '#fff';
-export const BG_COLOR_WHITE = '#FFFFFF';
-export const BG_COLOR_DARK = '#25292c';
-
 export const WIDGET_CONFIG = {
   DEFAULT_BASE_URL: 'https://app.limechat.ai',
   DEFAULT_LOCALE: 'en',

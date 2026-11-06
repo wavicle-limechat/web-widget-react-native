@@ -78,10 +78,6 @@ const WebViewComponent = ({
 
         const { event: eventType, type, count, cw_conversation } = parsedMessage;
 
-        if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
-          onWidgetLoad?.();
-        }
-
         if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
           onWidgetClose?.();
         }

@@ -55,7 +55,6 @@ const useWidgetConfig = (baseUrl, websiteToken, onError) => {
     widgetConfig,
     isLoading,
     error,
-    refetch: loadConfig,
   };
 };
 

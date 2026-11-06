@@ -23,21 +23,13 @@ const WidgetModal = ({
   onCwConversationUpdate,
   onError,
 }) => {
-  const handleClose = () => {
-    onClose?.();
-  };
-
-  const handleWidgetClose = () => {
-    handleClose();
-  };
-
   return (
     <Modal
       isVisible={isVisible}
       coverScreen
       hasBackdrop={false}
-      onBackdropPress={handleClose}
-      onBackButtonPress={handleClose}
+      onBackdropPress={onClose}
+      onBackButtonPress={onClose}
       style={modalStyles.modal}
       animationIn="fadeIn"
       animationOut="fadeOut"
@@ -58,7 +50,7 @@ const WidgetModal = ({
             customAttributes={customAttributes}
             cwConversation={cwConversation}
             onWidgetLoad={onWidgetLoad}
-            onWidgetClose={handleWidgetClose}
+            onWidgetClose={onClose}
             onUnreadCountUpdate={onUnreadCountUpdate}
             onCwConversationUpdate={onCwConversationUpdate}
             onError={onError}
