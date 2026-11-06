@@ -499,6 +499,15 @@ describe('LimeChatWidget', () => {
     expect(getByText('3')).toBeTruthy();
   });
 
+  it('caps the badge at 99+', () => {
+    const { getByText, queryByText, rerender } = render(<LimeChatWidget {...defaultProps} unreadCount={99} />);
+    expect(getByText('99')).toBeTruthy();
+
+    rerender(<LimeChatWidget {...defaultProps} unreadCount={100} />);
+    expect(getByText('99+')).toBeTruthy();
+    expect(queryByText('100')).toBeNull();
+  });
+
   it('renders no badge when unreadCount is 0', () => {
     const { queryByText } = render(<LimeChatWidget {...defaultProps} unreadCount={0} />);
 

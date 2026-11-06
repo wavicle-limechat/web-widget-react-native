@@ -191,7 +191,7 @@ const LimeChatWidget = React.forwardRef(({
     const badge = shownUnreadCount > 0 && (
       <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
         <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-          {shownUnreadCount}
+          {shownUnreadCount > 99 ? '99+' : shownUnreadCount}
         </Text>
       </View>
     );
