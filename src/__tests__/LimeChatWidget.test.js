@@ -74,6 +74,11 @@ jest.mock('../hooks/useWidgetConfig', () => {
   }));
 });
 
+const widgetListens = () =>
+  mockWebViewProps.onMessage({
+    nativeEvent: { data: `${WOOT_PREFIX}{"event":"set-cw-conversation","cw_conversation":"jwt"}` },
+  });
+
 const closeFromWidget = () =>
   mockWebViewProps.onMessage({ nativeEvent: { data: `${WOOT_PREFIX}{"type":"close-widget"}` } });
 
@@ -158,10 +163,48 @@ describe('LimeChatWidget', () => {
     expect(mockInject).not.toHaveBeenCalled();
 
     act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
     expect(mockInject).toHaveBeenCalledTimes(1);
     expect(mockInject.mock.calls[0][0]).toContain('open-with-message');
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"hi"');
 
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not send the held open message on onLoad alone', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open('hi'));
+    act(() => mockWebViewProps.onLoad());
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).not.toHaveBeenCalled();
+  });
+
+  it('sends the held open message once when the widget event comes before onLoad', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open('hi'));
+    act(() => widgetListens());
+    expect(mockInject).not.toHaveBeenCalled();
+    act(() => mockWebViewProps.onLoad());
+    expect(mockInject).toHaveBeenCalledTimes(1);
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"hi"');
+  });
+
+  it('does not resend on a repeat set-cw-conversation', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open('hi'));
+    act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
+    act(() => widgetListens());
     act(() => mockWebViewProps.onLoad());
     expect(mockInject).toHaveBeenCalledTimes(1);
   });
@@ -173,6 +216,7 @@ describe('LimeChatWidget', () => {
 
     act(() => ref.current.open());
     act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
     expect(mockInject).not.toHaveBeenCalled();
 
     act(() => ref.current.open('again'));
@@ -187,6 +231,7 @@ describe('LimeChatWidget', () => {
 
     act(() => ref.current.open());
     act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
     mockKeepModalMounted = true;
     act(() => closeFromWidget());
     act(() => ref.current.open('back'));
@@ -217,6 +262,7 @@ describe('LimeChatWidget', () => {
 
     act(() => open());
     act(() => mockWebViewProps.onLoad());
+    act(() => widgetListens());
     act(() => open('late'));
     expect(mockInject).toHaveBeenCalledTimes(1);
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"late"');

@@ -40,6 +40,8 @@ const LimeChatWidget = React.forwardRef(({
   const webViewRef = useRef(null);
   const pendingOpen = useRef(null);
   const isWidgetReady = useRef(false);
+  const hasLoaded = useRef(false);
+  const widgetListening = useRef(false);
   const lastValidationMessage = useRef(null);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
@@ -117,9 +119,18 @@ const LimeChatWidget = React.forwardRef(({
 
   useImperativeHandle(ref, () => ({ open, sendMessage }));
 
-  const handleWidgetLoad = () => {
+  // the widget adds its message listener after onload, and android can fire onLoad
+  // before that. set-cw-conversation is sent in the same task as the listener, so
+  // the held open message goes out only after both onLoad and that event.
+  const markReady = () => {
+    if (!hasLoaded.current || !widgetListening.current) return;
     isWidgetReady.current = true;
     flushOpen();
+  };
+
+  const handleWidgetLoad = () => {
+    hasLoaded.current = true;
+    markReady();
     onWidgetLoad?.();
   };
 
@@ -132,6 +143,8 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const handleCwConversationUpdate = (conversation) => {
+    widgetListening.current = true;
+    markReady();
     // If external token management is used, call the callback
     if (onConversationTokenChange) {
       onConversationTokenChange(conversation);
@@ -208,7 +221,11 @@ const LimeChatWidget = React.forwardRef(({
           locale={locale}
           colorScheme={colorScheme}
           hideFilePicker={hideFilePicker}
-          onWebViewUnmount={() => { isWidgetReady.current = false; }}
+          onWebViewUnmount={() => {
+            isWidgetReady.current = false;
+            hasLoaded.current = false;
+            widgetListening.current = false;
+          }}
           webViewRef={webViewRef}
           user={user}
           customAttributes={customAttributes}

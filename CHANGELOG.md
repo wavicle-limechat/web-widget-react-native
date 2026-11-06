@@ -18,6 +18,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - Invalid props no longer loop and spam `onError` on React 18
 - `open(message)` is sent after the widget loads, so contact data is set first. A failed page load still loses it, and `onError` fires
 - Load errors no longer include the conversation token or open message
+- `open(message)` waits for the widget to be listening, not only `onLoad`, so Android's early load event cannot drop it
 - Web links open without `canOpenURL`, which can return false on Android 11+
 - `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
 
