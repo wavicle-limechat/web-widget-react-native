@@ -51,6 +51,7 @@ export interface LimeChatWidgetProps {
 export interface LimeChatWidgetHandle {
   open(message?: string | { content?: string; submitted_values?: unknown }): void;
   sendMessage(event: string, data?: Record<string, unknown>): boolean;
+  setMessageAttributes(attributes: Record<string, unknown>): boolean;
 }
 
 declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;
@@ -76,6 +77,7 @@ export const POST_MESSAGE_EVENTS: {
   SET_LOCALE: string;
   SET_CUSTOM_ATTRIBUTES: string;
   SET_USER: string;
+  SET_MESSAGE_ATTRIBUTES: string;
   OPEN_WITH_MESSAGE: string;
   SET_COLOR_SCHEME: string;
   WIDGET_LOADED: string;

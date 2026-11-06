@@ -461,4 +461,137 @@ describe('LimeChatWidget', () => {
 
     expect(queryByText('0')).toBeNull();
   });
+
+  describe('setMessageAttributes', () => {
+    // run the injected script and return the object it posts
+    const postedBy = (script) => {
+      const posted = [];
+      // eslint-disable-next-line no-new-func
+      new Function('window', script)({ postMessage: (msg) => posted.push(msg) });
+      return JSON.parse(posted[0].replace(WOOT_PREFIX, ''));
+    };
+    const attributeCalls = () =>
+      mockInject.mock.calls.filter(([script]) => script.includes('set-message-attributes'));
+    const makeReady = () => {
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+    };
+
+    beforeEach(() => mockInject.mockClear());
+
+    it('returns false for null, array, empty, string and a cycle, and injects nothing', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      makeReady();
+
+      const cycle = {};
+      cycle.self = cycle;
+      [null, undefined, [], [1], {}, 'text', 5, cycle].forEach((value) => {
+        let result;
+        act(() => { result = ref.current.setMessageAttributes(value); });
+        expect(result).toBe(false);
+      });
+      expect(mockInject).not.toHaveBeenCalled();
+    });
+
+    it('holds attributes while closed and sends them at ready', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+      let result;
+      act(() => { result = ref.current.setMessageAttributes({ plan: 'gold' }); });
+      expect(result).toBe(true);
+      expect(mockInject).not.toHaveBeenCalled();
+
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+      expect(postedBy(attributeCalls()[0][0])).toEqual({
+        event: 'set-message-attributes',
+        attributes: { plan: 'gold' },
+      });
+    });
+
+    it('does not send on onLoad alone', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      act(() => mockWebViewProps.onLoad());
+      expect(mockInject).not.toHaveBeenCalled();
+    });
+
+    it('merges repeat calls, later keys win', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => { ref.current.setMessageAttributes({ a: 1, b: 1 }); });
+      act(() => { ref.current.setMessageAttributes({ b: 2, c: 3 }); });
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+      expect(postedBy(attributeCalls()[0][0]).attributes).toEqual({ a: 1, b: 2, c: 3 });
+    });
+
+    it('sends attributes before a held open message', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open('hi'));
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      makeReady();
+      expect(mockInject).toHaveBeenCalledTimes(2);
+      expect(mockInject.mock.calls[0][0]).toContain('set-message-attributes');
+      expect(mockInject.mock.calls[1][0]).toContain('open-with-message');
+    });
+
+    it('sends at once when ready', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      makeReady();
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      expect(attributeCalls()).toHaveLength(1);
+      act(() => { ref.current.setMessageAttributes({ b: 2 }); });
+      expect(attributeCalls()).toHaveLength(2);
+      expect(postedBy(attributeCalls()[1][0]).attributes).toEqual({ b: 2 });
+    });
+
+    it('does not resend after close and reopen once flushed', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+
+      act(() => closeFromWidget());
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+    });
+
+    it('keeps unflushed attributes through close and reopen', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      act(() => closeFromWidget());
+      expect(attributeCalls()).toHaveLength(0);
+
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+      expect(postedBy(attributeCalls()[0][0]).attributes).toEqual({ a: 1 });
+    });
+
+    it('apostrophe, quote, backslash and newline stay in valid json', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      const attributes = { name: "O'Brien \"q\"", path: 'a\\b', text: 'l1\nl2' };
+      act(() => ref.current.open());
+      makeReady();
+      act(() => { ref.current.setMessageAttributes(attributes); });
+      expect(postedBy(attributeCalls()[0][0]).attributes).toEqual(attributes);
+    });
+  });
 });

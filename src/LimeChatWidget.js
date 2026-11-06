@@ -39,6 +39,7 @@ const LimeChatWidget = React.forwardRef(({
   const [validationError, setValidationError] = useState(null);
   const webViewRef = useRef(null);
   const pendingOpen = useRef(null);
+  const pendingAttributes = useRef({});
   const isWidgetReady = useRef(false);
   const hasLoaded = useRef(false);
   const widgetListening = useRef(false);
@@ -120,7 +121,32 @@ const LimeChatWidget = React.forwardRef(({
     return true;
   };
 
-  useImperativeHandle(ref, () => ({ open, sendMessage }));
+  const flushAttributes = () => {
+    if (!isWidgetReady.current || !webViewRef.current) return;
+    if (Object.keys(pendingAttributes.current).length === 0) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({
+        event: POST_MESSAGE_EVENTS.SET_MESSAGE_ATTRIBUTES,
+        attributes: pendingAttributes.current,
+      })
+    );
+    pendingAttributes.current = {};
+  };
+
+  const setMessageAttributes = (attributes) => {
+    const isPlainObject = !!attributes && typeof attributes === 'object' && !Array.isArray(attributes);
+    if (!isPlainObject || Object.keys(attributes).length === 0) return false;
+    try {
+      JSON.stringify(attributes);
+    } catch (e) {
+      return false;
+    }
+    pendingAttributes.current = { ...pendingAttributes.current, ...attributes };
+    flushAttributes();
+    return true;
+  };
+
+  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes }));
 
   // the widget adds its message listener after onload, and android can fire onLoad
   // before that. set-cw-conversation is sent in the same task as the listener, so
@@ -129,6 +155,7 @@ const LimeChatWidget = React.forwardRef(({
   const markReady = () => {
     if (isWidgetReady.current || !hasLoaded.current || !widgetListening.current) return false;
     isWidgetReady.current = true;
+    flushAttributes();
     flushOpen();
     return true;
   };
