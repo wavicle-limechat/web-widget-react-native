@@ -175,10 +175,6 @@ const LimeChatWidget = React.forwardRef(({
     if (markReady()) onWidgetLoad?.();
   };
 
-  const handleError = (error, errorInfo) => {
-    onError?.(error, errorInfo);
-  };
-
   const handleUnreadCountUpdate = (count) => {
     setUnreadCount(count || 0);
   };
@@ -192,18 +188,20 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const renderIcon = () => {
+    const badge = shownUnreadCount > 0 && (
+      <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
+        <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
+          {shownUnreadCount}
+        </Text>
+      </View>
+    );
+
     // If customButton is provided, render it directly without wrapping in TouchableOpacity
     // This allows the custom button to handle its own onPress events
     if (customButton) {
       return (
         <View style={widgetStyles.iconButton}>
-          {shownUnreadCount > 0 && (
-            <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
-              <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-                {shownUnreadCount}
-              </Text>
-            </View>
-          )}
+          {badge}
 
           {React.cloneElement(customButton, {
             onPress: () => {
@@ -226,13 +224,7 @@ const LimeChatWidget = React.forwardRef(({
         style={widgetStyles.iconButton}
         activeOpacity={0.8}
       >
-        {shownUnreadCount > 0 && (
-          <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
-            <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-              {shownUnreadCount}
-            </Text>
-          </View>
-        )}
+        {badge}
 
         <WidgetIcon
           widgetConfig={widgetConfig}
@@ -246,7 +238,7 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   return (
-    <ErrorBoundary onError={handleError}>
+    <ErrorBoundary onError={onError}>
       <View style={[widgetStyles.container, style]}>
         {renderIcon()}
 

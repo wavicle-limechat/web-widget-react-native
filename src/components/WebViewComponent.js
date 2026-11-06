@@ -127,16 +127,12 @@ const WebViewComponent = ({
     reportError(error, onError, { action: 'webViewHttpError' });
   };
 
-  const handleLoad = () => {
-    onWidgetLoad?.();
-  };
-
   return (
     <WebView
       ref={webViewRef}
       source={{ uri: widgetUrl }}
       onMessage={handleMessage}
-      onLoad={handleLoad}
+      onLoad={onWidgetLoad}
       onError={handleError}
       onHttpError={handleHttpError}
       onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
