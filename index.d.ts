@@ -82,6 +82,7 @@ export const POST_MESSAGE_EVENTS: {
   SET_MESSAGE_ATTRIBUTES: string;
   OPEN_WITH_MESSAGE: string;
   SET_COLOR_SCHEME: string;
+  /** @deprecated Never sent. Removed at the next major. */
   WIDGET_LOADED: string;
   CLOSE_WIDGET: string;
   SET_CW_CONVERSATION: string;
