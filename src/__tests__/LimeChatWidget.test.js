@@ -117,6 +117,23 @@ describe('LimeChatWidget', () => {
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"again"');
   });
 
+  it('sendMessage returns false while closed and injects when open', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    let result;
+    act(() => { result = ref.current.sendMessage('set-label', { label: 'vip' }); });
+    expect(result).toBe(false);
+    expect(mockInject).not.toHaveBeenCalled();
+
+    act(() => ref.current.open());
+    act(() => { result = ref.current.sendMessage('set-label', { label: 'vip' }); });
+    expect(result).toBe(true);
+    expect(mockInject.mock.calls[0][0]).toContain('"label":"vip"');
+    expect(mockInject.mock.calls[0][0]).toContain('"event":"set-label"');
+  });
+
   it('renders default widget icon when no customButton is provided', () => {
     const { getByTestId } = render(<LimeChatWidget {...defaultProps} />);
     

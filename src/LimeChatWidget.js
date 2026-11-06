@@ -99,7 +99,13 @@ const LimeChatWidget = React.forwardRef(({
     setShowWidget(true);
   };
 
-  useImperativeHandle(ref, () => ({ open }));
+  const sendMessage = (event, data = {}) => {
+    if (!webViewRef.current) return false;
+    webViewRef.current.injectJavaScript(createWootPostMessage({ ...data, event }));
+    return true;
+  };
+
+  useImperativeHandle(ref, () => ({ open, sendMessage }));
 
   const handleWidgetLoad = () => {
     onWidgetLoad?.();
