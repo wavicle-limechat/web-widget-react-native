@@ -27,15 +27,16 @@ const WebViewComponent = ({
 }) => {
   const [currentUrl, setCurrentUrl] = useState(null);
 
-  const widgetUrl = buildWidgetUrl({
-    baseUrl,
-    websiteToken,
-    locale,
-    colorScheme,
-    user,
-    customAttributes,
-    cwConversation,
-  });
+  const [widgetUrl] = useState(() =>
+    buildWidgetUrl({
+      baseUrl,
+      websiteToken,
+      locale,
+      colorScheme,
+      customAttributes,
+      cwConversation,
+    })
+  );
 
   const injectedJavaScript = generateScripts({ user });
 
