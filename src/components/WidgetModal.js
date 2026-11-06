@@ -13,6 +13,8 @@ const WidgetModal = ({
   locale,
   colorScheme,
   hideFilePicker,
+  openMessage,
+  webViewRef,
   user,
   customAttributes,
   cwConversation,
@@ -50,6 +52,8 @@ const WidgetModal = ({
             locale={locale}
             colorScheme={colorScheme}
             hideFilePicker={hideFilePicker}
+            openMessage={openMessage}
+            webViewRef={webViewRef}
             user={user}
             customAttributes={customAttributes}
             cwConversation={cwConversation}
@@ -73,6 +77,8 @@ WidgetModal.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
   hideFilePicker: PropTypes.bool,
+  openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   user: PropTypes.shape({
     name: PropTypes.string,
     email: PropTypes.string,

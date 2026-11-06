@@ -46,7 +46,11 @@ export interface LimeChatWidgetProps {
   unreadCountTextStyle?: TextStyle;
 }
 
-declare const LimeChatWidget: React.FC<LimeChatWidgetProps>;
+export interface LimeChatWidgetHandle {
+  open(message?: string | { content?: string; submitted_values?: unknown }): void;
+}
+
+declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;
 
 export default LimeChatWidget;
 
@@ -84,6 +88,7 @@ export const POST_MESSAGE_EVENTS: {
   SET_LOCALE: string;
   SET_CUSTOM_ATTRIBUTES: string;
   SET_USER: string;
+  OPEN_WITH_MESSAGE: string;
   SET_COLOR_SCHEME: string;
   WIDGET_LOADED: string;
   CLOSE_WIDGET: string;

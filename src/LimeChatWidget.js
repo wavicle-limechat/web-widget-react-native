@@ -1,15 +1,16 @@
 import PropTypes from "prop-types";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, useRef } from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WidgetIcon from "./components/WidgetIcon";
 import WidgetModal from "./components/WidgetModal";
-import { WIDGET_CONFIG, ERROR_CODES } from "./constants";
+import { WIDGET_CONFIG, ERROR_CODES, POST_MESSAGE_EVENTS } from "./constants";
 import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
+import { createWootPostMessage } from "./utils";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
 
-const LimeChatWidget = ({
+const LimeChatWidget = React.forwardRef(({
   websiteToken,
   baseUrl = WIDGET_CONFIG.DEFAULT_BASE_URL,
   user = {},
@@ -27,12 +28,14 @@ const LimeChatWidget = ({
   iconStyle,
   unreadCountStyle,
   unreadCountTextStyle,
-}) => {
+}, ref) => {
   const widgetBaseUrl = baseUrl.replace(/\/+$/, '');
   const [showWidget, setShowWidget] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [cwConversation, setCwConversation] = useState(null);
   const [validationError, setValidationError] = useState(null);
+  const [openMessage, setOpenMessage] = useState(null);
+  const webViewRef = useRef(null);
 
   // Validate props on mount and when they change
   useEffect(() => {
@@ -60,6 +63,7 @@ const LimeChatWidget = ({
         reportError(validationError, onError, { action: 'iconPress' });
         return;
       }
+      setOpenMessage(null);
       setShowWidget(!showWidget);
     } catch (error) {
       const widgetError = new WidgetError(
@@ -73,9 +77,29 @@ const LimeChatWidget = ({
   };
 
   const handleModalClose = () => {
+    setOpenMessage(null);
     setShowWidget(false);
     onWidgetClose?.();
   };
+
+  const open = (message = null) => {
+    if (validationError) {
+      reportError(validationError, onError, { action: 'open' });
+      return;
+    }
+    if (showWidget) {
+      if (message !== null) {
+        webViewRef.current?.injectJavaScript(
+          createWootPostMessage({ event: POST_MESSAGE_EVENTS.OPEN_WITH_MESSAGE, openMessage: message })
+        );
+      }
+      return;
+    }
+    setOpenMessage(message);
+    setShowWidget(true);
+  };
+
+  useImperativeHandle(ref, () => ({ open }));
 
   const handleWidgetLoad = () => {
     onWidgetLoad?.();
@@ -166,6 +190,8 @@ const LimeChatWidget = ({
           locale={locale}
           colorScheme={colorScheme}
           hideFilePicker={hideFilePicker}
+          openMessage={openMessage}
+          webViewRef={webViewRef}
           user={user}
           customAttributes={customAttributes}
           cwConversation={conversationToken || cwConversation}
@@ -177,7 +203,9 @@ const LimeChatWidget = ({
       </View>
     </ErrorBoundary>
   );
-};
+});
+
+LimeChatWidget.displayName = 'LimeChatWidget';
 
 LimeChatWidget.propTypes = {
   websiteToken: PropTypes.string.isRequired,

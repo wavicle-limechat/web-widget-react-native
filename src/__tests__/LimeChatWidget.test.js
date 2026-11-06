@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { Text, View, TouchableOpacity } from 'react-native';
 import LimeChatWidget from '../LimeChatWidget';
 
@@ -24,6 +24,8 @@ afterAll(() => {
 });
 
 // Mock the components and hooks
+const mockInject = jest.fn();
+
 jest.mock('../components/ErrorBoundary', () => {
   return function MockErrorBoundary({ children }) {
     return children;
@@ -43,12 +45,20 @@ jest.mock('../components/WidgetModal', () => {
   const { Text } = require('react-native');
   const PropTypes = require('prop-types');
   
-  function MockWidgetModal({ isVisible }) {
-    return isVisible ? React.createElement(Text, { testID: 'widget-modal' }, 'Modal') : null;
+  function MockWidgetModal({ isVisible, openMessage, webViewRef }) {
+    if (!isVisible) return null;
+    if (webViewRef) webViewRef.current = { injectJavaScript: mockInject };
+    return React.createElement(
+      Text,
+      { testID: 'widget-modal' },
+      openMessage ? `Modal:${JSON.stringify(openMessage)}` : 'Modal'
+    );
   }
   
   MockWidgetModal.propTypes = {
     isVisible: PropTypes.bool,
+    openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+    webViewRef: PropTypes.object,
   };
   
   return MockWidgetModal;
@@ -81,6 +91,30 @@ describe('LimeChatWidget', () => {
     render(<LimeChatWidget {...defaultProps} />);
 
     expect(useWidgetConfig.mock.calls[0][0]).toBe('https://app.limechat.ai');
+  });
+
+  it('opens the widget with a message through the ref handle', () => {
+    const ref = React.createRef();
+    const { getByTestId, queryByTestId } = render(<LimeChatWidget {...defaultProps} ref={ref} />);
+    expect(queryByTestId('widget-modal')).toBeNull();
+
+    act(() => ref.current.open('hi'));
+    expect(getByTestId('widget-modal').props.children).toBe('Modal:"hi"');
+  });
+
+  it('opens without a message and sends open-with-message when already open', () => {
+    mockInject.mockClear();
+    const ref = React.createRef();
+    const { getByTestId } = render(<LimeChatWidget {...defaultProps} ref={ref} />);
+
+    act(() => ref.current.open());
+    expect(getByTestId('widget-modal').props.children).toBe('Modal');
+    expect(mockInject).not.toHaveBeenCalled();
+
+    act(() => ref.current.open('again'));
+    expect(mockInject).toHaveBeenCalledTimes(1);
+    expect(mockInject.mock.calls[0][0]).toContain('open-with-message');
+    expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"again"');
   });
 
   it('renders default widget icon when no customButton is provided', () => {

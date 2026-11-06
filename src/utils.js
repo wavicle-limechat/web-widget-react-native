@@ -52,7 +52,7 @@ const buildQueryString = (params) => {
 /**
  * Build the widget URL with parameters
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hideFilePicker, customAttributes, cwConversation }) => {
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hideFilePicker, openMessage, customAttributes, cwConversation }) => {
   const params = {
     website_token: websiteToken,
     locale: locale || 'en',
@@ -69,6 +69,15 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hid
 
   if (hideFilePicker) {
     params.hide_file_picker = 'true';
+  }
+
+  if (typeof openMessage === 'string') {
+    params.lc_open_message = openMessage;
+  }
+
+  if (openMessage && typeof openMessage === 'object') {
+    // the widget decodes this twice, so a literal % has to survive as a json escape
+    params.lc_open_payload = JSON.stringify(openMessage).replace(/%/g, '\\u0025');
   }
 
   const queryString = buildQueryString(params);

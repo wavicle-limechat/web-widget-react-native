@@ -18,6 +18,8 @@ const WebViewComponent = ({
   locale,
   colorScheme,
   hideFilePicker,
+  openMessage,
+  webViewRef,
   user,
   customAttributes,
   cwConversation,
@@ -34,6 +36,7 @@ const WebViewComponent = ({
       locale,
       colorScheme,
       hideFilePicker,
+      openMessage,
       customAttributes,
       cwConversation,
     })
@@ -123,6 +126,7 @@ const WebViewComponent = ({
 
   return (
     <WebView
+      ref={webViewRef}
       source={{ uri: widgetUrl }}
       onMessage={handleMessage}
       onLoad={handleLoad}
@@ -148,6 +152,8 @@ WebViewComponent.propTypes = {
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
   hideFilePicker: PropTypes.bool,
+  openMessage: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   user: PropTypes.shape({
     name: PropTypes.string,
     email: PropTypes.string,

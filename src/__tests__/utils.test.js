@@ -136,6 +136,21 @@ describe('Utils', () => {
       expect(buildWidgetUrl({ ...base, hideFilePicker: false })).not.toContain('hide_file_picker');
     });
 
+    it('adds lc_open_message for a string and lc_open_payload for an object', () => {
+      const base = { baseUrl: 'https://app.limechat.ai', websiteToken: 'test-token' };
+      const strUrl = buildWidgetUrl({ ...base, openMessage: 'hello there' });
+      expect(strUrl).toContain('lc_open_message=hello%20there');
+      expect(strUrl).not.toContain('lc_open_payload');
+
+      const objUrl = buildWidgetUrl({ ...base, openMessage: { content: '50% off', submitted_values: { a: 1 } } });
+      const payload = decodeURIComponent(objUrl.split('lc_open_payload=')[1]);
+      expect(payload).toContain('50\\u0025 off');
+      expect(JSON.parse(payload).content).toBe('50% off');
+      expect(objUrl).not.toContain('lc_open_message');
+
+      expect(buildWidgetUrl(base)).not.toContain('lc_open');
+    });
+
     it('handles empty custom attributes object', () => {
       const paramsWithEmptyAttributes = {
         baseUrl: 'https://app.limechat.ai',
