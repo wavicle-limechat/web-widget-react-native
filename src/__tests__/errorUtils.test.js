@@ -203,15 +203,27 @@ describe('ErrorUtils', () => {
       Linking.openURL.mockResolvedValue(true);
 
       await expect(safeOpenURL('https://example.com')).resolves.not.toThrow();
-      expect(Linking.canOpenURL).toHaveBeenCalledWith('https://example.com');
       expect(Linking.openURL).toHaveBeenCalledWith('https://example.com');
+    });
+
+    it('should open https links even when canOpenURL reports false', async () => {
+      const { Linking } = require('react-native');
+      Linking.canOpenURL.mockResolvedValue(false);
+      Linking.openURL.mockClear();
+      Linking.openURL.mockResolvedValue(true);
+
+      await safeOpenURL('https://example.com/page');
+      expect(Linking.openURL).toHaveBeenCalledWith('https://example.com/page');
     });
 
     it('should throw WidgetError for unsupported URL', async () => {
       const { Linking } = require('react-native');
       Linking.canOpenURL.mockResolvedValue(false);
 
+      Linking.openURL.mockClear();
+
       await expect(safeOpenURL('invalid://url')).rejects.toThrow(WidgetError);
+      expect(Linking.openURL).not.toHaveBeenCalled();
     });
 
     it('should throw WidgetError when openURL fails', async () => {
