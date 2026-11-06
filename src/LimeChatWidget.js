@@ -46,6 +46,7 @@ const LimeChatWidget = React.forwardRef(({
   const hasLoaded = useRef(false);
   const widgetListening = useRef(false);
   const lastValidationMessage = useRef(null);
+  const lastTokenProp = useRef(conversationToken);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
@@ -63,6 +64,12 @@ const LimeChatWidget = React.forwardRef(({
       reportError(error, onError, { action: 'propValidation' });
     }
   }, [websiteToken, user, customAttributes, onError]);
+
+  // a host that clears the prop on logout must not fall back to the old live token
+  useEffect(() => {
+    if (lastTokenProp.current && !conversationToken) setCwConversation(null);
+    lastTokenProp.current = conversationToken;
+  }, [conversationToken]);
 
   const { widgetConfig, isLoading, error } = useWidgetConfig(
     widgetBaseUrl,

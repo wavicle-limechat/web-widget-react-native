@@ -376,6 +376,34 @@ describe('LimeChatWidget', () => {
     expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-jwt');
   });
 
+  it('clearing conversationToken drops the live token', () => {
+    const ref = React.createRef();
+    const onConversationTokenChange = jest.fn();
+    const props = { ...defaultProps, onConversationTokenChange };
+    const { rerender } = render(<LimeChatWidget {...props} conversationToken="userA" ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => widgetListens());
+    act(() => closeFromWidget());
+
+    // logout: the host clears the prop
+    rerender(<LimeChatWidget {...props} conversationToken={undefined} ref={ref} />);
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+
+    // next user gets their own live token
+    act(() => widgetListens());
+    act(() => closeFromWidget());
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
+
+    // a new host token still wins
+    act(() => closeFromWidget());
+    rerender(<LimeChatWidget {...props} conversationToken="userC" ref={ref} />);
+    act(() => ref.current.open());
+    expect(mockWebViewProps.source.uri).toContain('cw_conversation=userC');
+  });
+
   it('passes onMessage through the modal to the webview', () => {
     const onMessage = jest.fn();
     const ref = React.createRef();
