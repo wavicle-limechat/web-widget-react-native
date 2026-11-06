@@ -15,6 +15,15 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - The webview no longer reloads when the conversation token arrives
 - Links to other origins open outside the webview
 - Exports declared in `index.d.ts` now exist at runtime
+- Invalid props no longer loop and spam `onError` on React 18
+- `open(message)` is sent after the widget loads, so contact data is set first and no message is dropped
+- Load errors no longer include the conversation token or open message
+- Web links open without `canOpenURL`, which can return false on Android 11+
+- `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
+
+### Changed
+- The widget url is built when the widget opens. Changing `locale` or `customAttributes` while it is open applies on the next open
+- `onWidgetLoad` fires once on the first open
 
 ### Removed
 - Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received

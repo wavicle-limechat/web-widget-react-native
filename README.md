@@ -161,6 +161,8 @@ widgetRef.current.open({ content: 'Hi', submitted_values: {} });
 widgetRef.current.sendMessage('set-label', { label: 'vip' }); // false if the widget is closed
 ```
 
+`sendMessage` returns `true` when the message was injected into the webview, not when the widget received it. The widget must have loaded to read it, so a message sent before load is lost. `open(message)` waits for the load for you.
+
 ## 🎨 Customization Examples
 
 ### Advanced Styling
