@@ -196,6 +196,17 @@ describe('LimeChatWidget', () => {
     expect(mockInject.mock.calls[0][0]).toContain('"openMessage":"hi"');
   });
 
+  it('calls onWidgetLoad once when onLoad fires twice', () => {
+    const onWidgetLoad = jest.fn();
+    const ref = React.createRef();
+    render(<LimeChatWidget {...defaultProps} onWidgetLoad={onWidgetLoad} ref={ref} />);
+
+    act(() => ref.current.open());
+    act(() => mockWebViewProps.onLoad());
+    act(() => mockWebViewProps.onLoad());
+    expect(onWidgetLoad).toHaveBeenCalledTimes(1);
+  });
+
   it('does not resend on a repeat set-cw-conversation', () => {
     mockInject.mockClear();
     const ref = React.createRef();

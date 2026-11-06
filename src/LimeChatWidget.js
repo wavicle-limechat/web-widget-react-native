@@ -129,9 +129,10 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const handleWidgetLoad = () => {
+    const firstLoad = !hasLoaded.current;
     hasLoaded.current = true;
     markReady();
-    onWidgetLoad?.();
+    if (firstLoad) onWidgetLoad?.();
   };
 
   const handleError = (error, errorInfo) => {
