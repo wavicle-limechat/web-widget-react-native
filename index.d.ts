@@ -32,6 +32,7 @@ export interface LimeChatWidgetProps {
   baseUrl?: string;
   user?: LimeChatUser;
   locale?: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   colorScheme?: 'light' | 'dark' | 'auto';
   hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
@@ -96,6 +97,7 @@ export const POST_MESSAGE_EVENTS: {
   SET_USER: string;
   SET_MESSAGE_ATTRIBUTES: string;
   OPEN_WITH_MESSAGE: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   SET_COLOR_SCHEME: string;
   /** @deprecated Never sent. Will be removed in the next major release. */
   WIDGET_LOADED: string;
@@ -107,6 +109,7 @@ export const POST_MESSAGE_EVENTS: {
 export const WIDGET_CONFIG: {
   DEFAULT_BASE_URL: string;
   DEFAULT_LOCALE: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   DEFAULT_COLOR_SCHEME: string;
   DEFAULT_ICON_SIZE: number;
   DEFAULT_BORDER_RADIUS: number;

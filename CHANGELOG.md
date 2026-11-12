@@ -32,6 +32,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 ### Deprecated
 - `createWidgetUrl`, an alias of `buildWidgetUrl`, will be removed in the next major release
 - `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent, will be removed in the next major release
+- The `colorScheme` prop, `POST_MESSAGE_EVENTS.SET_COLOR_SCHEME` and `WIDGET_CONFIG.DEFAULT_COLOR_SCHEME` are ignored by the widget and will be removed in the next major release
 
 ### Fixed
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
