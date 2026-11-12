@@ -168,6 +168,7 @@ widgetRef.current.open({ content: 'Hi', submitted_values: {} });
 widgetRef.current.setMessageAttributes({ order_id: 'A-100' }); // true if accepted
 widgetRef.current.sendMessage('set-label', { label: 'vip' });  // false if the widget is closed
 widgetRef.current.reload();                // false if the widget is closed
+widgetRef.current.close();                 // hide the widget
 ```
 
 - `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget.
@@ -175,6 +176,7 @@ widgetRef.current.reload();                // false if the widget is closed
 - If the page fails to load, a held message stays held. `open(message)` with a message remounts the page and sends the message at ready. `open()` with no message does not retry: call `reload()`.
 - `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.
 - `reload()` remounts the webview with the live conversation token. Held attributes and the open message are sent when the new page is ready.
+- `close()` hides the widget the way the widget's own close does: it drops a held open message and calls `onWidgetClose`. It does nothing if the widget is already closed.
 
 ### Message attributes
 
@@ -191,7 +193,7 @@ widgetRef.current.reload();                // false if the widget is closed
 
 The widget is ready when the page has loaded and the widget is listening. At ready, the SDK sends held attributes, then the held open message, then calls `onConversationTokenChange`, then `onWidgetLoad`. `onWidgetLoad` runs once per page load, so a `reload()` fires it again.
 
-If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `close()` to dismiss it, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
 
 A page that returns 200 but never mounts gives no `onWidgetLoad` and no error. An HTTP error on the page reaches `onError`.
 

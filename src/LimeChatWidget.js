@@ -108,6 +108,12 @@ const LimeChatWidget = React.forwardRef(({
     onWidgetClose?.();
   };
 
+  // the same path as the widget's own close event and the modal's back press
+  const close = () => {
+    if (!showWidget) return;
+    handleModalClose();
+  };
+
   const flushOpen = () => {
     if (pendingOpen.current === null || !isWidgetReady.current || !webViewRef.current) return;
     webViewRef.current.injectJavaScript(
@@ -199,7 +205,7 @@ const LimeChatWidget = React.forwardRef(({
     reload();
   };
 
-  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload }));
+  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload, close }));
 
   // the widget adds its message listener after onload, and android can fire onLoad
   // before that. set-cw-conversation is sent in the same task as the listener, so

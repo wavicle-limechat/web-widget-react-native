@@ -9,6 +9,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 ### Added
 - `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
 - `reload()` on the ref handle
+- `close()` on the ref handle. It hides the widget and calls `onWidgetClose`, so a host can dismiss a blank widget after a second process death
 - `onMessage` prop, for widget messages that are not close or token events. The widget sends none today
 - `custom_attributes` on `user`
 - `baseUrl`, `hideFilePicker` and `unreadCount` props

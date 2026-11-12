@@ -956,4 +956,55 @@ describe('LimeChatWidget', () => {
       expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
     });
   });
+
+  describe('close', () => {
+    it('close hides the widget and calls onWidgetClose', () => {
+      const onWidgetClose = jest.fn();
+      const ref = React.createRef();
+      const { queryByTestId } = render(<LimeChatWidget {...defaultProps} onWidgetClose={onWidgetClose} ref={ref} />);
+      act(() => ref.current.open());
+      expect(queryByTestId('widget-modal')).toBeTruthy();
+
+      act(() => ref.current.close());
+      expect(queryByTestId('widget-modal')).toBeNull();
+      expect(onWidgetClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('close does nothing while the widget is closed', () => {
+      const onWidgetClose = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onWidgetClose={onWidgetClose} ref={ref} />);
+
+      act(() => ref.current.close());
+      expect(onWidgetClose).not.toHaveBeenCalled();
+    });
+
+    it('close drops a held open message, like the widget close event', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open('hi'));
+      act(() => ref.current.close());
+      mockInject.mockClear();
+
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(mockInject).not.toHaveBeenCalled();
+    });
+
+    it('close dismisses a blank widget after a second process death', () => {
+      const onWidgetClose = jest.fn();
+      const ref = React.createRef();
+      const { queryByTestId } = render(
+        <LimeChatWidget {...defaultProps} onWidgetClose={onWidgetClose} ref={ref} />
+      );
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onRenderProcessGone());
+      act(() => mockWebViewProps.onRenderProcessGone());
+
+      act(() => ref.current.close());
+      expect(queryByTestId('widget-modal')).toBeNull();
+      expect(onWidgetClose).toHaveBeenCalledTimes(1);
+    });
+  });
 });
