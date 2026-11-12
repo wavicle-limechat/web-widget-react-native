@@ -20,7 +20,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - `identifier` on `user`. `set-user` is sent only when both `identifier` and `identifier_hash` are set. A host that passes only `identifier_hash` no longer sends `set-user`, so pass both
 
 ### Deprecated
-- `createWidgetUrl`, an alias of `buildWidgetUrl`
+- `createWidgetUrl`, an alias of `buildWidgetUrl`, will be removed in the next major release
 
 ### Fixed
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
@@ -57,7 +57,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
 
 ### Deprecated
-- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent. Removed at the next major
+- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent, will be removed in the next major release
 
 ### Removed
 - Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received

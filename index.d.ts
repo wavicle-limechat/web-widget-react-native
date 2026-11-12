@@ -73,7 +73,7 @@ export function buildWidgetUrl(params: {
   cwConversation?: string;
 }): string;
 
-/** @deprecated use buildWidgetUrl */
+/** @deprecated Use buildWidgetUrl instead. Will be removed in the next major release. */
 export const createWidgetUrl: typeof buildWidgetUrl;
 
 // Essential utilities for advanced use cases
@@ -87,7 +87,7 @@ export const POST_MESSAGE_EVENTS: {
   SET_MESSAGE_ATTRIBUTES: string;
   OPEN_WITH_MESSAGE: string;
   SET_COLOR_SCHEME: string;
-  /** @deprecated Never sent. Removed at the next major. */
+  /** @deprecated Never sent. Will be removed in the next major release. */
   WIDGET_LOADED: string;
   CLOSE_WIDGET: string;
   SET_CW_CONVERSATION: string;

@@ -6,7 +6,7 @@ import { buildWidgetUrl } from './utils';
 
 export { buildWidgetUrl, generateScripts } from './utils';
 
-/** @deprecated use buildWidgetUrl */
+/** @deprecated Use buildWidgetUrl instead. Will be removed in the next major release. */
 export const createWidgetUrl = buildWidgetUrl;
 
 // Constants for external configuration
