@@ -951,6 +951,33 @@ describe('LimeChatWidget', () => {
       }
     );
 
+    it('a death after close and reopen reloads once again', () => {
+      const onError = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onError={onError} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onRenderProcessGone());
+
+      act(() => ref.current.close());
+      act(() => ref.current.open());
+      const mounts = mockWebViewMounts;
+      act(() => mockWebViewProps.onRenderProcessGone());
+      expect(mockWebViewMounts).toBe(mounts + 1);
+      expect(onError).not.toHaveBeenCalled();
+    });
+
+    it('a death during the reload still reports the second death', () => {
+      const onError = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onError={onError} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onRenderProcessGone());
+      const mounts = mockWebViewMounts;
+      act(() => mockWebViewProps.onRenderProcessGone());
+      expect(mockWebViewMounts).toBe(mounts);
+      expect(onError).toHaveBeenCalledTimes(1);
+    });
+
     it('open with a message after the second death retries the page', () => {
       const ref = React.createRef();
       render(<LimeChatWidget {...defaultProps} onError={jest.fn()} ref={ref} />);

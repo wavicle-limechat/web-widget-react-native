@@ -218,6 +218,11 @@ const LimeChatWidget = React.forwardRef(({
     reload();
   };
 
+  // closing gives a fresh allowance. onWebViewUnmount must not do this: reload() remounts by key
+  useEffect(() => {
+    if (!showWidget) processRecoveryUsed.current = false;
+  }, [showWidget]);
+
   useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload, close }));
 
   // the widget adds its message listener after onload, and android can fire onLoad

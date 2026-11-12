@@ -37,6 +37,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
 - `reload()` remounts the webview with the live conversation token, so a first-session conversation is kept
 - `open(message)` retries a page that failed to load
+- Closing the widget resets the web process death allowance, so a death after a later open reloads again
 - A web process death reloads the page once. A second death before ready reports `Widget web process died again before ready` through `onError`
 - A throwing `onConversationTokenChange` reaches `onError` when the token event comes before `onLoad`
 - Top frame `data:` and `blob:` urls are blocked and not opened
