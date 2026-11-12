@@ -158,6 +158,13 @@ const LimeChatWidget = React.forwardRef(({
     return true;
   };
 
+  const sendSetUser = () => {
+    if (!user?.identifier || !user?.identifier_hash || !webViewRef.current) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user })
+    );
+  };
+
   const flushAttributes = () => {
     if (!isWidgetReady.current || !webViewRef.current) return;
     if (Object.keys(pendingAttributes.current).length === 0) return;
@@ -233,6 +240,7 @@ const LimeChatWidget = React.forwardRef(({
     if (isWidgetReady.current || !hasLoaded.current || !widgetListening.current) return false;
     isWidgetReady.current = true;
     processRecoveryUsed.current = false;
+    sendSetUser();
     flushAttributes();
     flushOpen();
     return true;

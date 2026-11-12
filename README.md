@@ -195,7 +195,7 @@ widgetRef.current.close();                 // hide the widget
 
 ### Ready
 
-The widget is ready when the page has loaded and the widget is listening. At ready, the SDK sends held attributes, then the held open message, then calls `onConversationTokenChange`, then `onWidgetLoad`. `onWidgetLoad` runs once per page load, so a `reload()` fires it again.
+The widget is ready when the page has loaded and the widget is listening. At ready, the SDK sends `set-user` (only when `identifier` and `identifier_hash` are both set), then held attributes, then the held open message, then calls `onConversationTokenChange`, then `onWidgetLoad`. `onWidgetLoad` runs once per page load, so a `reload()` fires it again.
 
 If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `close()` to dismiss it, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
 

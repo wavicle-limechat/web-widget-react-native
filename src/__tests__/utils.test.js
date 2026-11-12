@@ -202,13 +202,13 @@ describe('Utils', () => {
       expect(scripts).not.toContain('set-locale');
     });
 
-    it('generates set-user when identifier and hash are both present', () => {
+    it('generateScripts sets rnUser only', () => {
       const scripts = generateScripts({
         user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },
       });
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_USER);
-      expect(scripts).toContain('"identifier":"id-1"');
-      expect(scripts).toContain('chatwoot-widget:');
+      expect(scripts).toContain('rnUser');
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
+      expect(scripts).not.toContain('postMessage');
     });
 
     it('does not generate set-user for a hash without identifier', () => {
@@ -233,20 +233,6 @@ describe('Utils', () => {
     it('rnUser has no custom_attributes key when unset', () => {
       const scripts = generateScripts({ user: { name: 'John' } });
       expect(rnUserOf(scripts)).toEqual({ name: 'John', email: '', phone_number: '' });
-    });
-
-    it('set-user script posts once when injected twice', () => {
-      const scripts = generateScripts({
-        user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },
-      });
-      const win = { postMessage: jest.fn() };
-      const doc = { readyState: 'complete' };
-      // eslint-disable-next-line no-new-func
-      const run = new Function('window', 'document', scripts);
-      run(win, doc);
-      run(win, doc);
-      expect(win.postMessage).toHaveBeenCalledTimes(1);
-      expect(win.postMessage.mock.calls[0][0]).toContain('set-user');
     });
 
     it('handles empty user data', () => {

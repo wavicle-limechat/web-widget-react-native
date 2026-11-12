@@ -17,7 +17,8 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message on a failed page is retried by `open(message)`. `open()` with no message does not retry: call `reload()`
 - The widget url sends `platform=react-native`, as the other SDKs send their own value
 - `open(object)` with no `content` and other keys, such as `submitted_values`, sends `content: "Hi"`, as in the web SDK
-- At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
+- At ready, `set-user` is sent first, then held attributes and the open message, then `onConversationTokenChange`, then `onWidgetLoad`
+- `generateScripts` no longer emits `set-user`. It sets `rnUser` only, and the SDK sends `set-user` at ready
 
 ### Added
 - `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
@@ -44,7 +45,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - Top frame `data:` and `blob:` urls are blocked and not opened
 - The named `LimeChatWidget` export is typed in `index.d.ts`
 - Main frame HTTP errors reach `onError`, with `statusCode` and `url` in the context
-- `set-user` is sent once per page
+- `set-user` is sent at ready, on every page load, before held attributes and the open message, in the same order as android and ios
 - The live token is kept under external token management, and clearing the `conversationToken` prop drops it
 - An old page's token event after `reload()` is ignored
 - An empty conversation token from the widget is ignored

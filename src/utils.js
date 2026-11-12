@@ -1,4 +1,4 @@
-import { WOOT_PREFIX, POST_MESSAGE_EVENTS, ERROR_CODES } from './constants';
+import { WOOT_PREFIX, ERROR_CODES } from './constants';
 import { safeJsonParse, WidgetError } from './utils/errorUtils';
 
 /**
@@ -80,18 +80,11 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hid
 /**
  * Generate JavaScript to inject into WebView
  */
-const whenWidgetReady = (script) =>
-  `(function(){var run=function(){${script}};if(document.readyState==='complete'){run();}else{window.addEventListener('load',run);}})();`;
-
-// android re-runs the injected script on each page finish, so guard per document
-const sendOnce = (script) =>
-  `if(!window.__limechatSetUserSent){window.__limechatSetUserSent=true;${script}}`;
-
 export const generateScripts = ({ user }) => {
   if (!user || Object.keys(user).length === 0) return '';
 
   // read by the widget at send time and for pre-chat prefill
-  let script = `
+  return `
     window.chatwootWebChannel = window.chatwootWebChannel || {};
     window.chatwootWebChannel.rnUser = ${JSON.stringify({
       name: user.name || '',
@@ -100,14 +93,6 @@ export const generateScripts = ({ user }) => {
       ...(user.custom_attributes ? { custom_attributes: user.custom_attributes } : {}),
     })};
   `;
-
-  if (user.identifier && user.identifier_hash) {
-    script += whenWidgetReady(
-      sendOnce(createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user }))
-    );
-  }
-
-  return script;
 };
 
 export const fetchWidgetConfig = async (baseUrl, websiteToken) => {

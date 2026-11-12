@@ -221,7 +221,7 @@ Custom styling for the unread count text.
 
 ##### `onWidgetLoad` (() => void)
 
-Called once per page load, when the widget is ready: the page has loaded and the widget is listening. Held attributes, the held open message and `onConversationTokenChange` run first. A `reload()` fires it again.
+Called once per page load, when the widget is ready: the page has loaded and the widget is listening. `set-user` (only when `identifier` and `identifier_hash` are both set), held attributes, the held open message and `onConversationTokenChange` run first, in that order. A `reload()` fires it again.
 
 It is not called if the page fails or loads but never mounts. A page that returns 200 and never mounts gives no error either. An HTTP error on the page reaches `onError`.
 

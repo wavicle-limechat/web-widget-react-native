@@ -876,6 +876,62 @@ describe('LimeChatWidget', () => {
     });
   });
 
+  describe('set-user', () => {
+    const user = { name: 'A', identifier: 'id-1', identifier_hash: 'hash-1' };
+    const setUserCalls = () => mockInject.mock.calls.filter(([script]) => script.includes('set-user'));
+
+    beforeEach(() => mockInject.mockClear());
+
+    it('is sent at ready before attributes and the open message', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+      act(() => ref.current.open('hi'));
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+      act(() => mockWebViewProps.onLoad());
+      expect(mockInject).not.toHaveBeenCalled();
+      act(() => widgetListens());
+
+      expect(mockInject).toHaveBeenCalledTimes(3);
+      expect(mockInject.mock.calls[0][0]).toContain('set-user');
+      expect(mockInject.mock.calls[0][0]).toContain('"identifier":"id-1"');
+      expect(mockInject.mock.calls[0][0]).toContain('"identifier_hash":"hash-1"');
+      expect(mockInject.mock.calls[1][0]).toContain('set-message-attributes');
+      expect(mockInject.mock.calls[2][0]).toContain('open-with-message');
+    });
+
+    it('is not sent without both identifier and identifier_hash', () => {
+      const ref = React.createRef();
+      const { rerender } = render(
+        <LimeChatWidget {...defaultProps} user={{ name: 'A', identifier: 'id-1' }} ref={ref} />
+      );
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(setUserCalls()).toHaveLength(0);
+
+      act(() => closeFromWidget());
+      rerender(<LimeChatWidget {...defaultProps} user={{ identifier_hash: 'hash-1' }} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(setUserCalls()).toHaveLength(0);
+    });
+
+    it('is sent again after reload', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(setUserCalls()).toHaveLength(1);
+
+      act(() => { ref.current.reload(); });
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      expect(setUserCalls()).toHaveLength(2);
+    });
+  });
+
   describe('failed page', () => {
     const failLoad = () =>
       mockWebViewProps.onError({ nativeEvent: { description: 'offline', url: 'https://x/y' } });
