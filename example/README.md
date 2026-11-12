@@ -33,7 +33,6 @@ This is an example React Native app built with Expo that demonstrates how to int
 3. **Run on your preferred platform**:
    - iOS: Press `i` in the terminal or run `yarn ios`
    - Android: Press `a` in the terminal or run `yarn android`
-   - Web: Press `w` in the terminal or run `yarn web`
 
 ## Configuration
 
