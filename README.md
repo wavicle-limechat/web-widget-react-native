@@ -171,7 +171,7 @@ widgetRef.current.reload();                // false if the widget is closed
 widgetRef.current.close();                 // hide the widget
 ```
 
-- `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget.
+- `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget. A message object with no `content` and other keys, such as `submitted_values`, gets `content: "Hi"`, as in the web SDK.
 - Closing the widget drops a held `open` message.
 - If the page fails to load, a held message stays held. `open(message)` with a message remounts the page and sends the message at ready. `open()` with no message does not retry: call `reload()`.
 - `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.

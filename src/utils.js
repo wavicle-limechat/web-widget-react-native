@@ -7,6 +7,14 @@ import { safeJsonParse, WidgetError } from './utils/errorUtils';
 export const createWootPostMessage = (object) =>
   `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
 
+// the web SDK sends "Hi" for a message object with no content and other keys, such as submitted_values
+export const withDefaultContent = (message) => {
+  if (!message || typeof message !== 'object') return message;
+  const noContent = message.content === undefined || message.content === null || message.content === '';
+  const hasOtherKeys = Object.keys(message).some((key) => key !== 'content');
+  return noContent && hasOtherKeys ? { ...message, content: 'Hi' } : message;
+};
+
 const DEFAULT_PORTS = { http: '80', https: '443' };
 
 // scheme, host and port, same rule as android and ios. no URL class, rn's is partial

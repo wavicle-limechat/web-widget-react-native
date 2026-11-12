@@ -7,7 +7,7 @@ import WidgetModal from "./components/WidgetModal";
 import { WIDGET_CONFIG, ERROR_CODES, POST_MESSAGE_EVENTS } from "./constants";
 import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
-import { createWootPostMessage } from "./utils";
+import { createWootPostMessage, withDefaultContent } from "./utils";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
 import { userPropType } from "./utils/propTypes";
 
@@ -143,7 +143,7 @@ const LimeChatWidget = React.forwardRef(({
     const hasMessage = typeof message === 'string'
       ? message.length > 0
       : !!message && Object.keys(message).length > 0;
-    if (hasMessage) pendingOpen.current = message;
+    if (hasMessage) pendingOpen.current = withDefaultContent(message);
     setShowWidget(true);
     if (hasMessage && loadFailed.current) {
       reload();

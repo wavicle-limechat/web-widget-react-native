@@ -431,6 +431,35 @@ describe('LimeChatWidget', () => {
     expect(mockInject).not.toHaveBeenCalled();
   });
 
+  describe('open default content', () => {
+    const openedWith = (message) => {
+      mockInject.mockClear();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open(message));
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+      const call = mockInject.mock.calls.find(([script]) => script.includes('open-with-message'));
+      return call && JSON.parse(call[0].match(/JSON\.stringify\((.*)\), '\*'\)/)[1]).openMessage;
+    };
+
+    it('sends Hi for submitted_values with no content', () => {
+      expect(openedWith({ submitted_values: { a: 1 } })).toEqual({ submitted_values: { a: 1 }, content: 'Hi' });
+    });
+
+    it('sends Hi for empty content with other keys', () => {
+      expect(openedWith({ content: '', submitted_values: {} })).toEqual({ content: 'Hi', submitted_values: {} });
+    });
+
+    it('keeps existing content', () => {
+      expect(openedWith({ content: 'help', submitted_values: {} })).toEqual({ content: 'help', submitted_values: {} });
+    });
+
+    it('leaves a lone empty content unchanged', () => {
+      expect(openedWith({ content: '' })).toEqual({ content: '' });
+    });
+  });
+
   it('reopen keeps the live token when the host has a callback but no prop', () => {
     const onConversationTokenChange = jest.fn();
     const ref = React.createRef();

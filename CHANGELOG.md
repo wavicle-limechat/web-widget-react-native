@@ -16,6 +16,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - `onWidgetLoad` fires once per page load, when the widget is ready (page loaded and widget listening), not on the first open. A failed page gives no `onWidgetLoad`
 - `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message on a failed page is retried by `open(message)`. `open()` with no message does not retry: call `reload()`
 - The widget url sends `platform=react-native`, as the other SDKs send their own value
+- `open(object)` with no `content` and other keys, such as `submitted_values`, sends `content: "Hi"`, as in the web SDK
 - At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
 
 ### Added
