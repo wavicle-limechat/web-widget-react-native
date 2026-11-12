@@ -4,6 +4,10 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 ## [Unreleased]
 
+## [0.2.0-beta.1]
+
+0.0.6 to 0.1.1 were tagged without changelog entries.
+
 > **Upgrade note: unverified contact update.** User details passed to the SDK reach the widget through `rnUser` with no verification. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone. If you use identity validation, pass `identifier` and `identifier_hash` so the contact is verified.
 
 ### Changed

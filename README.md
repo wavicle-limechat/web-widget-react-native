@@ -16,11 +16,11 @@ A powerful, easy-to-integrate React Native SDK that brings LimeChat's customer s
 ### Step 1: Install the SDK
 
 ```bash
-# Using yarn (recommended)
-yarn add @limechat/react-native-widget
+# Using yarn (recommended). not published on npm, install from the git tag
+yarn add github:wavicle-limechat/web-widget-react-native#v0.2.0-beta.1
 
 # Using npm
-npm install @limechat/react-native-widget
+npm install github:wavicle-limechat/web-widget-react-native#v0.2.0-beta.1
 ```
 
 ### Step 2: Install Required Dependencies
@@ -374,7 +374,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 - **Documentation**: [Complete SDK Documentation](https://docs.limechat.ai/react-native)
 - **Support**: [support@limechat.ai](mailto:support@limechat.ai)
-- **Issues**: [GitHub Issues](https://github.com/limechat/react-native-widget/issues)
+- **Issues**: [GitHub Issues](https://github.com/wavicle-limechat/web-widget-react-native/issues)
 - **Community**: [LimeChat Community Forum](https://community.limechat.ai)
 
 ---
