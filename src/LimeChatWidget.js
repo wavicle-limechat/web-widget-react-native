@@ -1,38 +1,60 @@
 import PropTypes from "prop-types";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, useRef } from "react";
 import { View, TouchableOpacity, Text } from "react-native";
 import ErrorBoundary from "./components/ErrorBoundary";
 import WidgetIcon from "./components/WidgetIcon";
 import WidgetModal from "./components/WidgetModal";
-import { WIDGET_CONFIG, ERROR_CODES } from "./constants";
+import { WIDGET_CONFIG, ERROR_CODES, POST_MESSAGE_EVENTS } from "./constants";
 import useWidgetConfig from "./hooks/useWidgetConfig";
 import { widgetStyles } from "./styles";
+import { createWootPostMessage, withDefaultContent } from "./utils";
 import { validators, reportError, WidgetError } from "./utils/errorUtils";
+import { userPropType } from "./utils/propTypes";
 
-// Internal baseUrl - not exposed to clients
-const INTERNAL_BASE_URL = WIDGET_CONFIG.DEFAULT_BASE_URL;
+const EMPTY_OBJECT = {};
 
-const LimeChatWidget = ({
+const LimeChatWidget = React.forwardRef(({
   websiteToken,
-  user = {},
+  baseUrl = WIDGET_CONFIG.DEFAULT_BASE_URL,
+  user = EMPTY_OBJECT,
   locale = WIDGET_CONFIG.DEFAULT_LOCALE,
   colorScheme = WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
-  customAttributes = {},
+  hideFilePicker = false,
+  customAttributes = EMPTY_OBJECT,
   customButton = null,
   conversationToken,
   onConversationTokenChange,
   onWidgetLoad,
   onWidgetClose,
+  onMessage,
   onError,
   style,
   iconStyle,
+  unreadCount: unreadCountProp,
   unreadCountStyle,
   unreadCountTextStyle,
-}) => {
+}, ref) => {
+  const widgetBaseUrl = baseUrl.replace(/\/+$/, '');
   const [showWidget, setShowWidget] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [cwConversation, setCwConversation] = useState(null);
   const [validationError, setValidationError] = useState(null);
+  const [webViewKey, setWebViewKey] = useState(0);
+  const webViewRef = useRef(null);
+  const pendingOpen = useRef(null);
+  const pendingAttributes = useRef({});
+  const isWidgetReady = useRef(false);
+  const hasLoaded = useRef(false);
+  const widgetListening = useRef(false);
+  const lastValidationMessage = useRef(null);
+  const reloadedAt = useRef(0);
+  const heldToken = useRef(null);
+  const loadFailed = useRef(false);
+  const processRecoveryUsed = useRef(false);
+  const lastTokenProp = useRef(conversationToken);
+  const ignoredTokenProp = useRef(null);
+  const ignoredUserKey = useRef(null);
+  const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
   useEffect(() => {
@@ -40,15 +62,50 @@ const LimeChatWidget = ({
       validators.websiteToken(websiteToken);
       validators.user(user);
       validators.customAttributes(customAttributes);
+      lastValidationMessage.current = null;
       setValidationError(null);
     } catch (error) {
+      if (lastValidationMessage.current === error.message) return;
+      lastValidationMessage.current = error.message;
       setValidationError(error);
       reportError(error, onError, { action: 'propValidation' });
     }
   }, [websiteToken, user, customAttributes, onError]);
 
+  // a host that clears the prop on logout must not fall back to the old live token
+  useEffect(() => {
+    ignoredTokenProp.current = null;
+    if (lastTokenProp.current && !conversationToken) setCwConversation(null);
+    lastTokenProp.current = conversationToken;
+  }, [conversationToken]);
+
+  // held attributes belong to the user who set them. a different user or token must not get them.
+  // a token arriving after none (first session) is not a switch.
+  const userKey = JSON.stringify([user?.identifier, user?.email, user?.phone_number]);
+  const lastUserKey = useRef(userKey);
+  // after reset() the current user prop is ignored until it changes, like ignoredTokenProp
+  useEffect(() => {
+    if (ignoredUserKey.current !== userKey) ignoredUserKey.current = null;
+  }, [userKey]);
+  const activeUser = ignoredUserKey.current === userKey ? EMPTY_OBJECT : user;
+  const lastHeldToken = useRef(conversationToken);
+  // a different identity, or none after one, must not keep the previous user's conversation.
+  // none to an identity (first login) and a new name for the same identity are not a switch.
+  const identity = [user?.identifier, user?.email, user?.phone_number].map((v) => v ?? '').join('\n');
+  const identityKey = identity === '\n\n' ? null : identity;
+  const lastIdentity = useRef(identityKey);
+  useEffect(() => {
+    if (lastIdentity.current !== null && lastIdentity.current !== identityKey) setCwConversation(null);
+    lastIdentity.current = identityKey;
+    const userChanged = lastUserKey.current !== userKey;
+    const tokenChanged = !!lastHeldToken.current && lastHeldToken.current !== conversationToken;
+    lastUserKey.current = userKey;
+    lastHeldToken.current = conversationToken;
+    if (userChanged || tokenChanged) pendingAttributes.current = {};
+  }, [userKey, identityKey, conversationToken]);
+
   const { widgetConfig, isLoading, error } = useWidgetConfig(
-    INTERNAL_BASE_URL,
+    widgetBaseUrl,
     websiteToken,
     onError
   );
@@ -60,6 +117,7 @@ const LimeChatWidget = ({
         reportError(validationError, onError, { action: 'iconPress' });
         return;
       }
+      pendingOpen.current = null;
       setShowWidget(!showWidget);
     } catch (error) {
       const widgetError = new WidgetError(
@@ -73,45 +131,204 @@ const LimeChatWidget = ({
   };
 
   const handleModalClose = () => {
+    pendingOpen.current = null;
     setShowWidget(false);
     onWidgetClose?.();
   };
 
-  const handleWidgetLoad = () => {
-    onWidgetLoad?.();
+  // the same path as the widget's own close event and the modal's back press
+  const close = () => {
+    if (!showWidget) return;
+    handleModalClose();
   };
 
-  const handleError = (error, errorInfo) => {
-    onError?.(error, errorInfo);
+  const flushOpen = () => {
+    if (pendingOpen.current === null || !isWidgetReady.current || !webViewRef.current) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.OPEN_WITH_MESSAGE, openMessage: pendingOpen.current })
+    );
+    pendingOpen.current = null;
+  };
+
+  const open = (message = null) => {
+    if (validationError) {
+      reportError(validationError, onError, { action: 'open' });
+      return;
+    }
+    const hasMessage = typeof message === 'string'
+      ? message.length > 0
+      : !!message && Object.keys(message).length > 0;
+    if (hasMessage) pendingOpen.current = withDefaultContent(message);
+    setShowWidget(true);
+    if (hasMessage && loadFailed.current) {
+      reload();
+      return;
+    }
+    flushOpen();
+  };
+
+  const sendMessage = (event, data = {}) => {
+    if (!webViewRef.current) return false;
+    webViewRef.current.injectJavaScript(createWootPostMessage({ ...data, event }));
+    return true;
+  };
+
+  const sendSetUser = () => {
+    if (!activeUser?.identifier || !activeUser?.identifier_hash || !webViewRef.current) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: activeUser.identifier, user: activeUser })
+    );
+  };
+
+  const flushAttributes = () => {
+    if (!isWidgetReady.current || !webViewRef.current) return;
+    if (Object.keys(pendingAttributes.current).length === 0) return;
+    webViewRef.current.injectJavaScript(
+      createWootPostMessage({
+        event: POST_MESSAGE_EVENTS.SET_MESSAGE_ATTRIBUTES,
+        attributes: pendingAttributes.current,
+      })
+    );
+    pendingAttributes.current = {};
+  };
+
+  const setMessageAttributes = (attributes) => {
+    const isPlainObject = !!attributes && typeof attributes === 'object' && !Array.isArray(attributes);
+    if (!isPlainObject || Object.keys(attributes).length === 0) return false;
+    try {
+      JSON.stringify(attributes);
+    } catch (e) {
+      return false;
+    }
+    pendingAttributes.current = { ...pendingAttributes.current, ...attributes };
+    flushAttributes();
+    return true;
+  };
+
+  const reload = () => {
+    if (!webViewRef.current) return false;
+    reloadedAt.current = Date.now();
+    heldToken.current = null;
+    isWidgetReady.current = false;
+    hasLoaded.current = false;
+    widgetListening.current = false;
+    setWebViewKey((key) => key + 1);
+    return true;
+  };
+
+  // the web process died: reload once, then report until the page is ready again
+  const handleProcessGone = () => {
+    isWidgetReady.current = false;
+    hasLoaded.current = false;
+    widgetListening.current = false;
+    heldToken.current = null;
+    if (processRecoveryUsed.current) {
+      loadFailed.current = true;
+      reportError(
+        new WidgetError(
+          ERROR_CODES.WEBVIEW_ERROR,
+          'Widget web process died again before ready',
+          null,
+          { action: 'webViewProcessGone' }
+        ),
+        onError,
+        { action: 'webViewProcessGone' }
+      );
+      return;
+    }
+    processRecoveryUsed.current = true;
+    reload();
+  };
+
+  // closing gives a fresh allowance. onWebViewUnmount must not do this: reload() remounts by key
+  useEffect(() => {
+    if (!showWidget) processRecoveryUsed.current = false;
+  }, [showWidget]);
+
+  // like the web SDK's reset(): drops the conversation and the user, not the widget. the open widget reloads without a token
+  const reset = () => {
+    setCwConversation(null);
+    ignoredTokenProp.current = conversationToken ?? null;
+    ignoredUserKey.current = userKey;
+    pendingAttributes.current = {};
+    pendingOpen.current = null;
+    reload();
+  };
+
+  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload, close, reset }));
+
+  // the widget adds its message listener after onload, and android can fire onLoad
+  // before that. set-cw-conversation is sent in the same task as the listener, so
+  // ready needs both onLoad and that event.
+  // returns true the first time the widget is ready on this webview load
+  const markReady = () => {
+    if (isWidgetReady.current || !hasLoaded.current || !widgetListening.current) return false;
+    isWidgetReady.current = true;
+    processRecoveryUsed.current = false;
+    sendSetUser();
+    flushAttributes();
+    flushOpen();
+    return true;
+  };
+
+  const deliverToken = (conversation) => {
+    if (typeof conversation !== 'string' || !conversation.trim()) return;
+    setCwConversation(conversation);
+    onConversationTokenChange?.(conversation);
+  };
+
+  // the token goes to the host after held attributes and open, as on android and ios
+  const handleWidgetLoad = () => {
+    hasLoaded.current = true;
+    const firstReady = markReady();
+    const token = heldToken.current;
+    heldToken.current = null;
+    try {
+      if (token !== null) deliverToken(token);
+    } catch (error) {
+      reportError(error, onError, { action: 'conversationToken' });
+    } finally {
+      if (firstReady) onWidgetLoad?.();
+    }
   };
 
   const handleUnreadCountUpdate = (count) => {
     setUnreadCount(count || 0);
   };
 
-  const handleCwConversationUpdate = (conversation) => {
-    // If external token management is used, call the callback
-    if (onConversationTokenChange) {
-      onConversationTokenChange(conversation);
-    } else {
-      // Otherwise, use internal state management
-      setCwConversation(conversation);
+  const handleCwConversationUpdate = (conversation, timestamp) => {
+    // the old page can still answer after a reload started
+    if (timestamp < reloadedAt.current) return;
+    widgetListening.current = true;
+    if (!hasLoaded.current) {
+      heldToken.current = conversation;
+      return;
+    }
+    const firstReady = markReady();
+    try {
+      deliverToken(conversation);
+    } catch (error) {
+      reportError(error, onError, { action: 'conversationToken' });
+    } finally {
+      if (firstReady) onWidgetLoad?.();
     }
   };
 
   const renderIcon = () => {
+    const badge = shownUnreadCount > 0 && (
+      <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
+        <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
+          {shownUnreadCount > 99 ? '99+' : shownUnreadCount}
+        </Text>
+      </View>
+    );
+
     // If customButton is provided, render it directly without wrapping in TouchableOpacity
     // This allows the custom button to handle its own onPress events
     if (customButton) {
       return (
         <View style={widgetStyles.iconButton}>
-          {unreadCount > 0 && (
-            <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
-              <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-                {unreadCount}
-              </Text>
-            </View>
-          )}
+          {badge}
 
           {React.cloneElement(customButton, {
             onPress: () => {
@@ -134,13 +351,7 @@ const LimeChatWidget = ({
         style={widgetStyles.iconButton}
         activeOpacity={0.8}
       >
-        {unreadCount > 0 && (
-          <View style={[widgetStyles.unreadCount, unreadCountStyle]}>
-            <Text style={[widgetStyles.unreadCountText, unreadCountTextStyle]}>
-              {unreadCount}
-            </Text>
-          </View>
-        )}
+        {badge}
 
         <WidgetIcon
           widgetConfig={widgetConfig}
@@ -153,22 +364,38 @@ const LimeChatWidget = ({
     );
   };
 
+  const effectiveTokenProp =
+    conversationToken && conversationToken !== ignoredTokenProp.current ? conversationToken : undefined;
+
   return (
-    <ErrorBoundary onError={handleError}>
+    <ErrorBoundary onError={onError}>
       <View style={[widgetStyles.container, style]}>
         {renderIcon()}
 
         <WidgetModal
           isVisible={showWidget}
           onClose={handleModalClose}
-          baseUrl={INTERNAL_BASE_URL}
+          baseUrl={widgetBaseUrl}
           websiteToken={websiteToken}
           locale={locale}
           colorScheme={colorScheme}
-          user={user}
+          hideFilePicker={hideFilePicker}
+          onWebViewUnmount={() => {
+            isWidgetReady.current = false;
+            hasLoaded.current = false;
+            widgetListening.current = false;
+            heldToken.current = null;
+            loadFailed.current = false;
+          }}
+          onLoadFailed={() => { loadFailed.current = true; }}
+          onProcessGone={handleProcessGone}
+          webViewRef={webViewRef}
+          webViewKey={webViewKey}
+          user={activeUser}
           customAttributes={customAttributes}
-          cwConversation={conversationToken || cwConversation}
+          cwConversation={effectiveTokenProp || cwConversation}
           onWidgetLoad={handleWidgetLoad}
+          onWidgetMessage={onMessage}
           onUnreadCountUpdate={handleUnreadCountUpdate}
           onCwConversationUpdate={handleCwConversationUpdate}
           onError={onError}
@@ -176,46 +403,30 @@ const LimeChatWidget = ({
       </View>
     </ErrorBoundary>
   );
-};
+});
+
+LimeChatWidget.displayName = 'LimeChatWidget';
 
 LimeChatWidget.propTypes = {
   websiteToken: PropTypes.string.isRequired,
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone_number: PropTypes.string,
-    identifier_hash: PropTypes.string,
-  }),
+  baseUrl: PropTypes.string,
+  user: userPropType,
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(["light", "dark", "auto"]),
+  hideFilePicker: PropTypes.bool,
   customAttributes: PropTypes.object,
   customButton: PropTypes.element,
   conversationToken: PropTypes.string,
   onConversationTokenChange: PropTypes.func,
   onWidgetLoad: PropTypes.func,
   onWidgetClose: PropTypes.func,
+  onMessage: PropTypes.func,
   onError: PropTypes.func,
   style: PropTypes.object,
   iconStyle: PropTypes.object,
+  unreadCount: PropTypes.number,
   unreadCountStyle: PropTypes.object,
   unreadCountTextStyle: PropTypes.object,
-};
-
-LimeChatWidget.defaultProps = {
-  user: {},
-  locale: WIDGET_CONFIG.DEFAULT_LOCALE,
-  colorScheme: WIDGET_CONFIG.DEFAULT_COLOR_SCHEME,
-  customAttributes: {},
-  customButton: null,
-  conversationToken: null,
-  onConversationTokenChange: null,
-  onWidgetLoad: null,
-  onWidgetClose: null,
-  onError: null,
-  style: {},
-  iconStyle: {},
-  unreadCountStyle: {},
-  unreadCountTextStyle: {},
 };
 
 export default LimeChatWidget;

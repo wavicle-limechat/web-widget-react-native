@@ -5,7 +5,9 @@ export interface LimeChatUser {
   name?: string;
   email?: string;
   phone_number?: string;
+  identifier?: string;
   identifier_hash?: string;
+  custom_attributes?: Record<string, any>;
 }
 
 export interface WidgetError {
@@ -27,25 +29,43 @@ export interface WidgetErrorData {
 
 export interface LimeChatWidgetProps {
   websiteToken: string;
+  baseUrl?: string;
   user?: LimeChatUser;
   locale?: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   colorScheme?: 'light' | 'dark' | 'auto';
+  hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   customButton?: React.ReactElement;
   conversationToken?: string;
   onConversationTokenChange?: (token: string) => void;
   onWidgetLoad?: () => void;
   onWidgetClose?: () => void;
+  onMessage?: (message: Record<string, any>) => void;
   onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
   style?: ViewStyle;
   iconStyle?: ViewStyle;
+  unreadCount?: number;
   unreadCountStyle?: ViewStyle;
   unreadCountTextStyle?: TextStyle;
 }
 
-declare const LimeChatWidget: React.FC<LimeChatWidgetProps>;
+export interface LimeChatWidgetHandle {
+  open(message?: string | { content?: string; submitted_values?: unknown }): void;
+  sendMessage(event: string, data?: Record<string, unknown>): boolean;
+  setMessageAttributes(attributes: Record<string, unknown>): boolean;
+  reload(): boolean;
+  close(): void;
+  /**
+   * `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it.
+   */
+  reset(): void;
+}
+
+declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;
 
 export default LimeChatWidget;
+export { LimeChatWidget };
 
 // Advanced use cases
 export function buildWidgetUrl(params: {
@@ -53,26 +73,24 @@ export function buildWidgetUrl(params: {
   websiteToken: string;
   locale?: string;
   colorScheme?: string;
-  user?: LimeChatUser;
+  hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   cwConversation?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  user?: LimeChatUser;
 }): string;
 
-export function createWidgetUrl(params: {
-  baseUrl: string;
-  websiteToken: string;
-  locale?: string;
-  colorScheme?: string;
-  user?: LimeChatUser;
-  customAttributes?: Record<string, any>;
-  cwConversation?: string;
-}): string;
+/** @deprecated Use buildWidgetUrl instead. Will be removed in the next major release. */
+export const createWidgetUrl: typeof buildWidgetUrl;
 
 // Essential utilities for advanced use cases
 export function generateScripts(params: {
-  colorScheme?: string;
   user?: LimeChatUser;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  colorScheme?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
   locale?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
   customAttributes?: Record<string, any>;
 }): string;
 
@@ -81,7 +99,11 @@ export const POST_MESSAGE_EVENTS: {
   SET_LOCALE: string;
   SET_CUSTOM_ATTRIBUTES: string;
   SET_USER: string;
+  SET_MESSAGE_ATTRIBUTES: string;
+  OPEN_WITH_MESSAGE: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   SET_COLOR_SCHEME: string;
+  /** @deprecated Never sent. Will be removed in the next major release. */
   WIDGET_LOADED: string;
   CLOSE_WIDGET: string;
   SET_CW_CONVERSATION: string;
@@ -91,6 +113,7 @@ export const POST_MESSAGE_EVENTS: {
 export const WIDGET_CONFIG: {
   DEFAULT_BASE_URL: string;
   DEFAULT_LOCALE: string;
+  /** @deprecated Ignored by the widget. Will be removed in the next major release. */
   DEFAULT_COLOR_SCHEME: string;
   DEFAULT_ICON_SIZE: number;
   DEFAULT_BORDER_RADIUS: number;
@@ -125,7 +148,7 @@ export class WidgetError extends Error {
   constructor(code: string, message: string, originalError?: Error, context?: Record<string, any>);
   code: string;
   type: string;
-  severity: string;
+  severity: 'critical' | 'high' | 'medium' | 'low' | 'info';
   originalError?: Error;
   context: Record<string, any>;
   timestamp: string;

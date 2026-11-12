@@ -16,11 +16,11 @@ A powerful, easy-to-integrate React Native SDK that brings LimeChat's customer s
 ### Step 1: Install the SDK
 
 ```bash
-# Using yarn (recommended)
-yarn add @limechat/react-native-widget
+# Using yarn (recommended). not published on npm, install from the git tag
+yarn add github:wavicle-limechat/web-widget-react-native#v0.2.0
 
 # Using npm
-npm install @limechat/react-native-widget
+npm install github:wavicle-limechat/web-widget-react-native#v0.2.0
 ```
 
 ### Step 2: Install Required Dependencies
@@ -117,15 +117,20 @@ export default function App() {
 |----------|------|----------|-------------|
 | `websiteToken` | `string` | ✅ | Your LimeChat website token from the dashboard |
 | `user` | [`LimeChatUser`](#limechatuser) | ❌ | User information for personalized chat experience |
+| `baseUrl` | `string` | ❌ | LimeChat base URL (default: `'https://app.limechat.ai'`) |
 | `locale` | `string` | ❌ | Language locale (default: `'en'`) |
-| `colorScheme` | `'light' \| 'dark' \| 'auto'` | ❌ | Theme preference (default: `'light'`) |
+| `hideFilePicker` | `boolean` | ❌ | Hide the attachment button in the chat (default: `false`) |
 | `customAttributes` | `Record<string, any>` | ❌ | Additional metadata to pass with the chat session |
+| `conversationToken` | `string` | ❌ | Token of the conversation to continue. Wins over the live token. See [Conversation Continuity](#conversation-continuity) |
+| `onConversationTokenChange` | `(token: string) => void` | ❌ | Called with the conversation token the widget reports. Store it to continue the conversation later |
 | `customButton` | `ReactElement` | ❌ | Custom trigger component with optional onPress handler |
-| `onWidgetLoad` | `() => void` | ❌ | Callback fired when the chat widget loads successfully |
+| `onWidgetLoad` | `() => void` | ❌ | Called once per page load, when the widget is ready. It is not called if the page fails or loads but never mounts |
 | `onWidgetClose` | `() => void` | ❌ | Callback fired when the chat widget is closed |
+| `onMessage` | `(message: object) => void` | ❌ | Called with messages from the widget that are not close or token events. The widget sends none today |
 | `onError` | [`ErrorHandler`](#error-handling) | ❌ | Callback for handling errors and monitoring |
 | `style` | `ViewStyle` | ❌ | Custom styling for the widget container |
 | `iconStyle` | `ViewStyle` | ❌ | Custom styling for the default chat icon |
+| `unreadCount` | `number` | ❌ | Number shown on the badge, capped at `99+`. Set by the host app. The widget does not update it |
 | `unreadCountStyle` | `ViewStyle` | ❌ | Custom styling for the unread message badge |
 | `unreadCountTextStyle` | `TextStyle` | ❌ | Custom styling for the unread count text |
 
@@ -136,52 +141,69 @@ interface LimeChatUser {
   name?: string;           // User's display name
   email?: string;          // User's email address
   phone_number?: string;   // User's phone number (with country code)
-  identifier_hash?: string; // Secure user identifier hash
+  identifier?: string;     // Your own stable user id
+  identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
+  custom_attributes?: Record<string, any>; // Sent with every message the customer types
 }
 ```
 
-## 🎨 Customization Examples
+`identifier_hash` only works together with `identifier`. The widget verifies the user only when both are set.
 
-### Advanced Styling
+User custom attributes go with every message the customer types, not onto the contact.
+
+Without them the details are sent unverified. With every message the server updates the contact, and can merge into an existing contact with the same email or phone.
+
+### Ref handle
+
+`LimeChatWidget` accepts a `ref` with these methods:
 
 ```tsx
-import { StyleSheet } from 'react-native';
+const widgetRef = useRef(null);
 
-const styles = StyleSheet.create({
-  widgetContainer: {
-    position: 'absolute',
-    bottom: 100,
-    left: 20, // Position on left instead of right
-  },
-  chatIcon: {
-    backgroundColor: '#ff6b6b',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-  },
-  unreadBadge: {
-    backgroundColor: '#ff4757',
-    borderRadius: 12,
-    minWidth: 24,
-    height: 24,
-    borderWidth: 2,
-    borderColor: 'white',
-  },
-  unreadText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-});
+<LimeChatWidget ref={widgetRef} websiteToken="your-token" />
 
-<LimeChatWidget
-  websiteToken="your-token"
-  style={styles.widgetContainer}
-  iconStyle={styles.chatIcon}
-  unreadCountStyle={styles.unreadBadge}
-  unreadCountTextStyle={styles.unreadText}
-/>
+widgetRef.current.open();                  // open the widget
+widgetRef.current.open('Hi, I need help'); // open and send a message
+widgetRef.current.open({ content: 'Hi', submitted_values: {} });
+widgetRef.current.setMessageAttributes({ order_id: 'A-100' }); // true if accepted
+widgetRef.current.sendMessage('set-label', { label: 'vip' });  // false if the widget is closed
+widgetRef.current.reload();                // false if the widget is closed
+widgetRef.current.close();                 // hide the widget
+widgetRef.current.reset();                 // clear the conversation, call on logout
 ```
+
+- `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget. A message object with no `content` and other keys, such as `submitted_values`, gets `content: "Hi"`, like the web SDK's `setOpenMessage`.
+- Closing the widget drops a held `open` message.
+- If the page fails to load, a held message stays held. `open(message)` with a message remounts the page and sends the message at ready. `open()` with no message does not retry: call `reload()`.
+- `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.
+- `reload()` remounts the webview with the live conversation token. Held attributes and the open message are sent when the new page is ready.
+- `close()` hides the widget the way the widget's own close does: it drops a held open message and calls `onWidgetClose`. It does nothing if the widget is already closed.
+- `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it.
+
+### Message attributes
+
+`setMessageAttributes(attributes)` attaches attributes to the customer's next message. It needs a widget build that contains `c8126fb7cd`.
+
+- It returns `false` and does nothing for an empty object, a non-object, an array, or a value `JSON.stringify` rejects.
+- Pass JSON values. A `NaN` becomes `null`, a `Date` becomes an ISO string, and an unknown object is sent with its fields.
+- Calls are merged and held until the widget is ready. They are sent once, before the open message.
+- The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
+- If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
+- After the customer's message is sent, the widget clears the attributes. If that message fails, the widget keeps them for the next one. Attributes already sent to the widget are lost on a page reload. Attributes still held are kept.
+- Attributes are not saved on the contact. They go on the message only.
+- File attachments and email-only submits do not use up the held attributes. They stay for the next message.
+- `custom_attributes` on the message payload win over held ones for the same key.
+- Held attributes are dropped when the user (`identifier`, `email` or `phone_number`) or the `conversationToken` prop changes while the widget stays mounted, so the next user does not get them. A first token after none, a reload and a process death keep them.
+
+### Ready
+
+The widget is ready when the page has loaded and the widget is listening. At ready, the SDK sends `set-user` (only when `identifier` and `identifier_hash` are both set), then held attributes, then the held open message, then calls `onConversationTokenChange`, then `onWidgetLoad`. `onWidgetLoad` runs once per page load, so a `reload()` fires it again.
+
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `close()` to dismiss it, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
+
+A page that returns 200 but never mounts gives no `onWidgetLoad` and no error. An HTTP error on the page reaches `onError`.
+
+## 🎨 Customization Examples
 
 ### User Context Integration
 
@@ -205,7 +227,6 @@ export default function ChatIntegration() {
         app_version: '2.1.0',
         user_segment: preferences.segment,
       }}
-      colorScheme={preferences.theme}
     />
   );
 }
@@ -250,44 +271,18 @@ const handleChatError = (error, errorData) => {
 />
 ```
 
-### Advanced Error Monitoring
-
-```tsx
-const handleChatError = (error, errorData) => {
-  // Send to error tracking service
-  if (error.severity === 'critical' || error.severity === 'high') {
-    Sentry.captureException(error, {
-      tags: {
-        component: 'limechat_widget',
-        error_code: error.code,
-      },
-      extra: errorData,
-    });
-  }
-
-  // Show user-appropriate messages
-  const userMessages = {
-    'WIDGET_ERROR_1000': 'Chat setup issue. Please contact support.',
-    'WIDGET_ERROR_1100': 'Chat temporarily unavailable. Please try again.',
-    'WIDGET_ERROR_1200': 'Connection issue. Check your internet connection.',
-    'WIDGET_ERROR_1300': 'Display issue. Refreshing chat interface.',
-  };
-
-  if (userMessages[error.code] && error.severity !== 'low') {
-    showUserNotification(userMessages[error.code]);
-  }
-};
-```
+See [ERROR_CODES.md](./ERROR_CODES.md) for the error codes, monitoring and recovery examples.
 
 ## 🌟 Advanced Features
 
-### Real-time Unread Count
+### Unread Count
 
-The SDK automatically displays unread message counts:
+The unread badge is driven by the host app through `unreadCount`:
 
 ```tsx
 <LimeChatWidget
   websiteToken="your-token"
+  unreadCount={3}
   unreadCountStyle={{
     backgroundColor: '#ff4757',
     top: -8,
@@ -302,7 +297,12 @@ The SDK automatically displays unread message counts:
 
 ### Conversation Continuity
 
-Users can seamlessly continue conversations across app sessions. This feature works automatically with no additional configuration required.
+The SDK keeps the conversation token in memory only. To continue a conversation across app launches, store the token from `onConversationTokenChange` and pass it back through `conversationToken`.
+
+- A `conversationToken` prop wins over the token the widget reported. The widget url is built when it opens, so a change applies on the next open.
+- Clearing the prop (to `undefined`) drops the live token.
+- `reset()` on the ref handle clears the conversation. Call it on logout. It drops the live token and the user, and ignores the current `conversationToken` and `user` props until they change, so clear your own stored token and user too.
+- A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live token. It applies on the next open, and the widget is not reloaded while it is open. The first login after an anonymous session, and a new `name` for the same identity, keep it. A `conversationToken` prop still wins. Call `reset()` on logout.
 
 ### Multi-language Support
 
@@ -321,7 +321,6 @@ Users can seamlessly continue conversations across app sessions. This feature wo
 
 ### iOS Requirements
 - iOS 11.0 or later
-- Automatic WebView permissions handling
 
 ### Android Requirements  
 - Android API level 21 (Android 5.0) or later
@@ -363,28 +362,8 @@ const chatConfig: LimeChatWidgetProps = {
 | **Chat not loading** | Check internet connection and firewall settings |
 | **TypeScript errors** | Make sure you're using the latest version with updated type definitions |
 
-### Debug Mode
+See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for more, including debug logging.
 
-Enable detailed logging to diagnose issues:
-
-```tsx
-<LimeChatWidget
-  websiteToken="your-token"
-  onError={(error, errorData) => {
-    // Detailed error information
-    console.log('Error Details:', {
-      code: error.code,
-      type: error.type,
-      severity: error.severity,
-      message: error.message,
-      timestamp: error.timestamp,
-      context: errorData,
-    });
-  }}
-  onWidgetLoad={() => console.log('✅ Chat loaded successfully')}
-  onWidgetClose={() => console.log('💬 Chat closed')}
-/>
-```
 
 ## 📄 License
 
@@ -394,7 +373,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 - **Documentation**: [Complete SDK Documentation](https://docs.limechat.ai/react-native)
 - **Support**: [support@limechat.ai](mailto:support@limechat.ai)
-- **Issues**: [GitHub Issues](https://github.com/limechat/react-native-widget/issues)
+- **Issues**: [GitHub Issues](https://github.com/wavicle-limechat/web-widget-react-native/issues)
 - **Community**: [LimeChat Community Forum](https://community.limechat.ai)
 
 ---

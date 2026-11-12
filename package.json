@@ -1,6 +1,6 @@
 {
   "name": "@limechat/react-native-widget",
-  "version": "0.0.6-beta",
+  "version": "0.2.0",
   "description": "React Native SDK for LimeChat widget integration",
   "main": "index.js",
   "types": "index.d.ts",
@@ -101,7 +101,7 @@
   "lint-staged": {
     "src/**/*.{js,jsx}": [
       "eslint --fix",
-      "npm test --findRelatedTests --passWithNoTests"
+      "jest --findRelatedTests --passWithNoTests"
     ]
   },
   "engines": {

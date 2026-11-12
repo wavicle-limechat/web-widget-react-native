@@ -42,7 +42,9 @@ These errors relate to the chat interface loading and display.
 
 **Common scenarios:**
 - Chat interface failed to load
+- The page loaded with an HTTP error (for example 500). `context` has `statusCode` and `url`, without the query string
 - JavaScript errors in the chat window
+- The web process died again before the page was ready (`context.action` is `webViewProcessGone`). The SDK reloads once after the first death and does not reload after the second. The page is blank after that and the customer cannot close it. In `onError`, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`.
 - Network connectivity issues during chat
 
 **Example handling:**
@@ -204,7 +206,6 @@ const handleChatError = (error, errorData) => {
     severity: error.severity,
     message: error.message,
     timestamp: error.timestamp,
-    userAgent: errorData.userAgent,
     context: errorData.context,
   });
 

@@ -96,7 +96,7 @@ export const safeJsonParse = (jsonString, fallback = null) => {
 export const safeOpenURL = async (url) => {
   try {
     const { Linking } = require('react-native');
-    const canOpen = await Linking.canOpenURL(url);
+    const canOpen = /^https?:/i.test(url) || await Linking.canOpenURL(url);
     if (canOpen) {
       await Linking.openURL(url);
     } else {

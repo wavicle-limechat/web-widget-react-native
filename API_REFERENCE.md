@@ -41,6 +41,7 @@ User information for personalizing the chat experience.
     name: 'John Doe',
     email: 'john@example.com',
     phone_number: '+1234567890',
+    identifier: 'user-123',
     identifier_hash: 'secure_user_hash'
   }}
 />
@@ -52,9 +53,29 @@ interface LimeChatUser {
   name?: string;           // User's display name
   email?: string;          // User's email address  
   phone_number?: string;   // Phone with country code (e.g., +1234567890)
-  identifier_hash?: string; // Secure identifier for user verification
+  identifier?: string;     // Your own stable user id
+  identifier_hash?: string; // HMAC-SHA256(hmac_token, identifier), computed on your server
+  custom_attributes?: Record<string, any>; // Sent with every message the customer types
 }
 ```
+
+`identifier_hash` needs `identifier`. The widget verifies the user only when both are set.
+
+Without them the details are sent unverified. With every message the server updates the contact, and can merge into an existing contact with the same email or phone.
+
+User custom attributes go with every message the customer types, not onto the contact. The `customAttributes` prop is separate. It goes in the widget url for the session.
+
+##### `baseUrl` (string)
+
+LimeChat base URL. Default: `'https://app.limechat.ai'`. Trailing slashes are removed.
+
+##### `hideFilePicker` (boolean)
+
+Hide the attachment button in the chat. Default: `false`.
+
+##### `unreadCount` (number)
+
+Number shown on the badge, capped at `99+`. Set by the host app. `0` hides the badge. The widget does not update it.
 
 ##### `locale` (string)
 
@@ -68,21 +89,6 @@ Language code for the chat interface. Default: `'en'`
 ```
 
 **Supported locales**: `'en'`, `'es'`, `'fr'`, `'de'`, `'pt'`, and more.
-
-##### `colorScheme` ('light' | 'dark' | 'auto')
-
-Theme for the chat interface. Default: `'light'`
-
-```javascript
-<LimeChatWidget
-  websiteToken="your-token"
-  colorScheme="dark"
-/>
-```
-
-- `'light'`: Light theme
-- `'dark'`: Dark theme  
-- `'auto'`: Follows system theme
 
 ##### `customAttributes` (Record<string, any>)
 
@@ -106,6 +112,22 @@ Additional metadata to pass with the chat session.
 - User segmentation
 - Purchase history
 - Geographic region
+
+##### `conversationToken` (string)
+
+Token of the conversation to continue. It wins over the token the widget reported. The widget url is built when the widget opens, so a change applies on the next open.
+
+Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Call `reset()` on the ref handle on logout, which also works when you never pass the prop. A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live token. It applies on the next open, and the widget is not reloaded while it is open. The first login after an anonymous session, and a new `name` for the same identity, keep it. This prop still wins. Call `reset()` on logout.
+
+```javascript
+const [token, setToken] = useState(storedToken);
+
+<LimeChatWidget
+  websiteToken="your-token"
+  conversationToken={token}
+  onConversationTokenChange={(next) => { saveToken(next); setToken(next); }}
+/>
+```
 
 ##### `customButton` (ReactElement)
 
@@ -199,7 +221,9 @@ Custom styling for the unread count text.
 
 ##### `onWidgetLoad` (() => void)
 
-Called when the chat widget loads successfully.
+Called once per page load, when the widget is ready: the page has loaded and the widget is listening. `set-user` (only when `identifier` and `identifier_hash` are both set), held attributes, the held open message and `onConversationTokenChange` run first, in that order. A `reload()` fires it again.
+
+It is not called if the page fails or loads but never mounts. A page that returns 200 and never mounts gives no error either. An HTTP error on the page reaches `onError`.
 
 ```javascript
 <LimeChatWidget
@@ -210,6 +234,14 @@ Called when the chat widget loads successfully.
   }}
 />
 ```
+
+##### `onConversationTokenChange` ((token: string) => void)
+
+Called with the conversation token the widget reports. Empty tokens are ignored. Store it and pass it back through `conversationToken` to continue the conversation after a restart.
+
+##### `onMessage` ((message: object) => void)
+
+Called with parsed messages from the widget that are not close or token events. The widget sends none today.
 
 ##### `onWidgetClose` (() => void)
 
@@ -246,6 +278,57 @@ Called when an error occurs. See [Error Handling Guide](./ERROR_CODES.md) for de
 />
 ```
 
+### Ref handle
+
+```typescript
+interface LimeChatWidgetHandle {
+  open(message?: string | { content?: string; submitted_values?: unknown }): void;
+  sendMessage(event: string, data?: Record<string, unknown>): boolean;
+  setMessageAttributes(attributes: Record<string, unknown>): boolean;
+  reload(): boolean;
+  close(): void;
+  reset(): void;
+}
+```
+
+```javascript
+const widgetRef = useRef(null);
+
+<LimeChatWidget ref={widgetRef} websiteToken="your-token" />
+
+widgetRef.current.open('Hi, I need help');
+widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
+```
+
+| Method | Behaviour |
+|--------|-----------|
+| `open(message)` | Shows the widget. Sends the message now if the widget is ready. Otherwise holds it and sends at ready. An empty string or object only shows the widget. A message object with no `content` and other keys, such as `submitted_values`, gets `content: "Hi"`, like the web SDK's `setOpenMessage`. Closing the widget drops a held message. If the page failed to load, a message remounts the page and is sent at ready. `open()` with no message does not retry: call `reload()`. |
+| `setMessageAttributes(attributes)` | Attaches attributes to the customer's next message. Returns `false` for an empty object, a non-object, an array, or a value `JSON.stringify` rejects. Merged with earlier calls and held until ready, then sent before the open message. Not saved on the contact. File attachments and email-only submits do not use them up. `custom_attributes` on the message payload win over held ones. Needs a widget build that contains `c8126fb7cd`. |
+| `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
+| `reload()` | Remounts the webview with the live conversation token. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
+| `close()` | Hides the widget the way the widget's own close does. Drops a held open message and calls `onWidgetClose`. Does nothing if the widget is already closed. |
+| `reset()` | `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it. |
+
+For the attribute notes (JSON values, the auto-start `Hi`, closing, failed sends and reload), see [Message attributes](./README.md#message-attributes) in the README.
+
+#### Web process death
+
+If the web process dies, the SDK reloads the page once. If it dies again before the page is ready, the SDK does not reload. It reports `Widget web process died again before ready` through `onError` (`WIDGET_ERROR_1100`, `context.action` is `webViewProcessGone`). The page is blank after that and the customer cannot close it. In `onError`, call `close()` to dismiss it, call `reload()` to try again, or unmount the widget, for example by changing its `key`. Unmounting drops the in-memory token and held attributes, so pass the stored token back through `conversationToken`. A later `open(message)` also loads the page again. The next ready resets this.
+
+---
+
+## Callback names across the LimeChat SDKs
+
+| Concept | Android | React Native | iOS |
+|---------|---------|--------------|-----|
+| loaded | `onLoaded` | `onWidgetLoad` | `widgetDidLoad` |
+| close | `onClose` | `onWidgetClose` | `widgetDidRequestClose` |
+| error | `onError` | `onError` | `widgetDidReceiveError` |
+| message | `onMessage` | `onMessage` | `widgetDidReceiveMessage` |
+| token | `onConversationTokenChange` | `onConversationTokenChange` | `widgetDidChangeConversationToken` |
+| identifier hash | `identifierHash` | `identifier_hash` | `identifierHash` |
+| phone | `phoneNumber` | `phone_number` | `phoneNumber` |
+
 ---
 
 ## Type Definitions
@@ -276,25 +359,7 @@ interface WidgetErrorData {
 }
 ```
 
-### LimeChatWidgetProps
-
-```typescript
-interface LimeChatWidgetProps {
-  websiteToken: string;
-  user?: LimeChatUser;
-  locale?: string;
-  colorScheme?: 'light' | 'dark' | 'auto';
-  customAttributes?: Record<string, any>;
-  customButton?: React.ReactElement;
-  onWidgetLoad?: () => void;
-  onWidgetClose?: () => void;
-  onError?: (error: WidgetError, errorData: WidgetErrorData) => void;
-  style?: ViewStyle;
-  iconStyle?: ViewStyle;
-  unreadCountStyle?: ViewStyle;
-  unreadCountTextStyle?: TextStyle;
-}
-```
+All types are declared in [`index.d.ts`](./index.d.ts).
 
 ---
 
@@ -311,11 +376,6 @@ const url = buildWidgetUrl({
   baseUrl: 'https://app.limechat.ai',
   websiteToken: 'your-token',
   locale: 'en',
-  colorScheme: 'light',
-  user: {
-    name: 'John Doe',
-    email: 'john@example.com'
-  },
   customAttributes: {
     plan: 'premium'
   }
@@ -329,8 +389,7 @@ console.log(url);
 - `baseUrl` (string): LimeChat base URL
 - `websiteToken` (string): Your website token
 - `locale` (string, optional): Language code
-- `colorScheme` (string, optional): Theme preference
-- `user` (LimeChatUser, optional): User information
+- `hideFilePicker` (boolean, optional): Hide the attachment button
 - `customAttributes` (object, optional): Additional metadata
 - `cwConversation` (string, optional): Conversation token for continuity
 
@@ -356,7 +415,7 @@ const ChatIntegration = () => {
       code: error.code,
       severity: error.severity,
       message: error.message,
-      userAgent: errorData.userAgent
+      context: errorData.context
     });
 
     // Track errors for monitoring
@@ -435,10 +494,10 @@ const ChatIntegration = () => {
         name: user.displayName,
         email: user.email,
         phone_number: user.phone,
-        identifier_hash: user.secureHash
+        identifier: user.id,
+        identifier_hash: user.secureHash // computed on your server
       }}
       locale={preferences.language || 'en'}
-      colorScheme={preferences.theme || 'light'}
       customAttributes={{
         subscription_tier: user.subscriptionTier,
         account_type: user.accountType,
@@ -462,53 +521,6 @@ const ChatIntegration = () => {
 };
 
 export default ChatIntegration;
-```
-
-### Testing and Development Setup
-
-```javascript
-// Development component with comprehensive logging
-const DevChatWidget = () => {
-  const [logs, setLogs] = useState([]);
-
-  const addLog = (message) => {
-    setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-    console.log(`[DevChat] ${message}`);
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      {/* Development logs */}
-      {__DEV__ && (
-        <View style={{ height: 200, backgroundColor: '#f0f0f0', padding: 10 }}>
-          <Text style={{ fontWeight: 'bold' }}>Development Logs:</Text>
-          <ScrollView style={{ flex: 1 }}>
-            {logs.map((log, index) => (
-              <Text key={index} style={{ fontSize: 12, fontFamily: 'monospace' }}>
-                {log}
-              </Text>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-
-      <LimeChatWidget
-        websiteToken="your-test-token"
-        user={{
-          name: 'Test User',
-          email: 'test@example.com'
-        }}
-        onWidgetLoad={() => addLog('✅ Widget loaded successfully')}
-        onWidgetClose={() => addLog('📱 Widget closed')}
-        onError={(error, errorData) => {
-          addLog(`❌ Error: ${error.code} - ${error.message}`);
-          addLog(`   Severity: ${error.severity}`);
-          addLog(`   Context: ${JSON.stringify(errorData.context || {})}`);
-        }}
-      />
-    </View>
-  );
-};
 ```
 
 ---
@@ -539,52 +551,6 @@ const DevChatWidget = () => {
     paddingBottom: Platform.OS === 'android' ? 20 : 0
   }}
 />
-```
-
----
-
-## Performance Tips
-
-### Optimize Re-renders
-
-```javascript
-// Memoize user object to prevent unnecessary re-renders
-const user = useMemo(() => ({
-  name: userData.name,
-  email: userData.email,
-  phone_number: userData.phone
-}), [userData.name, userData.email, userData.phone]);
-
-// Memoize custom attributes
-const customAttributes = useMemo(() => ({
-  subscription_plan: userPlan,
-  app_version: APP_VERSION
-}), [userPlan]);
-
-<LimeChatWidget
-  websiteToken="your-token"
-  user={user}
-  customAttributes={customAttributes}
-/>
-```
-
-### Lazy Loading
-
-```javascript
-// Lazy load chat widget when needed
-const [showChat, setShowChat] = useState(false);
-
-return (
-  <View>
-    {showChat ? (
-      <LimeChatWidget websiteToken="your-token" />
-    ) : (
-      <TouchableOpacity onPress={() => setShowChat(true)}>
-        <Text>Load Chat</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-);
 ```
 
 ---

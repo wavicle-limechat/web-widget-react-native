@@ -1,4 +1,2 @@
-import LimeChatWidget from './src/LimeChatWidget';
-
-export default LimeChatWidget;
-export { LimeChatWidget };
+export { default } from './src/index';
+export * from './src/index';

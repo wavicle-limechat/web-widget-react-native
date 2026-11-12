@@ -1,31 +1,37 @@
-import { WOOT_PREFIX, POST_MESSAGE_EVENTS, ERROR_CODES } from './constants';
+import { WOOT_PREFIX, ERROR_CODES } from './constants';
 import { safeJsonParse, WidgetError } from './utils/errorUtils';
-
-/**
- * Check if a string is valid JSON
- */
-export const isJsonString = (string) => {
-  try {
-    JSON.parse(string);
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
 
 /**
  * Create a post message script for WebView communication
  */
-export const createWootPostMessage = (object) => {
-  const stringifyObject = `'${WOOT_PREFIX}${JSON.stringify(object)}'`;
-  const script = `window.postMessage(${stringifyObject});`;
-  return script;
+export const createWootPostMessage = (object) =>
+  `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
+
+// the web SDK sends "Hi" for a message object with no content and other keys, such as submitted_values
+export const withDefaultContent = (message) => {
+  if (!message || typeof message !== 'object') return message;
+  const noContent = message.content === undefined || message.content === null || message.content === '';
+  const hasOtherKeys = Object.keys(message).some((key) => key !== 'content');
+  return noContent && hasOtherKeys ? { ...message, content: 'Hi' } : message;
+};
+
+const DEFAULT_PORTS = { http: '80', https: '443' };
+
+// scheme, host and port, same rule as android and ios. no URL class, rn's is partial
+const originOf = (url) => {
+  const match = /^([a-z][a-z0-9+.-]*):\/\/(?:[^/?#\\]*@)?(\[[^\]]*\]|[^/?#:\\]*)(?::(\d+))?/i.exec(url);
+  if (!match) return null;
+  const scheme = match[1].toLowerCase();
+  return `${scheme}://${match[2].toLowerCase()}:${match[3] || DEFAULT_PORTS[scheme] || ''}`;
 };
 
 /**
- * Extract message from post message data
+ * Whether a webview navigation should leave the webview and open in the system browser
  */
-export const getMessage = (data) => data.replace(WOOT_PREFIX, '');
+export const shouldOpenExternally = ({ url, isTopFrame }, baseUrl) => {
+  if (isTopFrame === false || /^(about|blob|data):/.test(url)) return false;
+  return originOf(url) !== originOf(baseUrl);
+};
 
 /**
  * Safe query string builder - replacement for URLSearchParams for React Native compatibility
@@ -47,9 +53,10 @@ const buildQueryString = (params) => {
 /**
  * Build the widget URL with parameters
  */
-export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, customAttributes, cwConversation }) => {
+export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, hideFilePicker, customAttributes, cwConversation }) => {
   const params = {
     website_token: websiteToken,
+    platform: 'react-native',
     locale: locale || 'en',
     color_scheme: colorScheme || 'light',
   };
@@ -62,6 +69,10 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, cus
     params.cw_conversation = cwConversation;
   }
 
+  if (hideFilePicker) {
+    params.hide_file_picker = 'true';
+  }
+
   const queryString = buildQueryString(params);
   return `${baseUrl}/widget?${queryString}`;
 };
@@ -69,58 +80,19 @@ export const buildWidgetUrl = ({ baseUrl, websiteToken, locale, colorScheme, cus
 /**
  * Generate JavaScript to inject into WebView
  */
-export const generateScripts = ({ colorScheme, user, locale, customAttributes }) => {
-  let script = '';
+export const generateScripts = ({ user }) => {
+  if (!user || Object.keys(user).length === 0) return '';
 
-  // Set user data
-  if (user && Object.keys(user).length > 0) {
-    const userObject = {
-      event: POST_MESSAGE_EVENTS.SET_USER,
-      identifier: user.identifier_hash,
-      user,
-    };
-    script += createWootPostMessage(userObject);
-
-    // Set user data globally for form prefill
-    script += `
-      window.chatwootWebChannel = window.chatwootWebChannel || {};
-      window.chatwootWebChannel.rnUser = {
-        name: ${JSON.stringify(user.name || '')},
-        email: ${JSON.stringify(user.email || '')},
-        phone_number: ${JSON.stringify(user.phone_number || '')},
-        identifier: ${JSON.stringify(user.identifier_hash || '')}
-      };
-    `;
-  }
-
-  // Set locale
-  if (locale) {
-    const localeObject = { 
-      event: POST_MESSAGE_EVENTS.SET_LOCALE, 
-      locale 
-    };
-    script += createWootPostMessage(localeObject);
-  }
-
-  // Set custom attributes
-  if (customAttributes && Object.keys(customAttributes).length > 0) {
-    const attributeObject = {
-      event: POST_MESSAGE_EVENTS.SET_CUSTOM_ATTRIBUTES,
-      customAttributes,
-    };
-    script += createWootPostMessage(attributeObject);
-  }
-
-  // Set color scheme
-  if (colorScheme) {
-    const themeObject = { 
-      event: POST_MESSAGE_EVENTS.SET_COLOR_SCHEME, 
-      darkMode: colorScheme === 'dark' 
-    };
-    script += createWootPostMessage(themeObject);
-  }
-
-  return script;
+  // read by the widget at send time and for pre-chat prefill
+  return `
+    window.chatwootWebChannel = window.chatwootWebChannel || {};
+    window.chatwootWebChannel.rnUser = ${JSON.stringify({
+      name: user.name || '',
+      email: user.email || '',
+      phone_number: user.phone_number || '',
+      ...(user.custom_attributes ? { custom_attributes: user.custom_attributes } : {}),
+    })};
+  `;
 };
 
 export const fetchWidgetConfig = async (baseUrl, websiteToken) => {

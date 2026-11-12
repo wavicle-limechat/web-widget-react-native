@@ -2,6 +2,75 @@
 
 All notable changes to the LimeChat React Native SDK will be documented in this file.
 
+## [Unreleased]
+
+## [0.2.0] - 2026-11-13
+
+0.0.6 to 0.1.1 were tagged without changelog entries.
+
+> **Upgrade note: unverified contact update.** User details passed to the SDK reach the widget through `rnUser` with no verification. With every message the server updates the contact, and can merge into an existing contact with the same email or phone. If you use identity validation, pass `identifier` and `identifier_hash` so the contact is verified.
+
+### Changed
+- The default export is now a `forwardRef` component, an object and not a function. JSX use is unchanged. Calling `LimeChatWidget(props)` directly, or checking `typeof === 'function'`, breaks
+- The widget url is built when the widget opens. Changing `locale` or `customAttributes` while it is open applies on the next open
+- `onWidgetLoad` fires once per page load, when the widget is ready (page loaded and widget listening), not on the first open. A failed page gives no `onWidgetLoad`
+- `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message on a failed page is retried by `open(message)`. `open()` with no message does not retry: call `reload()`
+- The widget url sends `platform=react-native`, as the other SDKs send their own value
+- `open(object)` with no `content` and other keys, such as `submitted_values`, sends `content: "Hi"`, like the web SDK's `setOpenMessage`
+- At ready, `set-user` is sent first, then held attributes and the open message, then `onConversationTokenChange`, then `onWidgetLoad`
+- `generateScripts` no longer emits `set-user`. It sets `rnUser` only, and the SDK sends `set-user` at ready
+
+### Added
+- `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
+- `reload()` on the ref handle
+- `close()` on the ref handle. It hides the widget and calls `onWidgetClose`, so a host can dismiss a blank widget after a second process death
+- `reset()` on the ref handle. It clears this widget's conversation: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), held attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it
+- `onMessage` prop, for widget messages that are not close or token events. The widget sends none today
+- `custom_attributes` on `user`
+- `baseUrl`, `hideFilePicker` and `unreadCount` props
+- `ref` handle with `open(message)` and `sendMessage(event, data)`
+- `identifier` on `user`. `set-user` is sent only when both `identifier` and `identifier_hash` are set. A host that passes only `identifier_hash` no longer sends `set-user`, so pass both
+
+### Deprecated
+- `createWidgetUrl`, an alias of `buildWidgetUrl`, will be removed in the next major release
+- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent, will be removed in the next major release
+- The `colorScheme` prop, `POST_MESSAGE_EVENTS.SET_COLOR_SCHEME` and `WIDGET_CONFIG.DEFAULT_COLOR_SCHEME` are ignored by the widget and will be removed in the next major release
+
+### Fixed
+- A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live conversation token, so the next user does not continue the old conversation. It applies on the next open. The first login after an anonymous session keeps it, and a `conversationToken` prop still wins
+- Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
+- `reload()` remounts the webview with the live conversation token, so a first-session conversation is kept
+- `open(message)` retries a page that failed to load
+- Closing the widget resets the web process death allowance, so a death after a later open reloads again
+- A web process death reloads the page once. A second death before ready reports `Widget web process died again before ready` through `onError`
+- A throwing `onConversationTokenChange` reaches `onError` when the token event comes before `onLoad`
+- Top frame `data:` and `blob:` urls are blocked and not opened
+- The named `LimeChatWidget` export is typed in `index.d.ts`
+- Main frame HTTP errors reach `onError`, with `statusCode` and `url` in the context
+- `set-user` is sent at ready, on every page load, before held attributes and the open message, in the same order as android and ios
+- The live token is kept under external token management, and clearing the `conversationToken` prop drops it
+- An old page's token event after `reload()` is ignored
+- An empty conversation token from the widget is ignored
+- `onWidgetLoad` still fires when `onConversationTokenChange` throws
+- The unread badge caps at `99+`
+- The same origin check compares scheme, host and port, and reads ipv6 hosts and backslashes like a browser
+- Empty `open` messages are ignored
+- Apostrophes no longer break injected scripts
+- Native messages use the `chatwoot-widget:` prefix the widget reads
+- The webview no longer reloads when the conversation token arrives
+- Links to other origins open outside the webview
+- Exports declared in `index.d.ts` now exist at runtime
+- Invalid props no longer loop and spam `onError` on React 18
+- Load errors no longer include the conversation token or open message
+- Web links open without `canOpenURL`, which can return false on Android 11+
+- `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
+- `buildWidgetUrl` accepts the old `user` field and `generateScripts` accepts the old `colorScheme`, `locale` and `customAttributes` fields in the types, as deprecated and ignored
+
+### Removed
+- Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received
+- Dead constants, styles and `defaultProps`
+- Tracked `example/.expo` state
+
 ## [0.0.5] - 2025-07-02
 
 ### Fixed

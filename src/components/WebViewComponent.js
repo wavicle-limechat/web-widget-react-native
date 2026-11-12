@@ -1,56 +1,55 @@
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { WebView } from 'react-native-webview';
 import { POST_MESSAGE_EVENTS, ERROR_CODES } from '../constants';
 import { webViewStyles } from '../styles';
 import {
   buildWidgetUrl,
   generateScripts,
-  getMessage,
-  isJsonString
+  shouldOpenExternally,
 } from '../utils';
 import { WidgetError, safeJsonParse, safeOpenURL, reportError } from '../utils/errorUtils';
+import { userPropType } from '../utils/propTypes';
 
 const WebViewComponent = ({
   baseUrl,
   websiteToken,
   locale,
   colorScheme,
+  hideFilePicker,
+  webViewRef,
   user,
   customAttributes,
   cwConversation,
   onWidgetLoad,
+  onLoadFailed,
+  onProcessGone,
+  onWebViewUnmount,
   onWidgetClose,
+  onWidgetMessage,
   onUnreadCountUpdate,
   onCwConversationUpdate,
   onError,
 }) => {
-  const [currentUrl, setCurrentUrl] = useState(null);
+  const [widgetUrl] = useState(() =>
+    buildWidgetUrl({
+      baseUrl,
+      websiteToken,
+      locale,
+      colorScheme,
+      hideFilePicker,
+      customAttributes,
+      cwConversation,
+    })
+  );
 
-  const widgetUrl = buildWidgetUrl({
-    baseUrl,
-    websiteToken,
-    locale,
-    colorScheme,
-    user,
-    customAttributes,
-    cwConversation,
-  });
+  useEffect(() => () => onWebViewUnmount?.(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const injectedJavaScript = generateScripts({
-    user,
-    locale,
-    customAttributes,
-    colorScheme,
-  });
+  const injectedJavaScript = generateScripts({ user });
 
   const onShouldStartLoadWithRequest = (request) => {
-    const isMessageView = currentUrl && currentUrl.includes('#/messages');
-    const isAttachmentUrl = !widgetUrl.includes(request.url);
-    // Open the attachments only in the external browser
-    const shouldRedirectToBrowser = isMessageView && isAttachmentUrl;
-
-    if (shouldRedirectToBrowser) {
+    if (request.isTopFrame !== false && /^(blob|data):/.test(request.url)) return false;
+    if (shouldOpenExternally(request, baseUrl)) {
       // Use safe URL opening with error handling
       safeOpenURL(request.url).catch(error => {
         reportError(error, onError, {
@@ -64,83 +63,73 @@ const WebViewComponent = ({
     return true;
   };
 
-  const handleWebViewNavigationStateChange = (newNavState) => {
-    setCurrentUrl(newNavState.url);
-  };
-
   const handleMessage = (event) => {
     try {
-      const { data } = event.nativeEvent;
-      const message = getMessage(data);
+      const parsedMessage = safeJsonParse(event.nativeEvent.data);
+      if (!parsedMessage || typeof parsedMessage !== 'object') return;
 
-      if (isJsonString(message)) {
-        // Use safe JSON parsing
-        const parsedMessage = safeJsonParse(message);
-        if (!parsedMessage) {
-          throw new WidgetError(
-            ERROR_CODES.WEBVIEW_ERROR,
-            'Failed to parse WebView message as JSON',
-            null,
-            { rawMessage: message }
-          );
-        }
+      const { count, cw_conversation } = parsedMessage;
+      const name = parsedMessage.event ?? parsedMessage.type;
 
-        const { event: eventType, type, count, cw_conversation } = parsedMessage;
-
-        if (eventType === POST_MESSAGE_EVENTS.WIDGET_LOADED) {
-          onWidgetLoad?.();
-        }
-
-        if (type === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
-          onWidgetClose?.();
-        }
-
-        if (eventType === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
-          onUnreadCountUpdate?.(count);
-        }
-
-        if (eventType === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
-          onCwConversationUpdate?.(cw_conversation);
-        }
+      if (name === POST_MESSAGE_EVENTS.CLOSE_WIDGET) {
+        onWidgetClose?.();
+      } else if (name === POST_MESSAGE_EVENTS.SET_UNREAD_COUNT) {
+        onUnreadCountUpdate?.(count);
+      } else if (name === POST_MESSAGE_EVENTS.SET_CW_CONVERSATION) {
+        onCwConversationUpdate?.(cw_conversation, parsedMessage.timestamp);
+      } else {
+        onWidgetMessage?.(parsedMessage);
       }
     } catch (error) {
       reportError(error, onError, {
-        action: 'handleWebViewMessage',
-        eventData: event.nativeEvent.data
+        action: 'handleWebViewMessage'
       });
     }
   };
 
   const handleError = (syntheticEvent) => {
     const { nativeEvent } = syntheticEvent;
+    const { url, code, description, domain } = nativeEvent;
 
     const error = new WidgetError(
       ERROR_CODES.WEBVIEW_ERROR,
       `WebView failed to load: ${nativeEvent.description || 'Unknown error'}`,
       null,
       {
-        nativeEvent,
-        url: nativeEvent.url || widgetUrl,
+        nativeEvent: { code, description, domain },
+        // the query string holds the conversation token and custom attributes
+        url: (url || widgetUrl).split('?')[0],
         canGoBack: nativeEvent.canGoBack,
         canGoForward: nativeEvent.canGoForward
       }
     );
 
+    onLoadFailed?.();
     reportError(error, onError, { action: 'webViewLoadError' });
   };
 
-  const handleLoad = () => {
-    onWidgetLoad?.();
+  const handleHttpError = ({ nativeEvent }) => {
+    const error = new WidgetError(
+      ERROR_CODES.WEBVIEW_ERROR,
+      `WebView HTTP error: ${nativeEvent.statusCode}`,
+      null,
+      { statusCode: nativeEvent.statusCode, url: (nativeEvent.url || widgetUrl).split('?')[0] }
+    );
+    onLoadFailed?.();
+    reportError(error, onError, { action: 'webViewHttpError' });
   };
 
   return (
     <WebView
+      ref={webViewRef}
       source={{ uri: widgetUrl }}
       onMessage={handleMessage}
-      onLoad={handleLoad}
+      onLoad={onWidgetLoad}
       onError={handleError}
+      onHttpError={handleHttpError}
+      onContentProcessDidTerminate={onProcessGone}
+      onRenderProcessGone={onProcessGone}
       onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
-      onNavigationStateChange={handleWebViewNavigationStateChange}
       style={webViewStyles.webview}
       startInLoadingState={true}
       javaScriptEnabled={true}
@@ -148,7 +137,6 @@ const WebViewComponent = ({
       allowsInlineMediaPlayback={true}
       injectedJavaScript={injectedJavaScript}
       scalesPageToFit={false}
-      useWebKit={true}
       sharedCookiesEnabled={true}
       scrollEnabled={true}
     />
@@ -160,32 +148,20 @@ WebViewComponent.propTypes = {
   websiteToken: PropTypes.string.isRequired,
   locale: PropTypes.string,
   colorScheme: PropTypes.oneOf(['light', 'dark', 'auto']),
-  user: PropTypes.shape({
-    name: PropTypes.string,
-    email: PropTypes.string,
-    phone_number: PropTypes.string,
-    identifier_hash: PropTypes.string,
-  }),
+  hideFilePicker: PropTypes.bool,
+  onWebViewUnmount: PropTypes.func,
+  webViewRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
+  user: userPropType,
   customAttributes: PropTypes.object,
   cwConversation: PropTypes.string,
   onWidgetLoad: PropTypes.func,
+  onLoadFailed: PropTypes.func,
+  onProcessGone: PropTypes.func,
   onWidgetClose: PropTypes.func,
+  onWidgetMessage: PropTypes.func,
   onUnreadCountUpdate: PropTypes.func,
   onCwConversationUpdate: PropTypes.func,
   onError: PropTypes.func,
-};
-
-WebViewComponent.defaultProps = {
-  locale: 'en',
-  colorScheme: 'light',
-  user: {},
-  customAttributes: {},
-  cwConversation: null,
-  onWidgetLoad: null,
-  onWidgetClose: null,
-  onUnreadCountUpdate: null,
-  onCwConversationUpdate: null,
-  onError: null,
 };
 
 export default WebViewComponent; 

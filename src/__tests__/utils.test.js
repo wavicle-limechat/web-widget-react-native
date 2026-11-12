@@ -1,10 +1,9 @@
 import {
-  isJsonString,
   buildWidgetUrl,
   fetchWidgetConfig,
   createWootPostMessage,
-  getMessage,
   generateScripts,
+  shouldOpenExternally,
 } from '../utils';
 import { WidgetError } from '../utils/errorUtils';
 import { WOOT_PREFIX, POST_MESSAGE_EVENTS } from '../constants';
@@ -15,35 +14,22 @@ describe('Utils', () => {
     global.fetch = jest.fn();
   });
 
-  describe('isJsonString', () => {
-    it('returns true for valid JSON strings', () => {
-      expect(isJsonString('{"key": "value"}')).toBe(true);
-      expect(isJsonString('[]')).toBe(true);
-      expect(isJsonString('null')).toBe(true);
-      expect(isJsonString('"string"')).toBe(true);
-    });
-
-    it('returns false for invalid JSON strings', () => {
-      expect(isJsonString('invalid json')).toBe(false);
-      expect(isJsonString('{key: value}')).toBe(false);
-      expect(isJsonString('')).toBe(false);
-    });
-  });
-
   describe('createWootPostMessage', () => {
     it('creates properly formatted post message scripts', () => {
       const object = { event: 'test', data: 'value' };
       const result = createWootPostMessage(object);
-      const expected = `window.postMessage('${WOOT_PREFIX}${JSON.stringify(object)}');`;
+      const expected = `window.postMessage('${WOOT_PREFIX}' + JSON.stringify(${JSON.stringify(object)}), '*');`;
       expect(result).toBe(expected);
     });
-  });
 
-  describe('getMessage', () => {
-    it('removes the widget prefix from messages', () => {
-      const message = 'test message';
-      const data = `${WOOT_PREFIX}${message}`;
-      expect(getMessage(data)).toBe(message);
+    it('survives apostrophes, backslashes and newlines', () => {
+      const object = { name: "O'Brien", path: 'a\\b', text: 'l1\nl2' };
+      const script = createWootPostMessage(object);
+      const posted = [];
+      // eslint-disable-next-line no-new-func
+      new Function('window', script)({ postMessage: (msg) => posted.push(msg) });
+      expect(posted).toHaveLength(1);
+      expect(JSON.parse(posted[0].replace(WOOT_PREFIX, ''))).toEqual(object);
     });
   });
 
@@ -74,6 +60,11 @@ describe('Utils', () => {
       expect(url).toContain('custom_attributes=');
       // cw_conversation is not included in validParams, so it shouldn't be in the URL
       expect(url).not.toContain('cw_conversation');
+    });
+
+    it('the url has platform react-native after website_token', () => {
+      const url = buildWidgetUrl(validParams);
+      expect(url).toContain('website_token=test-token&platform=react-native&locale=en');
     });
 
     it('handles missing optional parameters', () => {
@@ -118,6 +109,13 @@ describe('Utils', () => {
       expect(decodeURIComponent(url)).toContain('café résumé 中文');
     });
 
+    it('adds hide_file_picker only when hideFilePicker is true', () => {
+      const base = { baseUrl: 'https://app.limechat.ai', websiteToken: 'test-token' };
+      expect(buildWidgetUrl({ ...base, hideFilePicker: true })).toContain('hide_file_picker=true');
+      expect(buildWidgetUrl(base)).not.toContain('hide_file_picker');
+      expect(buildWidgetUrl({ ...base, hideFilePicker: false })).not.toContain('hide_file_picker');
+    });
+
     it('handles empty custom attributes object', () => {
       const paramsWithEmptyAttributes = {
         baseUrl: 'https://app.limechat.ai',
@@ -148,21 +146,93 @@ describe('Utils', () => {
     });
   });
 
-  describe('generateScripts', () => {
-    it('generates user data scripts', () => {
-      const userData = {
-        user: { name: 'John Doe', email: 'john@example.com' },
-        locale: 'en',
-        colorScheme: 'dark',
-        customAttributes: { plan: 'premium' }
-      };
+  describe('shouldOpenExternally', () => {
+    const base = 'https://app.limechat.ai';
+    const nav = (url, isTopFrame = true) => ({ url, isTopFrame });
 
-      const scripts = generateScripts(userData);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_USER);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_LOCALE);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_COLOR_SCHEME);
-      expect(scripts).toContain(POST_MESSAGE_EVENTS.SET_CUSTOM_ATTRIBUTES);
+    it('keeps same-origin urls in the webview', () => {
+      expect(shouldOpenExternally(nav(`${base}/widget?a=1`), base)).toBe(false);
+      expect(shouldOpenExternally(nav(base), base)).toBe(false);
+    });
+
+    it('opens other hosts externally', () => {
+      expect(shouldOpenExternally(nav('https://example.com/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai.evil.com'), base)).toBe(true);
+    });
+
+    it('treats upper case host and an explicit default port as same origin', () => {
+      expect(shouldOpenExternally(nav('https://APP.LimeChat.ai/widget'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai:443/widget'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('HTTPS://app.limechat.ai/widget'), base)).toBe(false);
+    });
+
+    it('keeps a query with no path inside the webview', () => {
+      expect(shouldOpenExternally(nav(`${base}?a=1`), base)).toBe(false);
+      expect(shouldOpenExternally(nav(`${base}#top`), base)).toBe(false);
+    });
+
+    it('opens userinfo, other ports, other schemes and mailto externally', () => {
+      expect(shouldOpenExternally(nav('https://app.limechat.ai@evil.com/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('https://app.limechat.ai:8443/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('http://app.limechat.ai/x'), base)).toBe(true);
+      expect(shouldOpenExternally(nav('mailto:a@b.com'), base)).toBe(true);
+    });
+
+    it('reads ipv6 hosts and backslashes the way a browser does', () => {
+      expect(shouldOpenExternally(nav('http://[::2]:9999/x'), 'http://[::1]:9999')).toBe(true);
+      expect(shouldOpenExternally(nav('http://[::1]:9999/x'), 'http://[::1]:9999')).toBe(false);
+      expect(shouldOpenExternally(nav('https://evil.com\\@app.limechat.ai/x'), base)).toBe(true);
+    });
+
+    it('ignores subframes and internal schemes', () => {
+      expect(shouldOpenExternally(nav('https://example.com/x', false), base)).toBe(false);
+      expect(shouldOpenExternally(nav('about:blank'), base)).toBe(false);
+      expect(shouldOpenExternally(nav('blob:https://app.limechat.ai/1'), base)).toBe(false);
+    });
+  });
+
+  describe('generateScripts', () => {
+    it('generates rnUser without set-user when identifier is missing', () => {
+      const scripts = generateScripts({
+        user: { name: 'John Doe', email: 'john@example.com', identifier_hash: 'hash-1' },
+      });
+      expect(scripts).toContain('rnUser');
       expect(scripts).toContain('john@example.com');
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
+      expect(scripts).not.toContain('set-locale');
+    });
+
+    it('generateScripts sets rnUser only', () => {
+      const scripts = generateScripts({
+        user: { name: 'John Doe', identifier: 'id-1', identifier_hash: 'hash-1' },
+      });
+      expect(scripts).toContain('rnUser');
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
+      expect(scripts).not.toContain('postMessage');
+    });
+
+    it('does not generate set-user for a hash without identifier', () => {
+      const scripts = generateScripts({ user: { identifier_hash: 'hash-1' } });
+      expect(scripts).not.toContain(POST_MESSAGE_EVENTS.SET_USER);
+    });
+
+    const rnUserOf = (scripts) => {
+      const win = {};
+      // eslint-disable-next-line no-new-func
+      new Function('window', 'document', scripts)(win, { readyState: 'loading' });
+      return win.chatwootWebChannel.rnUser;
+    };
+
+    it('rnUser carries custom_attributes when set', () => {
+      const scripts = generateScripts({
+        user: { name: 'John', custom_attributes: { plan: 'gold', n: 2 } },
+      });
+      expect(rnUserOf(scripts).custom_attributes).toEqual({ plan: 'gold', n: 2 });
+    });
+
+    it('rnUser has no custom_attributes key when unset', () => {
+      const scripts = generateScripts({ user: { name: 'John' } });
+      expect(rnUserOf(scripts)).toEqual({ name: 'John', email: '', phone_number: '' });
     });
 
     it('handles empty user data', () => {

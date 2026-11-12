@@ -77,17 +77,9 @@ const WidgetIcon = ({
 WidgetIcon.propTypes = {
   widgetConfig: PropTypes.object,
   isLoading: PropTypes.bool,
-  error: PropTypes.string,
+  error: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   iconStyle: PropTypes.object,
   onError: PropTypes.func,
-};
-
-WidgetIcon.defaultProps = {
-  widgetConfig: {},
-  isLoading: false,
-  error: null,
-  iconStyle: {},
-  onError: null,
 };
 
 export default WidgetIcon; 

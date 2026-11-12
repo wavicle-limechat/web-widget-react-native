@@ -4,9 +4,8 @@ This is an example React Native app built with Expo that demonstrates how to int
 
 ## Features
 
-- 🌓 **Dark/Light Mode Support**: Automatic theme switching based on system preferences
 - 👤 **User Pre-filling**: Demonstrate user information integration
-- 🎨 **Custom Styling**: Show how to customize widget appearance
+- 🔧 **Ref API**: open, setMessageAttributes, reload, reset and close
 - 📱 **Mobile Optimized**: Built specifically for React Native/Expo
 - 🛡️ **Error Handling**: Proper error boundary implementation
 - ♿ **Accessibility**: Screen reader and accessibility support
@@ -19,37 +18,27 @@ This is an example React Native app built with Expo that demonstrates how to int
 
 ## Quick Start
 
-1. **Install dependencies**:
+1. **Install dependencies** (the example uses the local sdk through `"@limechat/react-native-widget": "file:.."`):
    ```bash
-   npm install
+   cd example
+   yarn install
    ```
+   yarn copies the package, so after changing the sdk run `yarn install --force` or `yarn upgrade @limechat/react-native-widget`. `metro.config.js` resolves modules only from `example/node_modules`, so the copied sdk does not bring a second react.
 
 2. **Start the development server**:
    ```bash
-   npm start
+   yarn start
    ```
 
 3. **Run on your preferred platform**:
-   - iOS: Press `i` in the terminal or run `npm run ios`
-   - Android: Press `a` in the terminal or run `npm run android`
-   - Web: Press `w` in the terminal or run `npm run web`
+   - iOS: Press `i` in the terminal or run `yarn ios`
+   - Android: Press `a` in the terminal or run `yarn android`
 
 ## Configuration
 
-Before running the app, make sure to update the `websiteToken` in `App.js`:
+Before running the app, replace the placeholders in `App.js`: `WEBSITE_TOKEN` and `identifier_hash` in `user`.
 
-```javascript
-<LimeChatWidget
-  websiteToken="your-actual-website-token-here"  // Replace with your token
-  user={user}
-  locale="en"
-  colorScheme={colorScheme}
-  customAttributes={customAttributes}
-  onWidgetLoad={handleWidgetLoad}
-  onWidgetClose={handleWidgetClose}
-  onError={handleError}
-/>
-```
+`App.js` also uses the ref handle. the buttons call `open('hi')`, `open({ submitted_values })`, `setMessageAttributes({...})`, `reload()`, `reset()` and `close()`.
 
 ## Widget Props
 
@@ -58,7 +47,6 @@ The example demonstrates these key LimeChat Widget properties:
 - `websiteToken`: Your LimeChat website token
 - `user`: User information object (name, email, phone)
 - `locale`: Language locale (e.g., 'en', 'es', 'fr')
-- `colorScheme`: Theme preference ('light', 'dark', 'auto')
 - `customAttributes`: Additional user metadata
 - `onWidgetLoad`: Callback when widget loads successfully
 - `onWidgetClose`: Callback when widget is closed
@@ -71,7 +59,7 @@ example/
 ├── App.js              # Main application component with widget integration
 ├── package.json        # Dependencies and scripts
 ├── app.json           # Expo app configuration
-├── babel.config.js    # Babel configuration
+├── metro.config.js    # resolves modules from example/node_modules only
 └── README.md          # This file
 ```
 
@@ -79,9 +67,8 @@ example/
 
 The app includes interactive elements to test different widget configurations:
 
-1. **Color Scheme Toggle**: Tap the button to cycle through light, dark, and auto modes
-2. **Widget Interaction**: The widget icon should appear and be interactive
-3. **Console Logging**: Check the console for widget lifecycle events
+1. **Widget Interaction**: The widget icon should appear and be interactive
+2. **Console Logging**: Check the console for widget lifecycle events
 
 ## Troubleshooting
 
@@ -105,7 +92,7 @@ To integrate the LimeChat Widget into your own React Native app:
 
 1. Install the required dependencies:
    ```bash
-   npm install @limechat/react-native-widget react-native-webview react-native-modal @react-native-async-storage/async-storage @react-native-community/netinfo
+   npm install @limechat/react-native-widget react-native-webview react-native-modal
    ```
 
 2. Import and use the widget:
