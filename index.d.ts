@@ -71,13 +71,23 @@ export function buildWidgetUrl(params: {
   hideFilePicker?: boolean;
   customAttributes?: Record<string, any>;
   cwConversation?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  user?: LimeChatUser;
 }): string;
 
 /** @deprecated Use buildWidgetUrl instead. Will be removed in the next major release. */
 export const createWidgetUrl: typeof buildWidgetUrl;
 
 // Essential utilities for advanced use cases
-export function generateScripts(params: { user?: LimeChatUser }): string;
+export function generateScripts(params: {
+  user?: LimeChatUser;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  colorScheme?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  locale?: string;
+  /** @deprecated Ignored. Will be removed in the next major release. */
+  customAttributes?: Record<string, any>;
+}): string;
 
 // Constants for external configuration
 export const POST_MESSAGE_EVENTS: {

@@ -60,6 +60,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - Load errors no longer include the conversation token or open message
 - Web links open without `canOpenURL`, which can return false on Android 11+
 - `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
+- `buildWidgetUrl` accepts the old `user` field and `generateScripts` accepts the old `colorScheme`, `locale` and `customAttributes` fields in the types, as deprecated and ignored
 
 ### Removed
 - Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received
