@@ -53,6 +53,7 @@ const LimeChatWidget = React.forwardRef(({
   const processRecoveryUsed = useRef(false);
   const lastTokenProp = useRef(conversationToken);
   const ignoredTokenProp = useRef(null);
+  const ignoredUserKey = useRef(null);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
@@ -82,6 +83,11 @@ const LimeChatWidget = React.forwardRef(({
   // a token arriving after none (first session) is not a switch.
   const userKey = JSON.stringify([user?.identifier, user?.email, user?.phone_number]);
   const lastUserKey = useRef(userKey);
+  // after reset() the current user prop is ignored until it changes, like ignoredTokenProp
+  useEffect(() => {
+    if (ignoredUserKey.current !== userKey) ignoredUserKey.current = null;
+  }, [userKey]);
+  const activeUser = ignoredUserKey.current === userKey ? EMPTY_OBJECT : user;
   const lastHeldToken = useRef(conversationToken);
   // a different identity, or none after one, must not keep the previous user's conversation.
   // none to an identity (first login) and a new name for the same identity are not a switch.
@@ -168,9 +174,9 @@ const LimeChatWidget = React.forwardRef(({
   };
 
   const sendSetUser = () => {
-    if (!user?.identifier || !user?.identifier_hash || !webViewRef.current) return;
+    if (!activeUser?.identifier || !activeUser?.identifier_hash || !webViewRef.current) return;
     webViewRef.current.injectJavaScript(
-      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: user.identifier, user })
+      createWootPostMessage({ event: POST_MESSAGE_EVENTS.SET_USER, identifier: activeUser.identifier, user: activeUser })
     );
   };
 
@@ -239,10 +245,11 @@ const LimeChatWidget = React.forwardRef(({
     if (!showWidget) processRecoveryUsed.current = false;
   }, [showWidget]);
 
-  // like the web SDK's reset(): drops the conversation, not the widget. the open widget reloads without a token
+  // like the web SDK's reset(): drops the conversation and the user, not the widget. the open widget reloads without a token
   const reset = () => {
     setCwConversation(null);
     ignoredTokenProp.current = conversationToken ?? null;
+    ignoredUserKey.current = userKey;
     pendingAttributes.current = {};
     pendingOpen.current = null;
     reload();
@@ -384,7 +391,7 @@ const LimeChatWidget = React.forwardRef(({
           onProcessGone={handleProcessGone}
           webViewRef={webViewRef}
           webViewKey={webViewKey}
-          user={user}
+          user={activeUser}
           customAttributes={customAttributes}
           cwConversation={effectiveTokenProp || cwConversation}
           onWidgetLoad={handleWidgetLoad}

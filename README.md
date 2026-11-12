@@ -178,7 +178,7 @@ widgetRef.current.reset();                 // clear the conversation, call on lo
 - `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.
 - `reload()` remounts the webview with the live conversation token. Held attributes and the open message are sent when the new page is ready.
 - `close()` hides the widget the way the widget's own close does: it drops a held open message and calls `onWidgetClose`. It does nothing if the widget is already closed.
-- `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the stored or live conversation token (and a token you passed in, until you pass a new one), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout.
+- `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it.
 
 ### Message attributes
 
@@ -301,7 +301,7 @@ The SDK keeps the conversation token in memory only. To continue a conversation 
 
 - A `conversationToken` prop wins over the token the widget reported. The widget url is built when it opens, so a change applies on the next open.
 - Clearing the prop (to `undefined`) drops the live token.
-- `reset()` on the ref handle clears the conversation. Call it on logout. It drops the live token and ignores the current `conversationToken` prop until you pass a new one, so clear your stored token too.
+- `reset()` on the ref handle clears the conversation. Call it on logout. It drops the live token and the user, and ignores the current `conversationToken` and `user` props until they change, so clear your own stored token and user too.
 - A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live token. It applies on the next open, and the widget is not reloaded while it is open. The first login after an anonymous session, and a new `name` for the same identity, keep it. A `conversationToken` prop still wins. Call `reset()` on logout.
 
 ### Multi-language Support

@@ -1189,6 +1189,54 @@ describe('LimeChatWidget', () => {
       expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-2');
     });
 
+    describe('user', () => {
+      const user = { name: 'A', identifier: 'id-1', identifier_hash: 'hash-1' };
+      const other = { name: 'B', identifier: 'id-2', identifier_hash: 'hash-2' };
+      const setUserCalls = () => mockInject.mock.calls.filter(([script]) => script.includes('set-user'));
+      const readyOpen = (ref) => {
+        act(() => ref.current.open());
+        ready();
+      };
+
+      it('reset sends no set-user and no rnUser on the remounted page', () => {
+        const ref = React.createRef();
+        render(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+        readyOpen(ref);
+        expect(mockWebViewProps.injectedJavaScript).toContain('rnUser');
+        expect(setUserCalls()).toHaveLength(1);
+
+        act(() => ref.current.reset());
+        expect(mockWebViewProps.injectedJavaScript).not.toContain('rnUser');
+        ready();
+        expect(setUserCalls()).toHaveLength(1);
+      });
+
+      it('a changed user prop after reset sends set-user again', () => {
+        const ref = React.createRef();
+        const { rerender } = render(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+        readyOpen(ref);
+        act(() => ref.current.reset());
+        rerender(<LimeChatWidget {...defaultProps} user={other} ref={ref} />);
+        act(() => { ref.current.reload(); });
+        ready();
+        expect(setUserCalls()).toHaveLength(2);
+        expect(setUserCalls()[1][0]).toContain('"identifier":"id-2"');
+        expect(mockWebViewProps.injectedJavaScript).toContain('rnUser');
+      });
+
+      it('clearing the user prop after reset and setting the same user sends set-user', () => {
+        const ref = React.createRef();
+        const { rerender } = render(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+        readyOpen(ref);
+        act(() => ref.current.reset());
+        rerender(<LimeChatWidget {...defaultProps} user={undefined} ref={ref} />);
+        rerender(<LimeChatWidget {...defaultProps} user={user} ref={ref} />);
+        act(() => { ref.current.reload(); });
+        ready();
+        expect(setUserCalls()).toHaveLength(2);
+      });
+    });
+
     it('an old page token event after reset is ignored', () => {
       const now = jest.spyOn(Date, 'now');
       const withTimestamp = (timestamp) =>

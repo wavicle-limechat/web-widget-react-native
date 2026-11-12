@@ -56,6 +56,9 @@ export interface LimeChatWidgetHandle {
   setMessageAttributes(attributes: Record<string, unknown>): boolean;
   reload(): boolean;
   close(): void;
+  /**
+   * `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it.
+   */
   reset(): void;
 }
 

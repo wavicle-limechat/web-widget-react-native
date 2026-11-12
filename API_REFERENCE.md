@@ -307,7 +307,7 @@ widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
 | `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
 | `reload()` | Remounts the webview with the live conversation token. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
 | `close()` | Hides the widget the way the widget's own close does. Drops a held open message and calls `onWidgetClose`. Does nothing if the widget is already closed. |
-| `reset()` | Clears this widget's conversation, like the web SDK's `reset()`: it drops the stored or live conversation token (and a token you passed in, until you pass a new one), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. |
+| `reset()` | `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the live conversation token and the user (and a `conversationToken` or `user` prop you passed in, until it changes), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. If the same user logs back in without the prop changing, pass the user again after clearing it. |
 
 For the attribute notes (JSON values, the auto-start `Hi`, closing, failed sends and reload), see [Message attributes](./README.md#message-attributes) in the README.
 
