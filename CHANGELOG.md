@@ -37,6 +37,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - The `colorScheme` prop, `POST_MESSAGE_EVENTS.SET_COLOR_SCHEME` and `WIDGET_CONFIG.DEFAULT_COLOR_SCHEME` are ignored by the widget and will be removed in the next major release
 
 ### Fixed
+- A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live conversation token, so the next user does not continue the old conversation. It applies on the next open. The first login after an anonymous session keeps it, and a `conversationToken` prop still wins
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
 - `reload()` remounts the webview with the live conversation token, so a first-session conversation is kept
 - `open(message)` retries a page that failed to load

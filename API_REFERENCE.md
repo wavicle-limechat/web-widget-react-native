@@ -117,7 +117,7 @@ Additional metadata to pass with the chat session.
 
 Token of the conversation to continue. It wins over the token the widget reported. The widget url is built when the widget opens, so a change applies on the next open.
 
-Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Call `reset()` on the ref handle on logout, which also works when you never pass the prop. If you never pass the prop, remount the widget with a new `key` when the user changes.
+Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Call `reset()` on the ref handle on logout, which also works when you never pass the prop. A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live token. It applies on the next open, and the widget is not reloaded while it is open. The first login after an anonymous session, and a new `name` for the same identity, keep it. This prop still wins. Call `reset()` on logout.
 
 ```javascript
 const [token, setToken] = useState(storedToken);

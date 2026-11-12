@@ -1216,6 +1216,58 @@ describe('LimeChatWidget', () => {
     });
   });
 
+  describe('user switch', () => {
+    const ready = () => {
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+    };
+    // a live token for the first user, then the widget closes
+    const withLiveToken = (userProps, extra = {}) => {
+      const ref = React.createRef();
+      const utils = render(<LimeChatWidget {...defaultProps} {...extra} user={userProps} ref={ref} />);
+      act(() => ref.current.open());
+      ready();
+      act(() => closeFromWidget());
+      return { ref, ...utils };
+    };
+    const A = { identifier: 'a', name: 'A' };
+
+    it('a user switch drops the live token', () => {
+      const { ref, rerender } = withLiveToken(A);
+      rerender(<LimeChatWidget {...defaultProps} user={{ identifier: 'b' }} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    });
+
+    it('user to empty drops the live token', () => {
+      const { ref, rerender } = withLiveToken(A);
+      rerender(<LimeChatWidget {...defaultProps} user={{}} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    });
+
+    it('first login after anonymous keeps the live token', () => {
+      const { ref, rerender } = withLiveToken(undefined);
+      rerender(<LimeChatWidget {...defaultProps} user={A} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
+    });
+
+    it('the same identity with a new name keeps the live token', () => {
+      const { ref, rerender } = withLiveToken(A);
+      rerender(<LimeChatWidget {...defaultProps} user={{ identifier: 'a', name: 'Renamed' }} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
+    });
+
+    it('a conversationToken prop still wins after a switch', () => {
+      const { ref, rerender } = withLiveToken(A);
+      rerender(<LimeChatWidget {...defaultProps} user={{ identifier: 'b' }} conversationToken="host-b" ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-b');
+    });
+  });
+
   describe('close', () => {
     it('close hides the widget and calls onWidgetClose', () => {
       const onWidgetClose = jest.fn();

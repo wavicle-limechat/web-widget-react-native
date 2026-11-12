@@ -302,11 +302,7 @@ The SDK keeps the conversation token in memory only. To continue a conversation 
 - A `conversationToken` prop wins over the token the widget reported. The widget url is built when it opens, so a change applies on the next open.
 - Clearing the prop (to `undefined`) drops the live token.
 - `reset()` on the ref handle clears the conversation. Call it on logout. It drops the live token and ignores the current `conversationToken` prop until you pass a new one, so clear your stored token too.
-- If the host never passes the prop, a user switch does not clear the stored token. On a user change, remount the widget with a new `key`:
-
-```tsx
-<LimeChatWidget key={currentUser.id} websiteToken="your-token" user={currentUser.chatUser} />
-```
+- A change of user (`identifier`, `email` or `phone_number`) to a different user, or to none, drops the live token. It applies on the next open, and the widget is not reloaded while it is open. The first login after an anonymous session, and a new `name` for the same identity, keep it. A `conversationToken` prop still wins. Call `reset()` on logout.
 
 ### Multi-language Support
 

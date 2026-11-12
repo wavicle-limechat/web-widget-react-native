@@ -83,13 +83,20 @@ const LimeChatWidget = React.forwardRef(({
   const userKey = JSON.stringify([user?.identifier, user?.email, user?.phone_number]);
   const lastUserKey = useRef(userKey);
   const lastHeldToken = useRef(conversationToken);
+  // a different identity, or none after one, must not keep the previous user's conversation.
+  // none to an identity (first login) and a new name for the same identity are not a switch.
+  const identity = [user?.identifier, user?.email, user?.phone_number].map((v) => v ?? '').join('\n');
+  const identityKey = identity === '\n\n' ? null : identity;
+  const lastIdentity = useRef(identityKey);
   useEffect(() => {
+    if (lastIdentity.current !== null && lastIdentity.current !== identityKey) setCwConversation(null);
+    lastIdentity.current = identityKey;
     const userChanged = lastUserKey.current !== userKey;
     const tokenChanged = !!lastHeldToken.current && lastHeldToken.current !== conversationToken;
     lastUserKey.current = userKey;
     lastHeldToken.current = conversationToken;
     if (userChanged || tokenChanged) pendingAttributes.current = {};
-  }, [userKey, conversationToken]);
+  }, [userKey, identityKey, conversationToken]);
 
   const { widgetConfig, isLoading, error } = useWidgetConfig(
     widgetBaseUrl,
