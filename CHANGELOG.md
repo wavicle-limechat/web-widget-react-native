@@ -4,7 +4,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 ## [Unreleased]
 
-## [0.2.0]
+## [0.2.0] - 2026-11-13
 
 0.0.6 to 0.1.1 were tagged without changelog entries.
 
