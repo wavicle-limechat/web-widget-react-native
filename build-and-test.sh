@@ -43,6 +43,9 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ] || [ -z "$1" ]; then
     echo "  3. Navigate to the example directory"
     echo "  4. Install the new SDK build"
     echo "  5. Start the example app"
+    echo "  6. On exit, restore example/package.json and example/yarn.lock to the file:.. link"
+    echo ""
+    echo "It refuses to run if example/package.json or example/yarn.lock has uncommitted changes."
     echo ""
     echo "Options:"
     echo "  -h, --help    Show this help message"
@@ -53,6 +56,12 @@ FILENAME="$1"
 TGZ_FILE="${FILENAME}.tgz"
 
 print_status "Starting build process for: $FILENAME"
+
+# the install below rewrites example/package.json and example/yarn.lock to a tarball
+if [ -n "$(git status --porcelain -- example/package.json example/yarn.lock)" ]; then
+    print_error "example/package.json or example/yarn.lock has uncommitted changes. Commit or stash them first, this script rewrites them and restores them from git."
+    exit 1
+fi
 
 # Step 1: Build the SDK
 print_status "Running prepack and pack..."
@@ -75,6 +84,12 @@ print_success "SDK packed successfully as: $TGZ_FILE"
 # Step 2: Navigate to example directory
 print_status "Navigating to example directory..."
 cd example
+
+# put the example back on the local file:.. link when the script ends, including Ctrl+C on yarn start
+restore_example() {
+    git checkout -- package.json yarn.lock && yarn install --force
+}
+trap restore_example EXIT
 
 if [ ! -d "node_modules" ]; then
     print_warning "Example node_modules not found, running yarn install first..."
