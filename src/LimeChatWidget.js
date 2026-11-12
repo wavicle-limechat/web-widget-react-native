@@ -52,6 +52,7 @@ const LimeChatWidget = React.forwardRef(({
   const loadFailed = useRef(false);
   const processRecoveryUsed = useRef(false);
   const lastTokenProp = useRef(conversationToken);
+  const ignoredTokenProp = useRef(null);
   const shownUnreadCount = unreadCountProp ?? unreadCount;
 
   // Validate props on mount and when they change
@@ -72,6 +73,7 @@ const LimeChatWidget = React.forwardRef(({
 
   // a host that clears the prop on logout must not fall back to the old live token
   useEffect(() => {
+    ignoredTokenProp.current = null;
     if (lastTokenProp.current && !conversationToken) setCwConversation(null);
     lastTokenProp.current = conversationToken;
   }, [conversationToken]);
@@ -230,7 +232,16 @@ const LimeChatWidget = React.forwardRef(({
     if (!showWidget) processRecoveryUsed.current = false;
   }, [showWidget]);
 
-  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload, close }));
+  // like the web SDK's reset(): drops the conversation, not the widget. the open widget reloads without a token
+  const reset = () => {
+    setCwConversation(null);
+    ignoredTokenProp.current = conversationToken ?? null;
+    pendingAttributes.current = {};
+    pendingOpen.current = null;
+    reload();
+  };
+
+  useImperativeHandle(ref, () => ({ open, sendMessage, setMessageAttributes, reload, close, reset }));
 
   // the widget adds its message listener after onload, and android can fire onLoad
   // before that. set-cw-conversation is sent in the same task as the listener, so
@@ -339,6 +350,9 @@ const LimeChatWidget = React.forwardRef(({
     );
   };
 
+  const effectiveTokenProp =
+    conversationToken && conversationToken !== ignoredTokenProp.current ? conversationToken : undefined;
+
   return (
     <ErrorBoundary onError={onError}>
       <View style={[widgetStyles.container, style]}>
@@ -365,7 +379,7 @@ const LimeChatWidget = React.forwardRef(({
           webViewKey={webViewKey}
           user={user}
           customAttributes={customAttributes}
-          cwConversation={conversationToken || cwConversation}
+          cwConversation={effectiveTokenProp || cwConversation}
           onWidgetLoad={handleWidgetLoad}
           onWidgetMessage={onMessage}
           onUnreadCountUpdate={handleUnreadCountUpdate}

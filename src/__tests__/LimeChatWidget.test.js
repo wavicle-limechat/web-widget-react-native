@@ -1119,6 +1119,103 @@ describe('LimeChatWidget', () => {
     });
   });
 
+  describe('reset', () => {
+    const ready = () => {
+      act(() => mockWebViewProps.onLoad());
+      act(() => widgetListens());
+    };
+
+    beforeEach(() => {
+      mockInject.mockClear();
+      mockReload.mockClear();
+    });
+
+    it('reset clears the live token and remounts the open widget without cw_conversation', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      ready();
+      act(() => { ref.current.reload(); });
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=jwt');
+
+      const mounts = mockWebViewMounts;
+      act(() => ref.current.reset());
+      expect(mockWebViewMounts).toBe(mounts + 1);
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    });
+
+    it('reset while closed opens without a token next time', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open());
+      ready();
+      act(() => closeFromWidget());
+
+      act(() => ref.current.reset());
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+    });
+
+    it('reset drops held attributes and a held open message', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} ref={ref} />);
+      act(() => ref.current.open('hi'));
+      act(() => { ref.current.setMessageAttributes({ a: 1 }); });
+
+      act(() => ref.current.reset());
+      ready();
+      expect(mockInject).not.toHaveBeenCalled();
+    });
+
+    it('reset ignores the current conversationToken prop until it changes', () => {
+      const ref = React.createRef();
+      const props = { ...defaultProps, conversationToken: 'host-1' };
+      const { rerender } = render(<LimeChatWidget {...props} ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-1');
+
+      act(() => ref.current.reset());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+      // a rerender with the same prop keeps ignoring it
+      rerender(<LimeChatWidget {...props} ref={ref} />);
+      act(() => closeFromWidget());
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+
+      // a new token is used
+      act(() => closeFromWidget());
+      rerender(<LimeChatWidget {...props} conversationToken="host-2" ref={ref} />);
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).toContain('cw_conversation=host-2');
+    });
+
+    it('an old page token event after reset is ignored', () => {
+      const now = jest.spyOn(Date, 'now');
+      const withTimestamp = (timestamp) =>
+        mockWebViewProps.onMessage({
+          nativeEvent: { data: JSON.stringify({ event: 'set-cw-conversation', cw_conversation: 'old', timestamp }) },
+        });
+      const onConversationTokenChange = jest.fn();
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} onConversationTokenChange={onConversationTokenChange} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => mockWebViewProps.onLoad());
+      act(() => withTimestamp(900));
+
+      now.mockReturnValue(1000);
+      act(() => ref.current.reset());
+      onConversationTokenChange.mockClear();
+      act(() => withTimestamp(950));
+      act(() => mockWebViewProps.onLoad());
+      expect(onConversationTokenChange).not.toHaveBeenCalled();
+
+      act(() => closeFromWidget());
+      act(() => ref.current.open());
+      expect(mockWebViewProps.source.uri).not.toContain('cw_conversation');
+      now.mockRestore();
+    });
+  });
+
   describe('close', () => {
     it('close hides the widget and calls onWidgetClose', () => {
       const onWidgetClose = jest.fn();

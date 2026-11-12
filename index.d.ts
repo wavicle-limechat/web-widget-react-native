@@ -56,6 +56,7 @@ export interface LimeChatWidgetHandle {
   setMessageAttributes(attributes: Record<string, unknown>): boolean;
   reload(): boolean;
   close(): void;
+  reset(): void;
 }
 
 declare const LimeChatWidget: React.ForwardRefExoticComponent<LimeChatWidgetProps & React.RefAttributes<LimeChatWidgetHandle>>;

@@ -169,6 +169,7 @@ widgetRef.current.setMessageAttributes({ order_id: 'A-100' }); // true if accept
 widgetRef.current.sendMessage('set-label', { label: 'vip' });  // false if the widget is closed
 widgetRef.current.reload();                // false if the widget is closed
 widgetRef.current.close();                 // hide the widget
+widgetRef.current.reset();                 // clear the conversation, call on logout
 ```
 
 - `open(message)` shows the widget. If the widget is ready the message is sent now. If not, it is held and sent once at ready. An empty string or object only shows the widget. A message object with no `content` and other keys, such as `submitted_values`, gets `content: "Hi"`, as in the web SDK.
@@ -177,6 +178,7 @@ widgetRef.current.close();                 // hide the widget
 - `sendMessage` returns `true` when the event was injected into the webview, not when the widget read it. It does not wait for ready, so an event sent before ready is lost.
 - `reload()` remounts the webview with the live conversation token. Held attributes and the open message are sent when the new page is ready.
 - `close()` hides the widget the way the widget's own close does: it drops a held open message and calls `onWidgetClose`. It does nothing if the widget is already closed.
+- `reset()` clears this widget's conversation, like the web SDK's `reset()`: it drops the stored or live conversation token (and a token you passed in, until you pass a new one), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout.
 
 ### Message attributes
 
@@ -298,8 +300,9 @@ The unread badge is driven by the host app through `unreadCount`:
 The SDK keeps the conversation token in memory only. To continue a conversation across app launches, store the token from `onConversationTokenChange` and pass it back through `conversationToken`.
 
 - A `conversationToken` prop wins over the token the widget reported. The widget url is built when it opens, so a change applies on the next open.
-- Clearing the prop (to `undefined`) drops the live token. Use this on logout.
-- If the host never passes the prop, the SDK has no way to know about a logout, and a user switch does not clear the stored token. On a user change, remount the widget with a new `key`:
+- Clearing the prop (to `undefined`) drops the live token.
+- `reset()` on the ref handle clears the conversation. Call it on logout. It drops the live token and ignores the current `conversationToken` prop until you pass a new one, so clear your stored token too.
+- If the host never passes the prop, a user switch does not clear the stored token. On a user change, remount the widget with a new `key`:
 
 ```tsx
 <LimeChatWidget key={currentUser.id} websiteToken="your-token" user={currentUser.chatUser} />

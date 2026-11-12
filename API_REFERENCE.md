@@ -117,7 +117,7 @@ Additional metadata to pass with the chat session.
 
 Token of the conversation to continue. It wins over the token the widget reported. The widget url is built when the widget opens, so a change applies on the next open.
 
-Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Use this on logout. If you never pass the prop, remount the widget with a new `key` when the user changes.
+Clearing the prop (to `undefined`) drops the live token, so the next open starts a new conversation. Call `reset()` on the ref handle on logout, which also works when you never pass the prop. If you never pass the prop, remount the widget with a new `key` when the user changes.
 
 ```javascript
 const [token, setToken] = useState(storedToken);
@@ -287,6 +287,7 @@ interface LimeChatWidgetHandle {
   setMessageAttributes(attributes: Record<string, unknown>): boolean;
   reload(): boolean;
   close(): void;
+  reset(): void;
 }
 ```
 
@@ -306,6 +307,7 @@ widgetRef.current.setMessageAttributes({ order_id: 'A-100' });
 | `sendMessage(event, data)` | Injects an event into the webview. Returns `false` if the widget is closed, `true` when injected, not when the widget read it. Does not wait for ready, so an event sent before ready is lost. |
 | `reload()` | Remounts the webview with the live conversation token. Returns `false` if the widget is closed. Held work is sent when the new page is ready. |
 | `close()` | Hides the widget the way the widget's own close does. Drops a held open message and calls `onWidgetClose`. Does nothing if the widget is already closed. |
+| `reset()` | Clears this widget's conversation, like the web SDK's `reset()`: it drops the stored or live conversation token (and a token you passed in, until you pass a new one), drops held message attributes and a held open message, and reloads the page without a conversation if it is showing. It does not close the widget. Call it on logout. |
 
 For the attribute notes (JSON values, the auto-start `Hi`, closing, failed sends and reload), see [Message attributes](./README.md#message-attributes) in the README.
 
