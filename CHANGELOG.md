@@ -17,6 +17,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - `identifier` on `user`; `set-user` is sent only with both `identifier` and `identifier_hash`
 
 ### Fixed
+- Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
 - `reload()` remounts the webview with the live conversation token, so a first-session conversation is kept
 - `open(message)` retries a page that failed to load
 - A web process death reloads the page once. A second death before ready reports `Widget web process died again before ready` through `onError`

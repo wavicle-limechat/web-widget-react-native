@@ -76,6 +76,19 @@ const LimeChatWidget = React.forwardRef(({
     lastTokenProp.current = conversationToken;
   }, [conversationToken]);
 
+  // held attributes belong to the user who set them. a different user or token must not get them.
+  // a token arriving after none (first session) is not a switch.
+  const userKey = JSON.stringify([user?.identifier, user?.email, user?.phone_number]);
+  const lastUserKey = useRef(userKey);
+  const lastHeldToken = useRef(conversationToken);
+  useEffect(() => {
+    const userChanged = lastUserKey.current !== userKey;
+    const tokenChanged = !!lastHeldToken.current && lastHeldToken.current !== conversationToken;
+    lastUserKey.current = userKey;
+    lastHeldToken.current = conversationToken;
+    if (userChanged || tokenChanged) pendingAttributes.current = {};
+  }, [userKey, conversationToken]);
+
   const { widgetConfig, isLoading, error } = useWidgetConfig(
     widgetBaseUrl,
     websiteToken,

@@ -786,6 +786,56 @@ describe('LimeChatWidget', () => {
       expect(postedBy(attributeCalls()[0][0]).attributes).toEqual({ a: 1 });
     });
 
+    it('drops held attributes when the user changes', () => {
+      const ref = React.createRef();
+      const { rerender } = render(<LimeChatWidget {...defaultProps} user={{ email: 'a@x.com' }} ref={ref} />);
+      act(() => { ref.current.setMessageAttributes({ plan: 'gold' }); });
+
+      rerender(<LimeChatWidget {...defaultProps} user={{ email: 'b@x.com' }} ref={ref} />);
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(0);
+    });
+
+    it('drops held attributes when the conversation token changes or is cleared', () => {
+      [['t1', 't2'], ['t1', undefined]].forEach(([from, to]) => {
+        mockInject.mockClear();
+        const ref = React.createRef();
+        const { rerender, unmount } = render(<LimeChatWidget {...defaultProps} conversationToken={from} ref={ref} />);
+        act(() => { ref.current.setMessageAttributes({ plan: 'gold' }); });
+
+        rerender(<LimeChatWidget {...defaultProps} conversationToken={to} ref={ref} />);
+        act(() => ref.current.open());
+        makeReady();
+        expect(attributeCalls()).toHaveLength(0);
+        unmount();
+      });
+    });
+
+    it('keeps held attributes on unrelated prop changes and a first token', () => {
+      const ref = React.createRef();
+      const { rerender } = render(<LimeChatWidget {...defaultProps} user={{ email: 'a@x.com', name: 'A' }} ref={ref} />);
+      act(() => { ref.current.setMessageAttributes({ plan: 'gold' }); });
+
+      rerender(<LimeChatWidget {...defaultProps} user={{ email: 'a@x.com', name: 'A2' }} locale="hi" conversationToken="t1" ref={ref} />);
+      act(() => ref.current.open());
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+    });
+
+    it('keeps held attributes through a reload', () => {
+      const ref = React.createRef();
+      render(<LimeChatWidget {...defaultProps} user={{ email: 'a@x.com' }} ref={ref} />);
+      act(() => ref.current.open());
+      act(() => { ref.current.setMessageAttributes({ plan: 'gold' }); });
+      act(() => { ref.current.reload(); });
+      expect(attributeCalls()).toHaveLength(0);
+
+      makeReady();
+      expect(attributeCalls()).toHaveLength(1);
+      expect(postedBy(attributeCalls()[0][0]).attributes).toEqual({ plan: 'gold' });
+    });
+
     it('apostrophe, quote, backslash and newline stay in valid json', () => {
       const ref = React.createRef();
       render(<LimeChatWidget {...defaultProps} ref={ref} />);

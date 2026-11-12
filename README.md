@@ -188,6 +188,7 @@ widgetRef.current.close();                 // hide the widget
 - The widget's auto-start `Hi` counts as the next message. With no `open(message)`, the attributes can land on `Hi` and not on what the customer types.
 - If the customer closes the widget before they are sent, they stay held. If they were already sent and the customer closes without sending, set them again.
 - After the customer's message is sent, the widget clears the attributes. If that message fails, the widget keeps them for the next one. Attributes already sent to the widget are lost on a page reload. Attributes still held are kept.
+- Held attributes are dropped when the user (`identifier`, `email` or `phone_number`) or the `conversationToken` prop changes while the widget stays mounted, so the next user does not get them. A first token after none, a reload and a process death keep them.
 
 ### Ready
 
