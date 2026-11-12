@@ -12,6 +12,11 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 ### Changed
 - The default export is now a `forwardRef` component, an object and not a function. JSX use is unchanged. Calling `LimeChatWidget(props)` directly, or checking `typeof === 'function'`, breaks
+- The widget url is built when the widget opens. Changing `locale` or `customAttributes` while it is open applies on the next open
+- `onWidgetLoad` fires once per page load, when the widget is ready (page loaded and widget listening), not on the first open. A failed page gives no `onWidgetLoad`
+- `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message on a failed page is retried by `open(message)`. `open()` with no message does not retry: call `reload()`
+- The widget url sends `platform=react-native`, as the other SDKs send their own value
+- At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
 
 ### Added
 - `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
@@ -25,6 +30,7 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 ### Deprecated
 - `createWidgetUrl`, an alias of `buildWidgetUrl`, will be removed in the next major release
+- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent, will be removed in the next major release
 
 ### Fixed
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
@@ -52,16 +58,6 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - Load errors no longer include the conversation token or open message
 - Web links open without `canOpenURL`, which can return false on Android 11+
 - `WidgetError.severity` and `buildWidgetUrl` types in `index.d.ts`
-
-### Changed
-- The widget url is built when the widget opens. Changing `locale` or `customAttributes` while it is open applies on the next open
-- `onWidgetLoad` fires once per page load, when the widget is ready (page loaded and widget listening), not on the first open. A failed page gives no `onWidgetLoad`
-- `open(message)` sends now if the widget is ready, and holds the message until ready otherwise. A held message on a failed page is retried by `open(message)`. `open()` with no message does not retry: call `reload()`
-- The widget url sends `platform=react-native`, as the other SDKs send their own value
-- At ready, held attributes and the open message are sent first, then `onConversationTokenChange`, then `onWidgetLoad`
-
-### Deprecated
-- `POST_MESSAGE_EVENTS.WIDGET_LOADED`, which is never sent, will be removed in the next major release
 
 ### Removed
 - Injected `set-locale`, `set-custom-attributes` and `set-color-scheme` messages, which the widget never received

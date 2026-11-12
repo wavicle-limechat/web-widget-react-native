@@ -151,7 +151,7 @@ interface LimeChatUser {
 
 User custom attributes go with every message the customer types, not onto the contact.
 
-Without them the details are sent unverified. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone.
+Without them the details are sent unverified. With every message the server updates the contact, and can merge into an existing contact with the same email or phone.
 
 ### Ref handle
 
@@ -299,7 +299,7 @@ The SDK keeps the conversation token in memory only. To continue a conversation 
 
 - A `conversationToken` prop wins over the token the widget reported. The widget url is built when it opens, so a change applies on the next open.
 - Clearing the prop (to `undefined`) drops the live token. Use this on logout.
-- If the host never passes the prop, the SDK has no way to know about a logout. On a user change, remount the widget with a new `key`:
+- If the host never passes the prop, the SDK has no way to know about a logout, and a user switch does not clear the stored token. On a user change, remount the widget with a new `key`:
 
 ```tsx
 <LimeChatWidget key={currentUser.id} websiteToken="your-token" user={currentUser.chatUser} />

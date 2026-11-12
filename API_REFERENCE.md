@@ -61,7 +61,7 @@ interface LimeChatUser {
 
 `identifier_hash` needs `identifier`. The widget verifies the user only when both are set.
 
-Without them the details are sent unverified. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone.
+Without them the details are sent unverified. With every message the server updates the contact, and can merge into an existing contact with the same email or phone.
 
 User custom attributes go with every message the customer types, not onto the contact. The `customAttributes` prop is separate. It goes in the widget url for the session.
 
