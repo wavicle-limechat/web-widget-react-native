@@ -17,10 +17,10 @@ A powerful, easy-to-integrate React Native SDK that brings LimeChat's customer s
 
 ```bash
 # Using yarn (recommended). not published on npm, install from the git tag
-yarn add github:wavicle-limechat/web-widget-react-native#v0.2.0-beta.1
+yarn add github:wavicle-limechat/web-widget-react-native#v0.2.0
 
 # Using npm
-npm install github:wavicle-limechat/web-widget-react-native#v0.2.0-beta.1
+npm install github:wavicle-limechat/web-widget-react-native#v0.2.0
 ```
 
 ### Step 2: Install Required Dependencies
