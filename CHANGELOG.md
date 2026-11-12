@@ -6,6 +6,9 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 
 > **Upgrade note: unverified contact update.** User details passed to the SDK reach the widget through `rnUser` with no verification. On the customer's first message the server updates the contact, and can merge into an existing contact with the same email or phone. If you use identity validation, pass `identifier` and `identifier_hash` so the contact is verified.
 
+### Changed
+- The default export is now a `forwardRef` component, an object and not a function. JSX use is unchanged. Calling `LimeChatWidget(props)` directly, or checking `typeof === 'function'`, breaks
+
 ### Added
 - `setMessageAttributes(attributes)` on the ref handle. It needs a widget build that contains `c8126fb7cd`
 - `reload()` on the ref handle
@@ -14,7 +17,10 @@ All notable changes to the LimeChat React Native SDK will be documented in this 
 - `custom_attributes` on `user`
 - `baseUrl`, `hideFilePicker` and `unreadCount` props
 - `ref` handle with `open(message)` and `sendMessage(event, data)`
-- `identifier` on `user`; `set-user` is sent only with both `identifier` and `identifier_hash`
+- `identifier` on `user`. `set-user` is sent only when both `identifier` and `identifier_hash` are set. A host that passes only `identifier_hash` no longer sends `set-user`, so pass both
+
+### Deprecated
+- `createWidgetUrl`, an alias of `buildWidgetUrl`
 
 ### Fixed
 - Held message attributes are dropped when the user or the `conversationToken` prop changes without unmounting, so the next user does not get them
