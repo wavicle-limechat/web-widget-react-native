@@ -5,7 +5,7 @@ This is an example React Native app built with Expo that demonstrates how to int
 ## Features
 
 - 👤 **User Pre-filling**: Demonstrate user information integration
-- 🎨 **Custom Styling**: Show how to customize widget appearance
+- 🔧 **Ref API**: open, setMessageAttributes, reload, reset and close
 - 📱 **Mobile Optimized**: Built specifically for React Native/Expo
 - 🛡️ **Error Handling**: Proper error boundary implementation
 - ♿ **Accessibility**: Screen reader and accessibility support
@@ -18,36 +18,28 @@ This is an example React Native app built with Expo that demonstrates how to int
 
 ## Quick Start
 
-1. **Install dependencies**:
+1. **Install dependencies** (the example uses the local sdk through `"@limechat/react-native-widget": "file:.."`):
    ```bash
-   npm install
+   cd example
+   yarn install
    ```
+   yarn copies the package, so after changing the sdk run `yarn install --force` or `yarn upgrade @limechat/react-native-widget`. `metro.config.js` resolves modules only from `example/node_modules`, so the copied sdk does not bring a second react.
 
 2. **Start the development server**:
    ```bash
-   npm start
+   yarn start
    ```
 
 3. **Run on your preferred platform**:
-   - iOS: Press `i` in the terminal or run `npm run ios`
-   - Android: Press `a` in the terminal or run `npm run android`
-   - Web: Press `w` in the terminal or run `npm run web`
+   - iOS: Press `i` in the terminal or run `yarn ios`
+   - Android: Press `a` in the terminal or run `yarn android`
+   - Web: Press `w` in the terminal or run `yarn web`
 
 ## Configuration
 
-Before running the app, make sure to update the `websiteToken` in `App.js`:
+Before running the app, replace the placeholders in `App.js`: `WEBSITE_TOKEN` and `identifier_hash` in `user`.
 
-```javascript
-<LimeChatWidget
-  websiteToken="your-actual-website-token-here"  // Replace with your token
-  user={user}
-  locale="en"
-  customAttributes={customAttributes}
-  onWidgetLoad={handleWidgetLoad}
-  onWidgetClose={handleWidgetClose}
-  onError={handleError}
-/>
-```
+`App.js` also uses the ref handle. the buttons call `open('hi')`, `open({ submitted_values })`, `setMessageAttributes({...})`, `reload()`, `reset()` and `close()`.
 
 ## Widget Props
 
@@ -68,7 +60,7 @@ example/
 ├── App.js              # Main application component with widget integration
 ├── package.json        # Dependencies and scripts
 ├── app.json           # Expo app configuration
-├── babel.config.js    # Babel configuration
+├── metro.config.js    # resolves modules from example/node_modules only
 └── README.md          # This file
 ```
 
