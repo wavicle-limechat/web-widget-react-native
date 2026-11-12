@@ -73,6 +73,9 @@ export function buildWidgetUrl(params: {
   cwConversation?: string;
 }): string;
 
+/** @deprecated use buildWidgetUrl */
+export const createWidgetUrl: typeof buildWidgetUrl;
+
 // Essential utilities for advanced use cases
 export function generateScripts(params: { user?: LimeChatUser }): string;
 
